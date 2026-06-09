@@ -245,6 +245,35 @@ export const GetObraBySlugResponse = zod.object({
 
 
 /**
+ * @summary Search obras by title
+ */
+export const SearchObrasParams = zod.object({
+  "term": zod.coerce.string()
+})
+
+export const SearchObrasResponseItem = zod.object({
+  "id": zod.number(),
+  "titulo": zod.string(),
+  "slug": zod.string(),
+  "sinopse": zod.string(),
+  "generos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "ano": zod.number(),
+  "nota": zod.number().nullish(),
+  "totalEps": zod.number().nullish(),
+  "capaUrl": zod.string(),
+  "bannerUrl": zod.string(),
+  "tipografiaUrl": zod.string().nullish(),
+  "showInBanner": zod.boolean().optional(),
+  "bannerOrder": zod.number().nullish(),
+  "views": zod.number().optional(),
+  "createdAt": zod.string().optional(),
+  "updatedAt": zod.string().optional()
+})
+export const SearchObrasResponse = zod.array(SearchObrasResponseItem)
+
+
+/**
  * @summary Increment view count for an obra
  */
 export const IncrementObraViewParams = zod.object({
@@ -544,6 +573,56 @@ export const UploadAvatarResponse = zod.object({
   "role": zod.string().optional(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Get user watchlist
+ */
+export const GetUsuarioListaParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+export const GetUsuarioListaResponseItem = zod.object({
+  "id": zod.number(),
+  "titulo": zod.string(),
+  "slug": zod.string(),
+  "sinopse": zod.string(),
+  "generos": zod.array(zod.string()).optional(),
+  "status": zod.string(),
+  "ano": zod.number(),
+  "nota": zod.number().nullish(),
+  "totalEps": zod.number().nullish(),
+  "capaUrl": zod.string(),
+  "bannerUrl": zod.string(),
+  "tipografiaUrl": zod.string().nullish(),
+  "showInBanner": zod.boolean().optional(),
+  "bannerOrder": zod.number().nullish(),
+  "views": zod.number().optional(),
+  "createdAt": zod.string().optional(),
+  "updatedAt": zod.string().optional()
+})
+export const GetUsuarioListaResponse = zod.array(GetUsuarioListaResponseItem)
+
+
+/**
+ * @summary Add obra to watchlist
+ */
+export const AddToListaParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+export const AddToListaBody = zod.object({
+  "obraId": zod.number()
+})
+
+
+/**
+ * @summary Remove obra from watchlist
+ */
+export const RemoveFromListaParams = zod.object({
+  "uid": zod.coerce.string(),
+  "obraId": zod.coerce.number()
 })
 
 

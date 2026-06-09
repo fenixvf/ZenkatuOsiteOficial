@@ -15,6 +15,8 @@ export * from './episodio';
 export * from './episodioInput';
 export * from './episodioUpdate';
 export * from './healthStatus';
+export * from './listaInput';
+export * from './listaItem';
 export * from './obra';
 export * from './obraInput';
 export * from './obraUpdate';

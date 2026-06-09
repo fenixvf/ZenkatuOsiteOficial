@@ -29,6 +29,8 @@ import type {
   EpisodioInput,
   EpisodioUpdate,
   HealthStatus,
+  ListaInput,
+  ListaItem,
   Obra,
   ObraInput,
   ObraUpdate,
@@ -789,6 +791,83 @@ export function useGetObraBySlug<TData = Awaited<ReturnType<typeof getObraBySlug
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetObraBySlugQueryOptions(slug,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSearchObrasUrl = (term: string,) => {
+
+
+
+
+  return `/api/obras/busca/${term}`
+}
+
+/**
+ * @summary Search obras by title
+ */
+export const searchObras = async (term: string, options?: RequestInit): Promise<Obra[]> => {
+
+  return customFetch<Obra[]>(getSearchObrasUrl(term),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchObrasQueryKey = (term: string,) => {
+    return [
+    `/api/obras/busca/${term}`
+    ] as const;
+    }
+
+
+export const getSearchObrasQueryOptions = <TData = Awaited<ReturnType<typeof searchObras>>, TError = ErrorType<unknown>>(term: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchObras>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchObrasQueryKey(term);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchObras>>> = ({ signal }) => searchObras(term, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(term), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchObras>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchObrasQueryResult = NonNullable<Awaited<ReturnType<typeof searchObras>>>
+export type SearchObrasQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Search obras by title
+ */
+
+export function useSearchObras<TData = Awaited<ReturnType<typeof searchObras>>, TError = ErrorType<unknown>>(
+ term: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchObras>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchObrasQueryOptions(term,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1897,6 +1976,227 @@ export const useUploadAvatar = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUploadAvatarMutationOptions(options));
+    }
+
+export const getGetUsuarioListaUrl = (uid: string,) => {
+
+
+
+
+  return `/api/usuarios/${uid}/lista`
+}
+
+/**
+ * @summary Get user watchlist
+ */
+export const getUsuarioLista = async (uid: string, options?: RequestInit): Promise<Obra[]> => {
+
+  return customFetch<Obra[]>(getGetUsuarioListaUrl(uid),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUsuarioListaQueryKey = (uid: string,) => {
+    return [
+    `/api/usuarios/${uid}/lista`
+    ] as const;
+    }
+
+
+export const getGetUsuarioListaQueryOptions = <TData = Awaited<ReturnType<typeof getUsuarioLista>>, TError = ErrorType<unknown>>(uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsuarioLista>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUsuarioListaQueryKey(uid);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsuarioLista>>> = ({ signal }) => getUsuarioLista(uid, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(uid), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsuarioLista>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUsuarioListaQueryResult = NonNullable<Awaited<ReturnType<typeof getUsuarioLista>>>
+export type GetUsuarioListaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get user watchlist
+ */
+
+export function useGetUsuarioLista<TData = Awaited<ReturnType<typeof getUsuarioLista>>, TError = ErrorType<unknown>>(
+ uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsuarioLista>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUsuarioListaQueryOptions(uid,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddToListaUrl = (uid: string,) => {
+
+
+
+
+  return `/api/usuarios/${uid}/lista`
+}
+
+/**
+ * @summary Add obra to watchlist
+ */
+export const addToLista = async (uid: string,
+    listaInput: ListaInput, options?: RequestInit): Promise<ListaItem> => {
+
+  return customFetch<ListaItem>(getAddToListaUrl(uid),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      listaInput,)
+  }
+);}
+
+
+
+
+export const getAddToListaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addToLista>>, TError,{uid: string;data: BodyType<ListaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addToLista>>, TError,{uid: string;data: BodyType<ListaInput>}, TContext> => {
+
+const mutationKey = ['addToLista'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addToLista>>, {uid: string;data: BodyType<ListaInput>}> = (props) => {
+          const {uid,data} = props ?? {};
+
+          return  addToLista(uid,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddToListaMutationResult = NonNullable<Awaited<ReturnType<typeof addToLista>>>
+    export type AddToListaMutationBody = BodyType<ListaInput>
+    export type AddToListaMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add obra to watchlist
+ */
+export const useAddToLista = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addToLista>>, TError,{uid: string;data: BodyType<ListaInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addToLista>>,
+        TError,
+        {uid: string;data: BodyType<ListaInput>},
+        TContext
+      > => {
+      return useMutation(getAddToListaMutationOptions(options));
+    }
+
+export const getRemoveFromListaUrl = (uid: string,
+    obraId: number,) => {
+
+
+
+
+  return `/api/usuarios/${uid}/lista/${obraId}`
+}
+
+/**
+ * @summary Remove obra from watchlist
+ */
+export const removeFromLista = async (uid: string,
+    obraId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getRemoveFromListaUrl(uid,obraId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getRemoveFromListaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFromLista>>, TError,{uid: string;obraId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeFromLista>>, TError,{uid: string;obraId: number}, TContext> => {
+
+const mutationKey = ['removeFromLista'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeFromLista>>, {uid: string;obraId: number}> = (props) => {
+          const {uid,obraId} = props ?? {};
+
+          return  removeFromLista(uid,obraId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveFromListaMutationResult = NonNullable<Awaited<ReturnType<typeof removeFromLista>>>
+
+    export type RemoveFromListaMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove obra from watchlist
+ */
+export const useRemoveFromLista = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFromLista>>, TError,{uid: string;obraId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeFromLista>>,
+        TError,
+        {uid: string;obraId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveFromListaMutationOptions(options));
     }
 
 export const getGetAdminStatsUrl = () => {

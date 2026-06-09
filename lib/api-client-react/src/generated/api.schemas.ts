@@ -172,6 +172,17 @@ export interface AvatarUpload {
   imageData: string;
 }
 
+export interface ListaItem {
+  id: number;
+  uid: string;
+  obraId: number;
+  createdAt: string;
+}
+
+export interface ListaInput {
+  obraId: number;
+}
+
 export interface AdminStats {
   totalObras: number;
   totalEpisodios: number;

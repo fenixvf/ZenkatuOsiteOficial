@@ -188,6 +188,27 @@ paths:
         "404":
           description: Not found
 
+  /obras/busca/{term}:
+    get:
+      operationId: searchObras
+      tags: [obras]
+      summary: Search obras by title
+      parameters:
+        - name: term
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Obra"
+
   /obras/{obraId}/view:
     post:
       operationId: incrementObraView
@@ -490,6 +511,70 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Usuario"
+
+  /usuarios/{uid}/lista:
+    get:
+      operationId: getUsuarioLista
+      tags: [usuarios]
+      summary: Get user watchlist
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Watchlist
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Obra"
+    post:
+      operationId: addToLista
+      tags: [usuarios]
+      summary: Add obra to watchlist
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListaInput"
+      responses:
+        "201":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListaItem"
+
+  /usuarios/{uid}/lista/{obraId}:
+    delete:
+      operationId: removeFromLista
+      tags: [usuarios]
+      summary: Remove obra from watchlist
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
 
   /stats/admin:
     get:
@@ -817,6 +902,31 @@ components:
         imageData:
           type: string
           description: Base64-encoded WebP image data
+
+    ListaItem:
+      type: object
+      required:
+        - id
+        - uid
+        - obraId
+        - createdAt
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        obraId:
+          type: integer
+        createdAt:
+          type: string
+
+    ListaInput:
+      type: object
+      required:
+        - obraId
+      properties:
+        obraId:
+          type: integer
 
     AdminStats:
       type: object

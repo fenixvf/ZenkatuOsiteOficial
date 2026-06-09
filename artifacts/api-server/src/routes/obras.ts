@@ -57,6 +57,22 @@ router.get("/obras/recentes", async (req, res) => {
   }
 });
 
+router.get("/obras/busca/:term", async (req, res) => {
+  try {
+    const term = req.params.term;
+    const obras = await db
+      .select()
+      .from(obrasTable)
+      .where(sql`lower(${obrasTable.titulo}) like ${"%" + term.toLowerCase() + "%"}`)
+      .orderBy(desc(obrasTable.views))
+      .limit(10);
+    res.json(obras.map(serializeObra));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/obras/slug/:slug", async (req, res) => {
   try {
     const [obra] = await db
