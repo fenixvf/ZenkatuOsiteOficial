@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Zenkatu Streaming API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: obras
+    description: Anime works management
+  - name: episodios
+    description: Episodes management
+  - name: comentarios
+    description: Comments management
+  - name: usuarios
+    description: User profile management
+  - name: stats
+    description: Dashboard statistics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,478 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /obras:
+    get:
+      operationId: listObras
+      tags: [obras]
+      summary: List all obras
+      responses:
+        "200":
+          description: List of obras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Obra"
+    post:
+      operationId: createObra
+      tags: [obras]
+      summary: Create a new obra
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObraInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Obra"
+
+  /obras/banner:
+    get:
+      operationId: listBannerObras
+      tags: [obras]
+      summary: List obras for homepage banner carousel
+      responses:
+        "200":
+          description: Banner obras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Obra"
+
+  /obras/top10:
+    get:
+      operationId: listTop10Obras
+      tags: [obras]
+      summary: Top 10 most viewed obras
+      responses:
+        "200":
+          description: Top 10 obras by views
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Obra"
+
+  /obras/recentes:
+    get:
+      operationId: listObrasRecentes
+      tags: [obras]
+      summary: Recently added or updated obras
+      responses:
+        "200":
+          description: Recent obras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Obra"
+
+  /obras/{obraId}:
+    get:
+      operationId: getObra
+      tags: [obras]
+      summary: Get obra by ID
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Obra details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Obra"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateObra
+      tags: [obras]
+      summary: Update an obra
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ObraUpdate"
+      responses:
+        "200":
+          description: Updated obra
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Obra"
+    delete:
+      operationId: deleteObra
+      tags: [obras]
+      summary: Delete an obra
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /obras/slug/{slug}:
+    get:
+      operationId: getObraBySlug
+      tags: [obras]
+      summary: Get obra by slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Obra details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Obra"
+        "404":
+          description: Not found
+
+  /obras/{obraId}/view:
+    post:
+      operationId: incrementObraView
+      tags: [obras]
+      summary: Increment view count for an obra
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: View incremented
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Obra"
+
+  /episodios:
+    get:
+      operationId: listEpisodiosRecentes
+      tags: [episodios]
+      summary: List recent episodes across all obras
+      responses:
+        "200":
+          description: Recent episodes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Episodio"
+
+  /obras/{obraId}/episodios:
+    get:
+      operationId: listObraEpisodios
+      tags: [episodios]
+      summary: List all episodes for an obra
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Episodes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Episodio"
+    post:
+      operationId: createEpisodio
+      tags: [episodios]
+      summary: Create a new episode
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EpisodioInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Episodio"
+
+  /episodios/{episodioId}:
+    get:
+      operationId: getEpisodio
+      tags: [episodios]
+      summary: Get episode by ID
+      parameters:
+        - name: episodioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Episode details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Episodio"
+    patch:
+      operationId: updateEpisodio
+      tags: [episodios]
+      summary: Update an episode
+      parameters:
+        - name: episodioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EpisodioUpdate"
+      responses:
+        "200":
+          description: Updated episode
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Episodio"
+    delete:
+      operationId: deleteEpisodio
+      tags: [episodios]
+      summary: Delete an episode
+      parameters:
+        - name: episodioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /obras/{obraId}/comentarios:
+    get:
+      operationId: listComentarios
+      tags: [comentarios]
+      summary: List comments for an obra
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Comments list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comentario"
+    post:
+      operationId: createComentario
+      tags: [comentarios]
+      summary: Post a comment
+      parameters:
+        - name: obraId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComentarioInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+
+  /comentarios/{comentarioId}:
+    patch:
+      operationId: updateComentario
+      tags: [comentarios]
+      summary: Edit a comment
+      parameters:
+        - name: comentarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComentarioUpdate"
+      responses:
+        "200":
+          description: Updated comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+    delete:
+      operationId: deleteComentario
+      tags: [comentarios]
+      summary: Delete a comment
+      parameters:
+        - name: comentarioId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /usuarios/{uid}:
+    get:
+      operationId: getUsuario
+      tags: [usuarios]
+      summary: Get user profile
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateUsuario
+      tags: [usuarios]
+      summary: Update user profile
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+
+  /usuarios:
+    post:
+      operationId: upsertUsuario
+      tags: [usuarios]
+      summary: Create or update user on login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UsuarioInput"
+      responses:
+        "200":
+          description: User upserted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+
+  /usuarios/{uid}/avatar:
+    post:
+      operationId: uploadAvatar
+      tags: [usuarios]
+      summary: Upload user avatar (base64 WebP)
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvatarUpload"
+      responses:
+        "200":
+          description: Avatar uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+
+  /stats/admin:
+    get:
+      operationId: getAdminStats
+      tags: [stats]
+      summary: Get admin dashboard statistics
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +514,323 @@ components:
       required:
         - status
 
+    Obra:
+      type: object
+      required:
+        - id
+        - titulo
+        - slug
+        - sinopse
+        - status
+        - ano
+        - capaUrl
+        - bannerUrl
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        slug:
+          type: string
+        sinopse:
+          type: string
+        generos:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        ano:
+          type: integer
+        nota:
+          type: ["number", "null"]
+        totalEps:
+          type: ["integer", "null"]
+        capaUrl:
+          type: string
+        bannerUrl:
+          type: string
+        tipografiaUrl:
+          type: ["string", "null"]
+        showInBanner:
+          type: boolean
+        bannerOrder:
+          type: ["integer", "null"]
+        views:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ObraInput:
+      type: object
+      required:
+        - titulo
+        - slug
+        - sinopse
+        - status
+        - ano
+        - capaUrl
+        - bannerUrl
+      properties:
+        titulo:
+          type: string
+        slug:
+          type: string
+        sinopse:
+          type: string
+        generos:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        ano:
+          type: integer
+        nota:
+          type: ["number", "null"]
+        totalEps:
+          type: ["integer", "null"]
+        capaUrl:
+          type: string
+        bannerUrl:
+          type: string
+        tipografiaUrl:
+          type: ["string", "null"]
+        showInBanner:
+          type: boolean
+        bannerOrder:
+          type: ["integer", "null"]
+
+    ObraUpdate:
+      type: object
+      properties:
+        titulo:
+          type: string
+        slug:
+          type: string
+        sinopse:
+          type: string
+        generos:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+        ano:
+          type: integer
+        nota:
+          type: ["number", "null"]
+        totalEps:
+          type: ["integer", "null"]
+        capaUrl:
+          type: string
+        bannerUrl:
+          type: string
+        tipografiaUrl:
+          type: ["string", "null"]
+        showInBanner:
+          type: boolean
+        bannerOrder:
+          type: ["integer", "null"]
+
+    Episodio:
+      type: object
+      required:
+        - id
+        - obraId
+        - temporada
+        - numero
+        - titulo
+        - playerContent
+        - publishedAt
+      properties:
+        id:
+          type: integer
+        obraId:
+          type: integer
+        obraTitulo:
+          type: ["string", "null"]
+        obraCapaUrl:
+          type: ["string", "null"]
+        temporada:
+          type: integer
+        numero:
+          type: integer
+        titulo:
+          type: string
+        thumbnailUrl:
+          type: ["string", "null"]
+        playerContent:
+          type: string
+        publishedAt:
+          type: string
+
+    EpisodioInput:
+      type: object
+      required:
+        - temporada
+        - numero
+        - titulo
+        - playerContent
+        - publishedAt
+      properties:
+        temporada:
+          type: integer
+        numero:
+          type: integer
+        titulo:
+          type: string
+        thumbnailUrl:
+          type: ["string", "null"]
+        playerContent:
+          type: string
+        publishedAt:
+          type: string
+
+    EpisodioUpdate:
+      type: object
+      properties:
+        temporada:
+          type: integer
+        numero:
+          type: integer
+        titulo:
+          type: string
+        thumbnailUrl:
+          type: ["string", "null"]
+        playerContent:
+          type: string
+        publishedAt:
+          type: string
+
+    Comentario:
+      type: object
+      required:
+        - id
+        - obraId
+        - userId
+        - username
+        - texto
+        - createdAt
+      properties:
+        id:
+          type: integer
+        obraId:
+          type: integer
+        userId:
+          type: string
+        username:
+          type: string
+        userPhoto:
+          type: ["string", "null"]
+        texto:
+          type: string
+        parentId:
+          type: ["integer", "null"]
+        editado:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ComentarioInput:
+      type: object
+      required:
+        - userId
+        - username
+        - texto
+      properties:
+        userId:
+          type: string
+        username:
+          type: string
+        userPhoto:
+          type: ["string", "null"]
+        texto:
+          type: string
+        parentId:
+          type: ["integer", "null"]
+
+    ComentarioUpdate:
+      type: object
+      required:
+        - texto
+      properties:
+        texto:
+          type: string
+
+    Usuario:
+      type: object
+      required:
+        - id
+        - uid
+        - email
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        email:
+          type: string
+        username:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    UsuarioInput:
+      type: object
+      required:
+        - uid
+        - email
+      properties:
+        uid:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+
+    UsuarioUpdate:
+      type: object
+      properties:
+        username:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+
+    AvatarUpload:
+      type: object
+      required:
+        - imageData
+      properties:
+        imageData:
+          type: string
+          description: Base64-encoded WebP image data
+
+    AdminStats:
+      type: object
+      required:
+        - totalObras
+        - totalEpisodios
+        - totalUsuarios
+        - comentariosHoje
+      properties:
+        totalObras:
+          type: integer
+        totalEpisodios:
+          type: integer
+        totalUsuarios:
+          type: integer
+        comentariosHoje:
+          type: integer

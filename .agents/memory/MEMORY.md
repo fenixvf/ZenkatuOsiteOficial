@@ -1,0 +1,2 @@
+- [Orval Params collision](orval-params-collision.md) — GET endpoints with query params cause TS2308; remove query params from spec, filter client-side.
+- [Zenkatu stack](zenkatu-stack.md) — Firebase Auth + PostgreSQL mirror pattern; VITE_ env vars required for frontend Firebase access.
