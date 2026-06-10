@@ -20,7 +20,7 @@ function HeroCarousel() {
   }, [bannerObras]);
 
   if (isLoading) return <Skeleton className="w-full aspect-video md:aspect-[21/9] lg:aspect-[3/1] rounded-none" />;
-  if (!bannerObras || bannerObras.length === 0) return null;
+  if (!Array.isArray(bannerObras) || bannerObras.length === 0) return null;
 
   const current = bannerObras[currentIndex];
 
