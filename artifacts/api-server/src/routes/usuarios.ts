@@ -1,14 +1,11 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
+import { usersTable, profileImagesTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import fs from "fs";
-import path from "path";
 
 const router = Router();
 
 const ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
-const AVATARS_DIR = path.join(process.cwd(), "dist", "avatars");
 
 router.get("/usuarios/:uid", async (req, res) => {
   try {
@@ -27,9 +24,12 @@ router.get("/usuarios/:uid", async (req, res) => {
 router.patch("/usuarios/:uid", async (req, res) => {
   try {
     const { username, photoUrl } = req.body;
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
+    if (username !== undefined) updateData.username = username;
+    if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
     const [user] = await db
       .update(usersTable)
-      .set({ username, photoUrl, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(usersTable.uid, req.params.uid))
       .returning();
     if (!user) {
@@ -37,8 +37,12 @@ router.patch("/usuarios/:uid", async (req, res) => {
       return;
     }
     res.json(serializeUser(user));
-  } catch (e) {
+  } catch (e: any) {
     req.log.error(e);
+    if (e?.code === "23505") {
+      res.status(409).json({ error: "Nome de usuário já está em uso." });
+      return;
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -78,6 +82,26 @@ router.post("/usuarios", async (req, res) => {
   }
 });
 
+router.get("/avatars/:uid", async (req, res) => {
+  try {
+    const [img] = await db
+      .select()
+      .from(profileImagesTable)
+      .where(eq(profileImagesTable.uid, req.params.uid));
+    if (!img) {
+      res.status(404).end();
+      return;
+    }
+    const buffer = Buffer.from(img.imageData, "base64");
+    res.set("Content-Type", "image/webp");
+    res.set("Cache-Control", "public, max-age=86400");
+    res.send(buffer);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).end();
+  }
+});
+
 router.post("/usuarios/:uid/avatar", async (req, res) => {
   try {
     const { imageData } = req.body;
@@ -86,19 +110,16 @@ router.post("/usuarios/:uid/avatar", async (req, res) => {
       return;
     }
     const base64Data = (imageData as string).replace(/^data:image\/\w+;base64,/, "");
-    const buffer = Buffer.from(base64Data, "base64");
-    if (!fs.existsSync(AVATARS_DIR)) {
-      fs.mkdirSync(AVATARS_DIR, { recursive: true });
-    }
-    const [existing] = await db.select().from(usersTable).where(eq(usersTable.uid, req.params.uid));
-    if (existing?.photoUrl) {
-      const oldFilename = existing.photoUrl.replace("/api/avatars/", "");
-      const oldFile = path.join(AVATARS_DIR, oldFilename);
-      if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
-    }
-    const filename = `${req.params.uid}-${Date.now()}.webp`;
-    fs.writeFileSync(path.join(AVATARS_DIR, filename), buffer);
-    const photoUrl = `/api/avatars/${filename}`;
+
+    await db
+      .insert(profileImagesTable)
+      .values({ uid: req.params.uid, imageData: base64Data })
+      .onConflictDoUpdate({
+        target: profileImagesTable.uid,
+        set: { imageData: base64Data, updatedAt: new Date() },
+      });
+
+    const photoUrl = `/api/avatars/${req.params.uid}`;
     const [user] = await db
       .update(usersTable)
       .set({ photoUrl, updatedAt: new Date() })
