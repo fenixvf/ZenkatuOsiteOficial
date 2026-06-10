@@ -130,7 +130,7 @@ function ObrasRecentes() {
     );
   }
 
-  if (!obras || obras.length === 0) return null;
+  if (!Array.isArray(obras) || obras.length === 0) return null;
 
   return (
     <div className="relative">
@@ -180,7 +180,7 @@ function Top10() {
     );
   }
 
-  if (!obras || obras.length === 0) return null;
+  if (!Array.isArray(obras) || obras.length === 0) return null;
 
   return (
     <div>
@@ -233,7 +233,7 @@ function EpisodiosRecentes() {
     );
   }
 
-  if (!episodios || episodios.length === 0) return null;
+  if (!Array.isArray(episodios) || episodios.length === 0) return null;
 
   return (
     <div className="col-span-full lg:col-span-2">
