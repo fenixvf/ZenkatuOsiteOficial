@@ -27,7 +27,7 @@ export default function Login() {
       setIsLoggingIn(true);
       await signInWithEmail(email, password);
     } catch (err: any) {
-      console.error(err);
+      console.error("Firebase login error:", err?.code, err?.message);
       const code = err?.code;
       if (
         code === "auth/user-not-found" ||
@@ -39,8 +39,12 @@ export default function Login() {
         setError("E-mail inválido.");
       } else if (code === "auth/too-many-requests") {
         setError("Muitas tentativas. Aguarde um momento e tente novamente.");
+      } else if (code === "auth/unauthorized-domain") {
+        setError("Domínio não autorizado no Firebase. Adicione este domínio nas configurações do Firebase Console.");
+      } else if (code === "auth/network-request-failed") {
+        setError("Erro de conexão. Verifique sua internet e tente novamente.");
       } else {
-        setError("Não foi possível fazer login. Tente novamente.");
+        setError(`Erro: ${code || err?.message || "desconhecido"}`);
       }
     } finally {
       setIsLoggingIn(false);
