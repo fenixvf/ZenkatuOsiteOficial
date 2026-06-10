@@ -13,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminObras() {
-  const { data: obras = [], isLoading } = useListObras();
+  const { data: obrasRaw, isLoading } = useListObras();
+  const obras = Array.isArray(obrasRaw) ? obrasRaw : [];
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
   const deleteObra = useDeleteObra();

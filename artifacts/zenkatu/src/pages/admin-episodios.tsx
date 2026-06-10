@@ -55,7 +55,8 @@ export default function AdminEpisodios() {
   const queryClient = useQueryClient();
 
   const { data: obra, isLoading: loadingObra } = useGetObra(id, { query: { enabled: !!id } });
-  const { data: episodios = [], isLoading: loadingEps } = useListObraEpisodios(id, { query: { enabled: !!id } });
+  const { data: episodiosRaw, isLoading: loadingEps } = useListObraEpisodios(id, { query: { enabled: !!id } });
+  const episodios = Array.isArray(episodiosRaw) ? episodiosRaw : [];
 
   const createEpisodio = useCreateEpisodio();
   const updateEpisodio = useUpdateEpisodio();

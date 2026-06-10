@@ -271,17 +271,20 @@ export default function ObraDetail() {
     }
   }, [obra?.id, incrementView]);
 
-  const { data: episodios = [], isLoading: loadingEpisodios } = useListObraEpisodios(obra?.id || 0, {
+  const { data: episodiosRaw, isLoading: loadingEpisodios } = useListObraEpisodios(obra?.id || 0, {
     query: { enabled: !!obra?.id }
   });
+  const episodios = Array.isArray(episodiosRaw) ? episodiosRaw : [];
 
-  const { data: comentarios = [], isLoading: loadingComentarios } = useListComentarios(obra?.id || 0, {
+  const { data: comentariosRaw, isLoading: loadingComentarios } = useListComentarios(obra?.id || 0, {
     query: { enabled: !!obra?.id }
   });
+  const comentarios = Array.isArray(comentariosRaw) ? comentariosRaw : [];
 
-  const { data: listaObras = [] } = useGetUsuarioLista(currentUser?.uid || "", {
+  const { data: listaObrasRaw } = useGetUsuarioLista(currentUser?.uid || "", {
     query: { enabled: !!currentUser?.uid }
   });
+  const listaObras = Array.isArray(listaObrasRaw) ? listaObrasRaw : [];
 
   const addToLista = useAddToLista();
   const removeFromLista = useRemoveFromLista();

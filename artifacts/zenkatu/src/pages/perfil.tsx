@@ -28,9 +28,10 @@ export default function Perfil() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: lista = [], isLoading: listaLoading } = useGetUsuarioLista(currentUser?.uid || "", {
+  const { data: listaRaw, isLoading: listaLoading } = useGetUsuarioLista(currentUser?.uid || "", {
     query: { enabled: !!currentUser?.uid },
   });
+  const lista = Array.isArray(listaRaw) ? listaRaw : [];
 
   if (!loading && !currentUser) {
     setLocation("/login");
