@@ -27,9 +27,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, X } from "lucide-react";
+import { ArrowLeft, Loader2, Save, X, Plus } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useCreateGenero, getListGenerosQueryKey } from "@workspace/api-client-react";
 
 const obraSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório"),
@@ -67,14 +75,39 @@ function GeneroMultiSelect({
   value: string[];
   onChange: (v: string[]) => void;
 }) {
-  const { data: generosRaw } = useListGeneros();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: generosRaw, refetch } = useListGeneros();
   const generos = Array.isArray(generosRaw) ? generosRaw : [];
+  const createGenero = useCreateGenero();
+
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [newNome, setNewNome] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const toggle = (nome: string) => {
     if (value.includes(nome)) {
       onChange(value.filter((g) => g !== nome));
     } else {
       onChange([...value, nome]);
+    }
+  };
+
+  const handleCreateGenero = async () => {
+    if (!newNome.trim()) return;
+    try {
+      setIsCreating(true);
+      const created = await createGenero.mutateAsync({ data: { nome: newNome.trim() } });
+      queryClient.invalidateQueries({ queryKey: getListGenerosQueryKey() });
+      await refetch();
+      onChange([...value, created.nome]);
+      setNewNome("");
+      setShowAddDialog(false);
+      toast({ title: `Gênero "${created.nome}" criado e selecionado.` });
+    } catch {
+      toast({ title: "Erro ao criar gênero", variant: "destructive" });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -95,35 +128,64 @@ function GeneroMultiSelect({
           ))}
         </div>
       )}
-      {generos.length === 0 ? (
-        <p className="text-sm text-muted-foreground italic">
-          Nenhum gênero cadastrado.{" "}
-          <Link href="/admin/generos" className="text-primary underline">
-            Adicione gêneros no painel de gêneros.
-          </Link>
-        </p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {generos.map((g) => {
-            const selected = value.includes(g.nome);
-            return (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => toggle(g.nome)}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
-                  selected
-                    ? "bg-primary/15 border-primary/40 text-primary"
-                    : "bg-transparent border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
-                )}
+      <div className="flex flex-wrap gap-2">
+        {generos.map((g) => {
+          const selected = value.includes(g.nome);
+          return (
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => toggle(g.nome)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                selected
+                  ? "bg-primary/15 border-primary/40 text-primary"
+                  : "bg-transparent border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
+              )}
               >
                 {g.nome}
               </button>
             );
           })}
-        </div>
-      )}
+        <button
+          type="button"
+          onClick={() => setShowAddDialog(true)}
+          className="px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-primary/40 text-primary/70 hover:border-primary hover:text-primary transition-all flex items-center gap-1"
+        >
+          <Plus className="w-3 h-3" /> Novo gênero
+        </button>
+      </div>
+
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-xs bg-card border-border">
+          <DialogHeader>
+            <DialogTitle>Criar novo gênero</DialogTitle>
+          </DialogHeader>
+          <Input
+            value={newNome}
+            onChange={(e) => setNewNome(e.target.value)}
+            placeholder="Ex: Isekai, Mecha..."
+            className="bg-background border-border"
+            maxLength={80}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); handleCreateGenero(); }
+            }}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="ghost" type="button" onClick={() => setShowAddDialog(false)}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={isCreating || !newNome.trim()}
+              onClick={handleCreateGenero}
+            >
+              {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar e selecionar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

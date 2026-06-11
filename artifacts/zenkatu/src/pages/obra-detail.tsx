@@ -439,9 +439,18 @@ export default function ObraDetail() {
             {obra.nota && <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500 border-none">★ {obra.nota}/10</Badge>}
             {obra.totalEps && <Badge variant="outline">{obra.totalEps} Eps</Badge>}
           </div>
-          <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 drop-shadow-xl">
-            {obra.titulo}
-          </h1>
+          {obra.tipografiaUrl ? (
+            <img
+              src={obra.tipografiaUrl}
+              alt={obra.titulo}
+              className="max-h-16 md:max-h-24 lg:max-h-32 w-auto object-contain mb-4 drop-shadow-2xl"
+              style={{ maxWidth: "520px" }}
+            />
+          ) : (
+            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 drop-shadow-xl">
+              {obra.titulo}
+            </h1>
+          )}
           <div className="flex flex-wrap items-center gap-3 mb-6">
             {obra.generos?.map(g => (
               <Badge key={g} variant="secondary" className="bg-card text-muted-foreground hover:text-foreground">
