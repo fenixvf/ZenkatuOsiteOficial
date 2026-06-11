@@ -160,7 +160,6 @@ function AdminSection({ onClose }: { onClose: () => void }) {
                 { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
                 { href: "/admin/obras", label: "Obras", icon: Layers },
                 { href: "/admin/generos", label: "Gêneros", icon: Tags },
-                { href: "/admin/episodios", label: "Episódios", icon: Film },
               ].map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} onClick={onClose}>
                   <div

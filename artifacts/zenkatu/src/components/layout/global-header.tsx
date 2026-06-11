@@ -30,7 +30,10 @@ function SearchBar() {
   }, [query]);
 
   const { data: results } = useSearchObras(debouncedQuery || "_", {
-    query: { enabled: debouncedQuery.trim().length >= 2 },
+    query: {
+      enabled: debouncedQuery.trim().length >= 2,
+      queryKey: ["searchObras", debouncedQuery] as any,
+    },
   });
 
   useEffect(() => {

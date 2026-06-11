@@ -31,45 +31,61 @@ import { useToast } from "@/hooks/use-toast";
 
 function Player({ content }: { content: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const trimmed = content.trim();
 
   useEffect(() => {
-    if (content.endsWith(".m3u8") && videoRef.current) {
+    const isM3u8 =
+      trimmed.endsWith(".m3u8") || trimmed.includes(".m3u8?");
+    if (isM3u8 && videoRef.current) {
       if (Hls.isSupported()) {
         const hls = new Hls();
-        hls.loadSource(content);
+        hls.loadSource(trimmed);
         hls.attachMedia(videoRef.current);
+        return () => hls.destroy();
       } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-        videoRef.current.src = content;
+        videoRef.current.src = trimmed;
       }
     }
-  }, [content]);
+  }, [trimmed]);
 
-  if (content.startsWith("<")) {
+  // HTML embed (iframe code, etc.)
+  if (trimmed.startsWith("<")) {
     return (
-      <div
-        className="w-full aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center [&>iframe]:w-full [&>iframe]:h-full"
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+        <div
+          className="absolute inset-0 [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0 [&>*]:w-full [&>*]:h-full"
+          dangerouslySetInnerHTML={{ __html: trimmed }}
+        />
+      </div>
     );
   }
 
-  if (content.endsWith(".mp4") || content.endsWith(".m3u8")) {
+  // Direct video file
+  if (
+    trimmed.endsWith(".mp4") ||
+    trimmed.endsWith(".m3u8") ||
+    trimmed.includes(".m3u8?")
+  ) {
     return (
       <video
         ref={videoRef}
         controls
         className="w-full aspect-video bg-black rounded-lg object-contain"
-        src={content.endsWith(".mp4") ? content : undefined}
+        src={trimmed.endsWith(".mp4") ? trimmed : undefined}
       />
     );
   }
 
+  // Plain URL — render as iframe
   return (
-    <iframe
-      src={content}
-      allowFullScreen
-      className="w-full aspect-video bg-black rounded-lg border-0"
-    />
+    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+      <iframe
+        src={trimmed}
+        allowFullScreen
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        className="absolute inset-0 w-full h-full border-0"
+      />
+    </div>
   );
 }
 

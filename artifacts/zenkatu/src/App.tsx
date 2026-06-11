@@ -13,6 +13,7 @@ import Perfil from "@/pages/perfil";
 import ObraDetail from "@/pages/obra-detail";
 import Generos from "@/pages/generos";
 import GeneroDetail from "@/pages/genero-detail";
+import Ranking from "@/pages/ranking";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminObras from "@/pages/admin-obras";
 import AdminObrasForm from "@/pages/admin-obras-form";
@@ -60,6 +61,7 @@ function Router() {
         <Route path="/obra/:slug" component={ObraDetail} />
         <Route path="/generos" component={Generos} />
         <Route path="/genero/:slug" component={GeneroDetail} />
+        <Route path="/ranking" component={Ranking} />
 
         {/* Admin Routes */}
         <Route path="/admin">
