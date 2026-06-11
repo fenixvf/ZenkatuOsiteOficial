@@ -7,7 +7,8 @@ import {
   useCreateObra,
   useUpdateObra,
   useGetObra,
-  getListObrasQueryKey
+  useListGeneros,
+  getListObrasQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -23,10 +24,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save, X } from "lucide-react";
 import { Link } from "wouter";
+import { cn } from "@/lib/utils";
 
 const obraSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório"),
@@ -41,25 +44,88 @@ const obraSchema = z.object({
   tipografiaUrl: z.string().url("URL inválida").optional().nullable().or(z.literal("")),
   showInBanner: z.boolean().default(false),
   bannerOrder: z.coerce.number().int().optional().nullable(),
-  generos: z.string().transform(val => val.split(',').map(s => s.trim()).filter(Boolean))
+  generos: z.array(z.string()).default([]),
 });
 
 type ObraFormValues = z.infer<typeof obraSchema>;
 
-const GENRE_LIST = [
-  "Ação", "Aventura", "Comédia", "Drama", "Fantasia", "Ficção Científica", 
-  "Horror", "Romance", "Slice of Life", "Sobrenatural", "Esporte", "Mecha"
-];
-
 function slugify(text: string) {
   return text.toString().toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-')
-    .replace(/^-+/, '')
-    .replace(/-+$/, '');
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "")
+    .replace(/--+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
+
+function GeneroMultiSelect({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const { data: generosRaw } = useListGeneros();
+  const generos = Array.isArray(generosRaw) ? generosRaw : [];
+
+  const toggle = (nome: string) => {
+    if (value.includes(nome)) {
+      onChange(value.filter((g) => g !== nome));
+    } else {
+      onChange([...value, nome]);
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map((g) => (
+            <Badge
+              key={g}
+              variant="secondary"
+              className="gap-1.5 pl-3 pr-2 py-1 bg-primary/15 text-primary border-primary/30 hover:bg-primary/20 cursor-pointer"
+              onClick={() => toggle(g)}
+            >
+              {g}
+              <X className="w-3 h-3" />
+            </Badge>
+          ))}
+        </div>
+      )}
+      {generos.length === 0 ? (
+        <p className="text-sm text-muted-foreground italic">
+          Nenhum gênero cadastrado.{" "}
+          <Link href="/admin/generos" className="text-primary underline">
+            Adicione gêneros no painel de gêneros.
+          </Link>
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {generos.map((g) => {
+            const selected = value.includes(g.nome);
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => toggle(g.nome)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium border transition-all",
+                  selected
+                    ? "bg-primary/15 border-primary/40 text-primary"
+                    : "bg-transparent border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                )}
+              >
+                {g.nome}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function AdminObrasForm() {
@@ -73,9 +139,7 @@ export default function AdminObrasForm() {
   const updateObra = useUpdateObra();
 
   const { data: obra, isLoading } = useGetObra(Number(id), {
-    query: {
-      enabled: isEditing,
-    }
+    query: { enabled: isEditing, queryKey: ["getObra", Number(id)] as any },
   });
 
   const form = useForm<ObraFormValues>({
@@ -93,8 +157,8 @@ export default function AdminObrasForm() {
       tipografiaUrl: "",
       showInBanner: false,
       bannerOrder: 0,
-      generos: [] as any // will be string for input binding, then transformed
-    }
+      generos: [],
+    },
   });
 
   useEffect(() => {
@@ -112,7 +176,7 @@ export default function AdminObrasForm() {
         tipografiaUrl: obra.tipografiaUrl || "",
         showInBanner: obra.showInBanner,
         bannerOrder: obra.bannerOrder,
-        generos: (obra.generos?.join(', ') || "") as any
+        generos: obra.generos ?? [],
       });
     }
   }, [obra, isEditing, form]);
@@ -127,27 +191,17 @@ export default function AdminObrasForm() {
 
   const onSubmit = async (data: ObraFormValues) => {
     try {
-      const payload = {
-        ...data,
-        tipografiaUrl: data.tipografiaUrl || null
-      };
-
+      const payload = { ...data, tipografiaUrl: data.tipografiaUrl || null };
       if (isEditing) {
-        await updateObra.mutateAsync({
-          obraId: Number(id),
-          data: payload
-        });
+        await updateObra.mutateAsync({ obraId: Number(id), data: payload });
         toast({ title: "Obra atualizada com sucesso" });
       } else {
-        await createObra.mutateAsync({
-          data: payload
-        });
+        await createObra.mutateAsync({ data: payload });
         toast({ title: "Obra criada com sucesso" });
       }
-      
       queryClient.invalidateQueries({ queryKey: getListObrasQueryKey() });
       setLocation("/admin/obras");
-    } catch (e) {
+    } catch {
       toast({ title: "Erro ao salvar obra", variant: "destructive" });
     }
   };
@@ -160,7 +214,9 @@ export default function AdminObrasForm() {
     <div className="container max-w-screen-md mx-auto px-4 py-8">
       <div className="flex items-center gap-4 mb-8">
         <Button asChild variant="ghost" size="icon" className="rounded-full">
-          <Link href="/admin/obras"><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href="/admin/obras">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
         </Button>
         <div>
           <h1 className="font-display text-3xl font-bold text-foreground">
@@ -171,7 +227,10 @@ export default function AdminObrasForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 bg-card border border-border p-6 sm:p-8 rounded-xl shadow-lg">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-8 bg-card border border-border p-6 sm:p-8 rounded-xl shadow-lg"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
@@ -208,7 +267,7 @@ export default function AdminObrasForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Selecione..." />
@@ -246,13 +305,19 @@ export default function AdminObrasForm() {
                 <FormItem>
                   <FormLabel>Total de Episódios</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="Deixe vazio se em exibição" {...field} value={field.value || ''} className="bg-background" />
+                    <Input
+                      type="number"
+                      placeholder="Deixe vazio se em exibição"
+                      {...field}
+                      value={field.value || ""}
+                      className="bg-background"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="nota"
@@ -260,23 +325,29 @@ export default function AdminObrasForm() {
                 <FormItem>
                   <FormLabel>Nota (0-10)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.1" {...field} value={field.value || ''} className="bg-background" />
+                    <Input
+                      type="number"
+                      step="0.1"
+                      {...field}
+                      value={field.value || ""}
+                      className="bg-background"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="generos"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>Gêneros (separados por vírgula)</FormLabel>
+                  <FormLabel>Gêneros</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ação, Aventura, Fantasia" {...field} value={field.value as any} className="bg-background" />
+                    <GeneroMultiSelect value={field.value} onChange={field.onChange} />
                   </FormControl>
-                  <FormDescription>Opções comuns: {GENRE_LIST.slice(0, 6).join(", ")}...</FormDescription>
+                  <FormDescription>Clique nos gêneros para selecionar ou remover.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -289,10 +360,10 @@ export default function AdminObrasForm() {
                 <FormItem className="md:col-span-2">
                   <FormLabel>Sinopse</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="História da obra..." 
-                      className="min-h-[120px] bg-background resize-y" 
-                      {...field} 
+                    <Textarea
+                      placeholder="História da obra..."
+                      className="min-h-[120px] bg-background resize-y"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
@@ -303,7 +374,6 @@ export default function AdminObrasForm() {
 
           <div className="border-t border-border pt-6 space-y-6">
             <h3 className="font-display text-xl font-bold">Imagens</h3>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -318,7 +388,6 @@ export default function AdminObrasForm() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="bannerUrl"
@@ -332,27 +401,34 @@ export default function AdminObrasForm() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="tipografiaUrl"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Tipografia URL (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://..." {...field} value={field.value || ""} className="bg-background" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
 
           <div className="border-t border-border pt-6 space-y-6">
             <h3 className="font-display text-xl font-bold">Destaque</h3>
-            
             <FormField
               control={form.control}
               name="showInBanner"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-border bg-background p-4">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Exibir no Carrossel Principal
-                    </FormLabel>
+                    <FormLabel>Exibir no Carrossel Principal</FormLabel>
                     <FormDescription>
                       A obra aparecerá no grande banner na página inicial.
                     </FormDescription>
@@ -360,7 +436,6 @@ export default function AdminObrasForm() {
                 </FormItem>
               )}
             />
-
             {form.watch("showInBanner") && (
               <FormField
                 control={form.control}
@@ -369,7 +444,12 @@ export default function AdminObrasForm() {
                   <FormItem>
                     <FormLabel>Ordem no Carrossel (Opcional)</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} value={field.value || ''} className="bg-background w-32" />
+                      <Input
+                        type="number"
+                        {...field}
+                        value={field.value || ""}
+                        className="bg-background w-32"
+                      />
                     </FormControl>
                     <FormDescription>Menor número aparece primeiro.</FormDescription>
                     <FormMessage />
@@ -383,7 +463,11 @@ export default function AdminObrasForm() {
             <Button asChild variant="ghost" className="font-display">
               <Link href="/admin/obras">Cancelar</Link>
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting} className="font-display px-8">
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="font-display px-8"
+            >
               {form.formState.isSubmitting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (

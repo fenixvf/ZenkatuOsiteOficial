@@ -9,6 +9,34 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary List all genres
+ */
+export const ListGenerosResponseItem = zod.object({
+  "id": zod.number(),
+  "nome": zod.string(),
+  "slug": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListGenerosResponse = zod.array(ListGenerosResponseItem)
+
+
+/**
+ * @summary Create a genre
+ */
+export const CreateGeneroBody = zod.object({
+  "nome": zod.string()
+})
+
+
+/**
+ * @summary Delete a genre
+ */
+export const DeleteGeneroParams = zod.object({
+  "generoId": zod.coerce.number()
+})
+
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

@@ -14,6 +14,8 @@ export * from './comentarioUpdate';
 export * from './episodio';
 export * from './episodioInput';
 export * from './episodioUpdate';
+export * from './genero';
+export * from './generoInput';
 export * from './healthStatus';
 export * from './listaInput';
 export * from './listaItem';

@@ -28,6 +28,8 @@ import type {
   Episodio,
   EpisodioInput,
   EpisodioUpdate,
+  Genero,
+  GeneroInput,
   HealthStatus,
   ListaInput,
   ListaItem,
@@ -50,6 +52,224 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getListGenerosUrl = () => {
+
+
+
+
+  return `/api/generos`
+}
+
+/**
+ * @summary List all genres
+ */
+export const listGeneros = async ( options?: RequestInit): Promise<Genero[]> => {
+
+  return customFetch<Genero[]>(getListGenerosUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGenerosQueryKey = () => {
+    return [
+    `/api/generos`
+    ] as const;
+    }
+
+
+export const getListGenerosQueryOptions = <TData = Awaited<ReturnType<typeof listGeneros>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGeneros>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGenerosQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGeneros>>> = ({ signal }) => listGeneros({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGeneros>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGenerosQueryResult = NonNullable<Awaited<ReturnType<typeof listGeneros>>>
+export type ListGenerosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all genres
+ */
+
+export function useListGeneros<TData = Awaited<ReturnType<typeof listGeneros>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGeneros>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGenerosQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateGeneroUrl = () => {
+
+
+
+
+  return `/api/generos`
+}
+
+/**
+ * @summary Create a genre
+ */
+export const createGenero = async (generoInput: GeneroInput, options?: RequestInit): Promise<Genero> => {
+
+  return customFetch<Genero>(getCreateGeneroUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      generoInput,)
+  }
+);}
+
+
+
+
+export const getCreateGeneroMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGenero>>, TError,{data: BodyType<GeneroInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGenero>>, TError,{data: BodyType<GeneroInput>}, TContext> => {
+
+const mutationKey = ['createGenero'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGenero>>, {data: BodyType<GeneroInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGenero(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGeneroMutationResult = NonNullable<Awaited<ReturnType<typeof createGenero>>>
+    export type CreateGeneroMutationBody = BodyType<GeneroInput>
+    export type CreateGeneroMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a genre
+ */
+export const useCreateGenero = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGenero>>, TError,{data: BodyType<GeneroInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGenero>>,
+        TError,
+        {data: BodyType<GeneroInput>},
+        TContext
+      > => {
+      return useMutation(getCreateGeneroMutationOptions(options));
+    }
+
+export const getDeleteGeneroUrl = (generoId: number,) => {
+
+
+
+
+  return `/api/generos/${generoId}`
+}
+
+/**
+ * @summary Delete a genre
+ */
+export const deleteGenero = async (generoId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteGeneroUrl(generoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteGeneroMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGenero>>, TError,{generoId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGenero>>, TError,{generoId: number}, TContext> => {
+
+const mutationKey = ['deleteGenero'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGenero>>, {generoId: number}> = (props) => {
+          const {generoId} = props ?? {};
+
+          return  deleteGenero(generoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGeneroMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGenero>>>
+
+    export type DeleteGeneroMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a genre
+ */
+export const useDeleteGenero = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGenero>>, TError,{generoId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGenero>>,
+        TError,
+        {generoId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteGeneroMutationOptions(options));
+    }
 
 export const getHealthCheckUrl = () => {
 

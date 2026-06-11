@@ -19,7 +19,56 @@ tags:
     description: User profile management
   - name: stats
     description: Dashboard statistics
+  - name: generos
+    description: Genre management
 paths:
+  /generos:
+    get:
+      operationId: listGeneros
+      tags: [generos]
+      summary: List all genres
+      responses:
+        "200":
+          description: List of genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Genero"
+    post:
+      operationId: createGenero
+      tags: [generos]
+      summary: Create a genre
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeneroInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Genero"
+
+  /generos/{generoId}:
+    delete:
+      operationId: deleteGenero
+      tags: [generos]
+      summary: Delete a genre
+      parameters:
+        - name: generoId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
   /healthz:
     get:
       operationId: healthCheck
@@ -927,6 +976,26 @@ components:
       properties:
         obraId:
           type: integer
+
+    Genero:
+      type: object
+      required: [id, nome, slug, createdAt]
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        slug:
+          type: string
+        createdAt:
+          type: string
+
+    GeneroInput:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
 
     AdminStats:
       type: object

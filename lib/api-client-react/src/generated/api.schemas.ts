@@ -183,6 +183,17 @@ export interface ListaInput {
   obraId: number;
 }
 
+export interface Genero {
+  id: number;
+  nome: string;
+  slug: string;
+  createdAt: string;
+}
+
+export interface GeneroInput {
+  nome: string;
+}
+
 export interface AdminStats {
   totalObras: number;
   totalEpisodios: number;

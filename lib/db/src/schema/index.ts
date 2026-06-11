@@ -4,3 +4,4 @@ export * from "./episodios";
 export * from "./comentarios";
 export * from "./lista";
 export * from "./profileImages";
+export * from "./generos";

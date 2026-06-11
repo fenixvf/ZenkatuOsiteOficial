@@ -11,10 +11,13 @@ import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Perfil from "@/pages/perfil";
 import ObraDetail from "@/pages/obra-detail";
+import Generos from "@/pages/generos";
+import GeneroDetail from "@/pages/genero-detail";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminObras from "@/pages/admin-obras";
 import AdminObrasForm from "@/pages/admin-obras-form";
 import AdminEpisodios from "@/pages/admin-episodios";
+import AdminGeneros from "@/pages/admin-generos";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -36,7 +39,7 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
       toast({
         title: "Acesso negado",
         description: "Você não tem permissão para acessar esta área.",
-        variant: "destructive"
+        variant: "destructive",
       });
       setLocation("/");
     }
@@ -55,7 +58,9 @@ function Router() {
         <Route path="/login" component={Login} />
         <Route path="/perfil" component={Perfil} />
         <Route path="/obra/:slug" component={ObraDetail} />
-        
+        <Route path="/generos" component={Generos} />
+        <Route path="/genero/:slug" component={GeneroDetail} />
+
         {/* Admin Routes */}
         <Route path="/admin">
           <AdminRoute component={AdminDashboard} />
@@ -69,6 +74,9 @@ function Router() {
         <Route path="/admin/episodios/:obraId">
           <AdminRoute component={AdminEpisodios} />
         </Route>
+        <Route path="/admin/generos">
+          <AdminRoute component={AdminGeneros} />
+        </Route>
 
         <Route component={NotFound} />
       </Switch>
@@ -78,7 +86,7 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   }, []);
 
   return (
