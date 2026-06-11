@@ -89,7 +89,7 @@ export default function Perfil() {
             const base64data = webpReader.result as string;
             try {
               const res = await uploadAvatar.mutateAsync({ uid: currentUser!.uid, data: { imageData: base64data } });
-              await updateUsuario.mutateAsync({ uid: currentUser!.uid, data: { photoUrl: res.photoUrl } });
+              queryClient.setQueryData(["getUsuario", currentUser!.uid], res);
               toast({ title: "Avatar atualizado", description: "Sua foto de perfil foi alterada com sucesso." });
             } catch {
               toast({ title: "Erro no upload", description: "Não foi possível enviar a imagem.", variant: "destructive" });

@@ -119,7 +119,7 @@ router.post("/usuarios/:uid/avatar", async (req, res) => {
         set: { imageData: base64Data, updatedAt: new Date() },
       });
 
-    const photoUrl = `/api/avatars/${req.params.uid}`;
+    const photoUrl = `/api/avatars/${req.params.uid}?v=${Date.now()}`;
     const [user] = await db
       .update(usersTable)
       .set({ photoUrl, updatedAt: new Date() })
