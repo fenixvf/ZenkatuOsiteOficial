@@ -88,7 +88,7 @@ export default function Perfil() {
           webpReader.onload = async () => {
             const base64data = webpReader.result as string;
             try {
-              const res = await uploadAvatar.mutateAsync({ data: { imageData: base64data } });
+              const res = await uploadAvatar.mutateAsync({ uid: currentUser!.uid, data: { imageData: base64data } });
               await updateUsuario.mutateAsync({ uid: currentUser!.uid, data: { photoUrl: res.photoUrl } });
               toast({ title: "Avatar atualizado", description: "Sua foto de perfil foi alterada com sucesso." });
             } catch {
