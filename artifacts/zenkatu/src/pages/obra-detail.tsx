@@ -361,12 +361,17 @@ export default function ObraDetail() {
       setNewComment("");
       queryClient.invalidateQueries({ queryKey: getListComentariosQueryKey(obra.id) });
 
-      fetch(`https://formspree.io/f/${import.meta.env.VITE_FORMSPREE_FORM_ID}`, {
+      fetch("https://formspree.io/f/xgobzerg", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: currentUser.email,
-          message: `Novo comentário em ${obra.titulo}: ${newComment.trim()}`
+          nome: userProfile.username || currentUser.displayName || "Usuário",
+          userId: currentUser.uid,
+          foto: userProfile.photoUrl || currentUser.photoURL || null,
+          obra: obra.titulo,
+          tipo: "comentário",
+          mensagem: newComment.trim()
         })
       }).catch(() => {});
 
@@ -390,6 +395,21 @@ export default function ObraDetail() {
         }
       });
       queryClient.invalidateQueries({ queryKey: getListComentariosQueryKey(obra.id) });
+
+      fetch("https://formspree.io/f/xgobzerg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: currentUser.email,
+          nome: userProfile.username || currentUser.displayName || "Usuário",
+          userId: currentUser.uid,
+          foto: userProfile.photoUrl || currentUser.photoURL || null,
+          obra: obra.titulo,
+          tipo: "resposta",
+          mensagem: text
+        })
+      }).catch(() => {});
+
       toast({ title: "Resposta publicada" });
     } catch {
       toast({ title: "Erro ao responder", variant: "destructive" });
