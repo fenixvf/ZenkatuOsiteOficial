@@ -9,6 +9,7 @@ import {
 import { auth } from "./firebase";
 import { useUpsertUsuario, useGetUsuario } from "@workspace/api-client-react";
 import { Usuario } from "@workspace/api-zod";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const queryClient = useQueryClient();
   const upsertUsuario = useUpsertUsuario();
 
   const { data: userProfileData } = useGetUsuario(currentUser?.uid || "", {
@@ -55,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCurrentUser(user);
       if (user) {
         await upsertUser((data) => upsertUsuario.mutateAsync(data), user);
+        queryClient.invalidateQueries({ queryKey: ["getUsuario", user.uid] });
       }
       setLoading(false);
     });
