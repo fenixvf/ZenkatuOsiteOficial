@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { useParams } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
@@ -30,13 +30,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-function Player({ content }: { content: string }) {
+const Player = memo(function Player({ content }: { content: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const embedRef = useRef<HTMLDivElement>(null);
   const trimmed = content.trim();
+  const isHtml = trimmed.startsWith("<");
+
+  // Para embeds HTML: setar innerHTML apenas uma vez (ou quando o conteúdo mudar)
+  // Usar useRef em vez de dangerouslySetInnerHTML evita que o React destrua/recrie o iframe a cada re-render
+  useEffect(() => {
+    if (isHtml && embedRef.current) {
+      embedRef.current.innerHTML = trimmed;
+    }
+  }, [isHtml, trimmed]);
 
   useEffect(() => {
-    const isM3u8 =
-      trimmed.endsWith(".m3u8") || trimmed.includes(".m3u8?");
+    const isM3u8 = trimmed.endsWith(".m3u8") || trimmed.includes(".m3u8?");
     if (isM3u8 && videoRef.current) {
       if (Hls.isSupported()) {
         const hls = new Hls();
@@ -51,12 +60,12 @@ function Player({ content }: { content: string }) {
   }, [trimmed]);
 
   // HTML embed (iframe code, etc.)
-  if (trimmed.startsWith("<")) {
+  if (isHtml) {
     return (
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
         <div
+          ref={embedRef}
           className="absolute inset-0 [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:w-full [&>iframe]:h-full [&>iframe]:border-0 [&>*]:w-full [&>*]:h-full"
-          dangerouslySetInnerHTML={{ __html: trimmed }}
         />
       </div>
     );
@@ -89,7 +98,7 @@ function Player({ content }: { content: string }) {
       />
     </div>
   );
-}
+});
 
 type ComentarioShape = {
   id: number;
@@ -297,7 +306,7 @@ export default function ObraDetail() {
   const episodios = Array.isArray(episodiosRaw) ? episodiosRaw : [];
 
   const { data: comentariosRaw, isLoading: loadingComentarios } = useListComentarios(obra?.id || 0, {
-    query: { enabled: !!obra?.id, queryKey: ["listComentarios", obra?.id || 0] },
+    query: { enabled: !!obra?.id, queryKey: getListComentariosQueryKey(obra?.id || 0) },
   });
   const comentarios = Array.isArray(comentariosRaw) ? comentariosRaw : [];
 
