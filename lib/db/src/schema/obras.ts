@@ -1,6 +1,20 @@
-import { pgTable, serial, varchar, text, integer, real, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, real, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+export type CastMember = {
+  nome: string;
+  papel: string;
+  fotoUrl?: string;
+  links?: {
+    youtube?: string;
+    instagram?: string;
+    discord?: string;
+    twitter?: string;
+    tiktok?: string;
+    site?: string;
+  };
+};
 
 export const obrasTable = pgTable("obras", {
   id: serial("id").primaryKey(),
@@ -17,6 +31,7 @@ export const obrasTable = pgTable("obras", {
   tipografiaUrl: text("tipografia_url"),
   showInBanner: boolean("show_in_banner").default(false).notNull(),
   bannerOrder: integer("banner_order"),
+  cast: jsonb("cast").$type<CastMember[]>().default([]),
   views: integer("views").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

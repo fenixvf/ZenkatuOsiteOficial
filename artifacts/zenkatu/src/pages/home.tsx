@@ -6,7 +6,7 @@ import {
 } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Play, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +80,6 @@ function HeroCarousel() {
                 </Badge>
               </div>
 
-              {/* Tipografia ou título */}
               {current.tipografiaUrl ? (
                 <img
                   src={current.tipografiaUrl}
@@ -159,12 +158,19 @@ function SectionTitle({ title }: { title: string }) {
 
 function ObrasRecentes() {
   const { data: obras, isLoading } = useListObrasRecentes();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
+  };
 
   if (isLoading) {
     return (
-      <div className="flex gap-4 overflow-x-hidden p-1">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="min-w-[200px] aspect-[2/3] rounded-lg" />
+      <div className="flex gap-3 overflow-x-hidden p-1">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Skeleton key={i} className="min-w-[120px] aspect-[2/3] rounded-lg flex-shrink-0" />
         ))}
       </div>
     );
@@ -175,54 +181,73 @@ function ObrasRecentes() {
   return (
     <div className="relative">
       <SectionTitle title="Obras Recentes" />
-      <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar p-1">
-        {obras.map((obra, idx) => (
-          <motion.div
-            key={obra.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="min-w-[160px] md:min-w-[200px] snap-start"
-          >
-            <Link href={`/obra/${obra.slug}`}>
-              <div className="group relative aspect-[2/3] rounded-lg overflow-hidden border border-border bg-card transition-all hover:scale-[1.03] hover:border-primary/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]">
-                <img
-                  src={
-                    obra.capaUrl ||
-                    `https://placehold.co/400x600/0F1C2E/1E3A8A?text=${obra.titulo}`
-                  }
-                  alt={obra.titulo}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-                {/* Tipografia overlay no canto inferior */}
-                {obra.tipografiaUrl && (
-                  <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
-                    <img
-                      src={obra.tipografiaUrl}
-                      alt={obra.titulo}
-                      className="max-h-10 w-auto object-contain drop-shadow-lg"
-                    />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground border-none px-2 py-0.5 text-xs font-bold shadow-md">
-                  NOVO
-                </Badge>
-                <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                  {!obra.tipografiaUrl && (
-                    <h4 className="font-display font-semibold text-sm md:text-base line-clamp-2">
-                      {obra.titulo}
-                    </h4>
+      <div className="relative group/carousel">
+        <button
+          onClick={() => scroll("left")}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 p-2 rounded-full bg-background/90 border border-border text-foreground shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-secondary"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {obras.map((obra, idx) => (
+            <motion.div
+              key={obra.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.06 }}
+              className="min-w-[120px] md:min-w-[140px] flex-shrink-0 snap-start"
+            >
+              <Link href={`/obra/${obra.slug}`}>
+                <div className="group relative aspect-[2/3] rounded-lg overflow-hidden border border-border bg-card transition-all hover:scale-[1.04] hover:border-primary/50 hover:shadow-[0_0_14px_rgba(59,130,246,0.3)]">
+                  <img
+                    src={
+                      obra.capaUrl ||
+                      `https://placehold.co/400x600/0F1C2E/1E3A8A?text=${obra.titulo}`
+                    }
+                    alt={obra.titulo}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  {obra.tipografiaUrl && (
+                    <div className="absolute bottom-0 left-0 right-0 p-2 z-10">
+                      <img
+                        src={obra.tipografiaUrl}
+                        alt={obra.titulo}
+                        className="max-h-8 w-auto object-contain drop-shadow-lg"
+                      />
+                    </div>
                   )}
-                  <p className="text-xs text-primary font-medium mt-1 truncate">
-                    {obra.generos?.[0]}
-                  </p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Badge className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground border-none px-1.5 py-0 text-[10px] font-bold shadow-md">
+                    NOVO
+                  </Badge>
+                  <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                    {!obra.tipografiaUrl && (
+                      <h4 className="font-display font-semibold text-xs line-clamp-2">
+                        {obra.titulo}
+                      </h4>
+                    )}
+                    <p className="text-[10px] text-primary font-medium mt-0.5 truncate">
+                      {obra.generos?.[0]}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        <button
+          onClick={() => scroll("right")}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 p-2 rounded-full bg-background/90 border border-border text-foreground shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-secondary"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

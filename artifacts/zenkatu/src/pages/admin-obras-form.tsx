@@ -27,7 +27,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, X, Plus } from "lucide-react";
+import { ArrowLeft, Loader2, Save, X, Plus, Trash2, Users, Youtube, Instagram, MessageCircle, Twitter, Globe, Music } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import {
@@ -38,6 +38,20 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useCreateGenero, getListGenerosQueryKey } from "@workspace/api-client-react";
+
+type CastMember = {
+  nome: string;
+  papel: string;
+  fotoUrl?: string;
+  links?: {
+    youtube?: string;
+    instagram?: string;
+    discord?: string;
+    twitter?: string;
+    tiktok?: string;
+    site?: string;
+  };
+};
 
 const obraSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório"),
@@ -142,11 +156,11 @@ function GeneroMultiSelect({
                   ? "bg-primary/15 border-primary/40 text-primary"
                   : "bg-transparent border-border text-muted-foreground hover:border-primary/30 hover:text-foreground",
               )}
-              >
-                {g.nome}
-              </button>
-            );
-          })}
+            >
+              {g.nome}
+            </button>
+          );
+        })}
         <button
           type="button"
           onClick={() => setShowAddDialog(true)}
@@ -190,6 +204,172 @@ function GeneroMultiSelect({
   );
 }
 
+const emptyCastMember = (): CastMember => ({
+  nome: "",
+  papel: "",
+  fotoUrl: "",
+  links: { youtube: "", instagram: "", discord: "", twitter: "", tiktok: "", site: "" },
+});
+
+function CastEditor({ cast, onChange }: { cast: CastMember[]; onChange: (c: CastMember[]) => void }) {
+  const [editingIdx, setEditingIdx] = useState<number | null>(null);
+  const [draft, setDraft] = useState<CastMember>(emptyCastMember());
+
+  const openAdd = () => {
+    setDraft(emptyCastMember());
+    setEditingIdx(-1);
+  };
+
+  const openEdit = (idx: number) => {
+    setDraft(JSON.parse(JSON.stringify(cast[idx])));
+    setEditingIdx(idx);
+  };
+
+  const handleSave = () => {
+    if (!draft.nome.trim() || !draft.papel.trim()) return;
+    const cleaned: CastMember = {
+      nome: draft.nome.trim(),
+      papel: draft.papel.trim(),
+      fotoUrl: draft.fotoUrl?.trim() || undefined,
+      links: {
+        youtube: draft.links?.youtube?.trim() || undefined,
+        instagram: draft.links?.instagram?.trim() || undefined,
+        discord: draft.links?.discord?.trim() || undefined,
+        twitter: draft.links?.twitter?.trim() || undefined,
+        tiktok: draft.links?.tiktok?.trim() || undefined,
+        site: draft.links?.site?.trim() || undefined,
+      },
+    };
+    if (editingIdx === -1) {
+      onChange([...cast, cleaned]);
+    } else if (editingIdx !== null) {
+      const updated = [...cast];
+      updated[editingIdx] = cleaned;
+      onChange(updated);
+    }
+    setEditingIdx(null);
+  };
+
+  const handleRemove = (idx: number) => {
+    onChange(cast.filter((_, i) => i !== idx));
+  };
+
+  const setLink = (key: keyof CastMember["links"] & string, val: string) => {
+    setDraft(d => ({ ...d, links: { ...d.links, [key]: val } }));
+  };
+
+  const isOpen = editingIdx !== null;
+
+  return (
+    <div className="space-y-4">
+      {cast.length === 0 && (
+        <p className="text-sm text-muted-foreground italic">Nenhum membro adicionado ainda.</p>
+      )}
+      <div className="space-y-3">
+        {cast.map((member, idx) => (
+          <div key={idx} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background/50">
+            {member.fotoUrl ? (
+              <img src={member.fotoUrl} alt={member.nome} className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 text-sm font-bold text-muted-foreground">
+                {member.nome[0]?.toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground truncate">{member.nome}</p>
+              <p className="text-xs text-muted-foreground truncate">{member.papel}</p>
+            </div>
+            <div className="flex gap-1 flex-shrink-0">
+              <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-xs" onClick={() => openEdit(idx)}>
+                Editar
+              </Button>
+              <Button type="button" size="sm" variant="ghost" className="h-8 px-2 text-destructive hover:text-destructive" onClick={() => handleRemove(idx)}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Button type="button" variant="outline" size="sm" onClick={openAdd} className="gap-2">
+        <Plus className="w-4 h-4" /> Adicionar membro
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={(o) => !o && setEditingIdx(null)}>
+        <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingIdx === -1 ? "Adicionar membro" : "Editar membro"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Nome *</label>
+                <Input
+                  value={draft.nome}
+                  onChange={e => setDraft(d => ({ ...d, nome: e.target.value }))}
+                  placeholder="Ex: João Silva"
+                  className="bg-background h-9 text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-muted-foreground">Papel *</label>
+                <Input
+                  value={draft.papel}
+                  onChange={e => setDraft(d => ({ ...d, papel: e.target.value }))}
+                  placeholder="Ex: Dublador, Editor"
+                  className="bg-background h-9 text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground">URL da Foto de Perfil</label>
+              <Input
+                value={draft.fotoUrl || ""}
+                onChange={e => setDraft(d => ({ ...d, fotoUrl: e.target.value }))}
+                placeholder="https://..."
+                className="bg-background h-9 text-sm"
+              />
+              {draft.fotoUrl && (
+                <img src={draft.fotoUrl} alt="preview" className="w-12 h-12 rounded-full object-cover border border-border mt-1" onError={e => (e.currentTarget.style.display = "none")} />
+              )}
+            </div>
+
+            <div className="border-t border-border pt-4 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Redes Sociais</p>
+              <div className="grid grid-cols-1 gap-3">
+                {([
+                  { key: "youtube", label: "YouTube", icon: Youtube, placeholder: "https://youtube.com/@canal" },
+                  { key: "instagram", label: "Instagram", icon: Instagram, placeholder: "https://instagram.com/usuario" },
+                  { key: "discord", label: "Discord", icon: MessageCircle, placeholder: "https://discord.gg/convite" },
+                  { key: "twitter", label: "Twitter / X", icon: Twitter, placeholder: "https://twitter.com/usuario" },
+                  { key: "tiktok", label: "TikTok", icon: Music, placeholder: "https://tiktok.com/@usuario" },
+                  { key: "site", label: "Site / Portfólio", icon: Globe, placeholder: "https://meusite.com" },
+                ] as const).map(({ key, label, icon: Icon, placeholder }) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <Input
+                      value={draft.links?.[key] || ""}
+                      onChange={e => setLink(key, e.target.value)}
+                      placeholder={placeholder}
+                      className="bg-background h-8 text-xs"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setEditingIdx(null)}>Cancelar</Button>
+            <Button type="button" disabled={!draft.nome.trim() || !draft.papel.trim()} onClick={handleSave}>
+              <Save className="w-4 h-4 mr-1" /> Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 export default function AdminObrasForm() {
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id && id !== "nova";
@@ -199,6 +379,8 @@ export default function AdminObrasForm() {
 
   const createObra = useCreateObra();
   const updateObra = useUpdateObra();
+
+  const [cast, setCast] = useState<CastMember[]>([]);
 
   const { data: obra, isLoading } = useGetObra(Number(id), {
     query: { enabled: isEditing, queryKey: ["getObra", Number(id)] as any },
@@ -240,6 +422,7 @@ export default function AdminObrasForm() {
         bannerOrder: obra.bannerOrder,
         generos: obra.generos ?? [],
       });
+      setCast((obra as any).cast ?? []);
     }
   }, [obra, isEditing, form]);
 
@@ -253,7 +436,7 @@ export default function AdminObrasForm() {
 
   const onSubmit = async (data: ObraFormValues) => {
     try {
-      const payload = { ...data, tipografiaUrl: data.tipografiaUrl || null };
+      const payload = { ...data, tipografiaUrl: data.tipografiaUrl || null, cast };
       if (isEditing) {
         await updateObra.mutateAsync({ obraId: Number(id), data: payload });
         toast({ title: "Obra atualizada com sucesso" });
@@ -519,6 +702,17 @@ export default function AdminObrasForm() {
                 )}
               />
             )}
+          </div>
+
+          <div className="border-t border-border pt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <h3 className="font-display text-xl font-bold">Equipe / Cast</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Adicione os membros responsáveis por esta obra (dubladores, editores, etc.) com links para suas redes sociais.
+            </p>
+            <CastEditor cast={cast} onChange={setCast} />
           </div>
 
           <div className="flex justify-end gap-4 pt-4 border-t border-border">

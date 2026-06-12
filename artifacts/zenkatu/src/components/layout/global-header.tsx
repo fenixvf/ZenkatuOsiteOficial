@@ -15,6 +15,7 @@ import { Search, X, Menu } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useSearchObras } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
+import logoImg from "/logo.png";
 
 function SearchBar() {
   const [query, setQuery] = useState("");
@@ -140,7 +141,6 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 max-w-full items-center justify-between px-4 gap-4">
         <div className="flex items-center gap-3">
-          {/* Hamburger — visible on mobile only */}
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
@@ -149,7 +149,14 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-primary/10">
+              <img
+                src={logoImg}
+                alt="Zenkatu"
+                className="w-full h-full object-cover object-center"
+              />
+            </div>
             <span className="font-display text-2xl font-bold tracking-wider text-primary">
               ZENKATU
             </span>

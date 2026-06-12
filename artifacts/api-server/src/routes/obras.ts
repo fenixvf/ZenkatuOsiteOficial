@@ -113,7 +113,7 @@ router.post("/obras", async (req, res) => {
   try {
     const {
       titulo, slug, sinopse, generos, status, ano, nota, totalEps,
-      capaUrl, bannerUrl, tipografiaUrl, showInBanner, bannerOrder,
+      capaUrl, bannerUrl, tipografiaUrl, showInBanner, bannerOrder, cast,
     } = req.body;
     const [obra] = await db.insert(obrasTable).values({
       titulo, slug, sinopse,
@@ -122,6 +122,7 @@ router.post("/obras", async (req, res) => {
       ano, nota, totalEps, capaUrl, bannerUrl, tipografiaUrl,
       showInBanner: showInBanner ?? false,
       bannerOrder,
+      cast: cast ?? [],
     }).returning();
     res.status(201).json(serializeObra(obra));
   } catch (e) {
@@ -207,6 +208,7 @@ function serializeObra(obra: typeof obrasTable.$inferSelect) {
     tipografiaUrl: obra.tipografiaUrl,
     showInBanner: obra.showInBanner,
     bannerOrder: obra.bannerOrder,
+    cast: obra.cast ?? [],
     views: obra.views,
     createdAt: obra.createdAt.toISOString(),
     updatedAt: obra.updatedAt.toISOString(),

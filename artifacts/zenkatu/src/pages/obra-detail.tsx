@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check } from "lucide-react";
+import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Player = memo(function Player({ content }: { content: string }) {
@@ -573,6 +573,72 @@ export default function ObraDetail() {
               </Button>
             )}
           </div>
+
+          {/* Equipe / Cast */}
+          {Array.isArray((obra as any).cast) && (obra as any).cast.length > 0 && (
+            <div className="bg-card/50 border border-border/50 p-6 rounded-xl">
+              <div className="flex items-center gap-2 mb-5">
+                <Users className="w-5 h-5 text-primary" />
+                <h3 className="font-display text-xl font-bold">Equipe</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {((obra as any).cast as Array<{
+                  nome: string; papel: string; fotoUrl?: string;
+                  links?: { youtube?: string; instagram?: string; discord?: string; twitter?: string; tiktok?: string; site?: string };
+                }>).map((member, idx) => (
+                  <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 rounded-lg border border-border/50 bg-background/40 hover:border-primary/30 transition-colors">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border bg-secondary flex-shrink-0">
+                      {member.fotoUrl ? (
+                        <img src={member.fotoUrl} alt={member.nome} className="w-full h-full object-cover" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xl font-bold text-muted-foreground">
+                          {member.nome[0]?.toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 w-full">
+                      <p className="font-semibold text-sm text-foreground leading-tight">{member.nome}</p>
+                      <p className="text-xs text-primary mt-0.5">{member.papel}</p>
+                    </div>
+                    {member.links && (
+                      <div className="flex flex-wrap justify-center gap-1.5">
+                        {member.links.youtube && (
+                          <a href={member.links.youtube} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-red-500 transition-colors" title="YouTube">
+                            <Youtube className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {member.links.instagram && (
+                          <a href={member.links.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-pink-500 transition-colors" title="Instagram">
+                            <Instagram className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {member.links.discord && (
+                          <a href={member.links.discord} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-indigo-400 transition-colors" title="Discord">
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {member.links.twitter && (
+                          <a href={member.links.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-sky-400 transition-colors" title="Twitter / X">
+                            <Twitter className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {member.links.tiktok && (
+                          <a href={member.links.tiktok} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                            <Music className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                        {member.links.site && (
+                          <a href={member.links.site} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" title="Site">
+                            <Globe className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Comentários */}
           <div className="space-y-6">
