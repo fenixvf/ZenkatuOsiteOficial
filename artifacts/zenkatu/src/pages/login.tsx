@@ -97,7 +97,7 @@ export default function Login() {
           transition={{ duration: 0.5 }}
         >
           <h1 className="font-display text-5xl font-bold tracking-widest text-primary mb-2">ZENKATU</h1>
-          <p className="text-muted-foreground mb-8">Sua plataforma premium de animes</p>
+          <p className="text-muted-foreground mb-8">Projetos de fãs para fãs</p>
         </motion.div>
 
         <AnimatePresence mode="wait">

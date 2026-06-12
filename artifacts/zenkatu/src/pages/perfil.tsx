@@ -376,7 +376,7 @@ export default function Perfil() {
                     </Link>
                     <button
                       onClick={() => handleRemoveFromLista(obra.id)}
-                      className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 border border-border text-muted-foreground hover:text-destructive hover:border-destructive/50 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-sm"
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 border border-border text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-all backdrop-blur-sm"
                       title="Remover da lista"
                     >
                       <Trash2 className="w-3 h-3" />
