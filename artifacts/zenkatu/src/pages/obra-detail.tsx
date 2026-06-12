@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, memo } from "react";
-import { useParams } from "wouter";
+import { useParams, useSearch } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -279,6 +279,8 @@ function ComentarioItem({ comentario, replies, currentUserId, isAdmin, onDelete,
 
 export default function ObraDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const search = useSearch();
+  const epIdFromUrl = Number(new URLSearchParams(search).get("ep")) || null;
   const { currentUser, userProfile, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -340,7 +342,7 @@ export default function ObraDetail() {
     }
   };
 
-  const [activeEpisodeId, setActiveEpisodeId] = useState<number | null>(null);
+  const [activeEpisodeId, setActiveEpisodeId] = useState<number | null>(epIdFromUrl);
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
   const [isSinopseExpanded, setIsSinopseExpanded] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -350,7 +352,20 @@ export default function ObraDetail() {
   const updateComentario = useUpdateComentario();
 
   useEffect(() => {
-    if (episodios.length > 0 && !activeEpisodeId) {
+    if (episodios.length === 0) return;
+    if (activeEpisodeId) {
+      const ep = episodios.find(e => e.id === activeEpisodeId);
+      if (ep) {
+        setSelectedSeason(ep.temporada);
+      } else {
+        const first = episodios[0];
+        setActiveEpisodeId(first.id);
+        setSelectedSeason(first.temporada);
+        if (currentUser?.uid && obra?.id) {
+          addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } });
+        }
+      }
+    } else {
       const first = episodios[0];
       setActiveEpisodeId(first.id);
       setSelectedSeason(first.temporada);
@@ -358,7 +373,7 @@ export default function ObraDetail() {
         addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } });
       }
     }
-  }, [episodios, activeEpisodeId, obra?.id]);
+  }, [episodios, obra?.id]);
 
   const handleSelectEpisode = (episodioId: number) => {
     setActiveEpisodeId(episodioId);
