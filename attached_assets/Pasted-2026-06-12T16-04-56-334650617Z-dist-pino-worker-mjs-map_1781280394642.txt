@@ -1,0 +1,72 @@
+2026-06-12T16:04:56.334650617Z   dist/pino-worker.mjs.map           256.9kb
+2026-06-12T16:04:56.334652577Z   dist/pino-file.mjs.map             229.0kb
+2026-06-12T16:04:56.334654597Z   dist/pino-pretty.mjs.map           204.0kb
+2026-06-12T16:04:56.334656566Z   dist/thread-stream-worker.mjs.map   12.0kb
+2026-06-12T16:04:56.334658397Z 
+2026-06-12T16:04:56.334661047Z ⚡ Done in 376ms
+2026-06-12T16:04:56.773498002Z 
+2026-06-12T16:04:56.773525663Z > @workspace/db@0.0.0 push-force /opt/render/project/src/lib/db
+2026-06-12T16:04:56.773529113Z > drizzle-kit push --force --config ./drizzle.config.ts
+2026-06-12T16:04:56.773532283Z 
+2026-06-12T16:04:56.916774292Z Reading config file '/opt/render/project/src/lib/db/drizzle.config.ts'
+2026-06-12T16:04:57.336975964Z Using 'pg' driver for database querying
+2026-06-12T16:04:57.711999416Z [⣷] Pulling schema from database...
+2026-06-12T16:04:57.735063991Z [✓] Pulling schema from database...
+2026-06-12T16:04:57.962349631Z [✓] Changes applied
+2026-06-12T16:05:16.539705226Z ==> Uploading build...
+2026-06-12T16:05:27.231628176Z ==> Uploaded in 5.3s. Compression took 5.3s
+2026-06-12T16:05:27.261471421Z ==> Build successful 🎉
+2026-06-12T16:05:43.836186162Z ==> Deploying...
+2026-06-12T16:05:43.927833663Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-06-12T16:06:07.286287433Z ==> Running 'pnpm run start:render'
+2026-06-12T16:06:10.687957118Z 
+2026-06-12T16:06:10.68799277Z > workspace@0.0.0 start:render /opt/render/project/src
+2026-06-12T16:06:10.68799938Z > node --enable-source-maps ./artifacts/api-server/dist/index.mjs
+2026-06-12T16:06:10.688002541Z 
+2026-06-12T16:06:12.890725234Z /opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218
+2026-06-12T16:06:12.890756446Z           throw new PathError(`Missing parameter name at index ${index}`, str);
+2026-06-12T16:06:12.890760576Z                 ^
+2026-06-12T16:06:12.890763636Z 
+2026-06-12T16:06:12.890766427Z PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+2026-06-12T16:06:12.890769657Z     at consumeUntil (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+2026-06-12T16:06:12.890775547Z     at parse (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+2026-06-12T16:06:12.890778337Z     at process (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+2026-06-12T16:06:12.890780877Z     at pathToRegexp (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+2026-06-12T16:06:12.890783638Z     at Object.match (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+2026-06-12T16:06:12.890789728Z     at matcher (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+2026-06-12T16:06:12.890793308Z     at new Layer (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+2026-06-12T16:06:12.890797209Z     at router11.route (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+2026-06-12T16:06:12.890800019Z     at app2.route (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+2026-06-12T16:06:12.890802159Z     at app2.app2.<computed> (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+2026-06-12T16:06:12.890804119Z   originalPath: '*'
+2026-06-12T16:06:12.890806039Z }
+2026-06-12T16:06:12.890807859Z 
+2026-06-12T16:06:12.890809839Z Node.js v24.14.1
+2026-06-12T16:06:13.081419202Z  ELIFECYCLE  Command failed with exit code 1.
+2026-06-12T16:06:20.306110987Z ==> Running 'pnpm run start:render'
+2026-06-12T16:06:23.203432227Z 
+2026-06-12T16:06:23.20347319Z > workspace@0.0.0 start:render /opt/render/project/src
+2026-06-12T16:06:23.20347878Z > node --enable-source-maps ./artifacts/api-server/dist/index.mjs
+2026-06-12T16:06:23.20348147Z 
+2026-06-12T16:06:24.416198679Z ==> Exited with status 1
+2026-06-12T16:06:24.419377447Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-06-12T16:06:25.597967605Z /opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218
+2026-06-12T16:06:25.598006437Z           throw new PathError(`Missing parameter name at index ${index}`, str);
+2026-06-12T16:06:25.598011307Z                 ^
+2026-06-12T16:06:25.598014647Z 
+2026-06-12T16:06:25.598018568Z PathError [TypeError]: Missing parameter name at index 1: *; visit https://git.new/pathToRegexpError for info
+2026-06-12T16:06:25.598023028Z     at consumeUntil (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:218:17)
+2026-06-12T16:06:25.598027258Z     at parse (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:262:24)
+2026-06-12T16:06:25.598030358Z     at process (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:466:52)
+2026-06-12T16:06:25.598033818Z     at pathToRegexp (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:478:3)
+2026-06-12T16:06:25.598036978Z     at Object.match (/opt/render/project/src/node_modules/.pnpm/path-to-regexp@8.4.2/node_modules/path-to-regexp/src/index.ts:416:28)
+2026-06-12T16:06:25.598040459Z     at matcher (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:86:23)
+2026-06-12T16:06:25.598044059Z     at new Layer (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/lib/layer.js:93:62)
+2026-06-12T16:06:25.598047719Z     at router11.route (/opt/render/project/src/node_modules/.pnpm/router@2.2.0/node_modules/router/index.js:428:17)
+2026-06-12T16:06:25.598050979Z     at app2.route (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:257:22)
+2026-06-12T16:06:25.59805409Z     at app2.app2.<computed> (/opt/render/project/src/node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:478:22) {
+2026-06-12T16:06:25.59805738Z   originalPath: '*'
+2026-06-12T16:06:25.5980605Z }
+2026-06-12T16:06:25.59806345Z 
+2026-06-12T16:06:25.59806674Z Node.js v24.14.1
+2026-06-12T16:06:25.704257641Z  ELIFECYCLE  Command failed with exit code 1.
