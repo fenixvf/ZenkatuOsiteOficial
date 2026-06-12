@@ -79,6 +79,8 @@ export interface Episodio {
   /** @nullable */
   obraTitulo?: string | null;
   /** @nullable */
+  obraSlug?: string | null;
+  /** @nullable */
   obraCapaUrl?: string | null;
   temporada: number;
   numero: number;

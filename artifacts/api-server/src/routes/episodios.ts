@@ -12,6 +12,7 @@ router.get("/episodios", async (req, res) => {
         id: episodiosTable.id,
         obraId: episodiosTable.obraId,
         obraTitulo: obrasTable.titulo,
+        obraSlug: obrasTable.slug,
         obraCapaUrl: obrasTable.capaUrl,
         temporada: episodiosTable.temporada,
         numero: episodiosTable.numero,
@@ -164,6 +165,7 @@ function serializeEpisodio(ep: {
   id: number;
   obraId: number;
   obraTitulo: string | null;
+  obraSlug?: string | null;
   obraCapaUrl: string | null;
   temporada: number;
   numero: number;
@@ -176,6 +178,7 @@ function serializeEpisodio(ep: {
     id: ep.id,
     obraId: ep.obraId,
     obraTitulo: ep.obraTitulo,
+    obraSlug: ep.obraSlug ?? null,
     obraCapaUrl: ep.obraCapaUrl,
     temporada: ep.temporada,
     numero: ep.numero,
