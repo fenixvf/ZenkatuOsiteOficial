@@ -38,8 +38,10 @@ app.use("/api", router);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(__dirname, "../../zenkatu/dist/public");
   app.use(express.static(frontendDist));
-  app.get("/{*path}", (_req, res) => {
-    res.sendFile(path.join(frontendDist, "index.html"));
+  app.use((_req, res, next) => {
+    res.sendFile(path.join(frontendDist, "index.html"), (err) => {
+      if (err) next(err);
+    });
   });
 }
 
