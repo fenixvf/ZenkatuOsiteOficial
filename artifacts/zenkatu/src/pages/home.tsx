@@ -330,7 +330,7 @@ function EpisodiosRecentes() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: idx * 0.05 }}
           >
-            <Link href={`/obra/${ep.obraSlug ?? ep.obraId}?ep=${ep.id}`}>
+            <Link href={`/obra/${ep.obraSlug ?? ep.obraId}`}>
               <div className="group relative rounded-lg overflow-hidden border border-border bg-card hover:border-primary/50 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.15)]">
                 <div className="aspect-video relative">
                   <img
