@@ -163,14 +163,14 @@ function ObrasRecentes() {
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
+    el.scrollBy({ left: dir === "left" ? -480 : 480, behavior: "smooth" });
   };
 
   if (isLoading) {
     return (
       <div className="flex gap-3 overflow-x-hidden p-1">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton key={i} className="min-w-[120px] aspect-[2/3] rounded-lg flex-shrink-0" />
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <Skeleton key={i} className="min-w-[110px] aspect-[2/3] rounded-lg flex-shrink-0" />
         ))}
       </div>
     );
@@ -181,29 +181,29 @@ function ObrasRecentes() {
   return (
     <div className="relative">
       <SectionTitle title="Obras Recentes" />
-      <div className="relative group/carousel">
+      <div className="relative">
         <button
           onClick={() => scroll("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-2 p-2 rounded-full bg-background/90 border border-border text-foreground shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-secondary"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4" />
         </button>
 
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth"
+          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth px-1"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {obras.map((obra, idx) => (
             <motion.div
               key={obra.id}
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.06 }}
-              className="min-w-[120px] md:min-w-[140px] flex-shrink-0 snap-start"
+              transition={{ delay: idx * 0.05 }}
+              className="min-w-[110px] md:min-w-[130px] flex-shrink-0 snap-start"
             >
               <Link href={`/obra/${obra.slug}`}>
-                <div className="group relative aspect-[2/3] rounded-lg overflow-hidden border border-border bg-card transition-all hover:scale-[1.04] hover:border-primary/50 hover:shadow-[0_0_14px_rgba(59,130,246,0.3)]">
+                <div className="group relative aspect-[2/3] rounded-md overflow-hidden border border-border bg-card transition-all hover:scale-[1.03] hover:border-primary/50 hover:shadow-[0_0_12px_rgba(59,130,246,0.25)]">
                   <img
                     src={
                       obra.capaUrl ||
@@ -213,28 +213,19 @@ function ObrasRecentes() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  {obra.tipografiaUrl && (
-                    <div className="absolute bottom-0 left-0 right-0 p-2 z-10">
-                      <img
-                        src={obra.tipografiaUrl}
-                        alt={obra.titulo}
-                        className="max-h-8 w-auto object-contain drop-shadow-lg"
-                      />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Badge className="absolute top-1.5 right-1.5 bg-primary text-primary-foreground border-none px-1.5 py-0 text-[10px] font-bold shadow-md">
+                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground border-none px-1 py-0 text-[9px] font-bold shadow-md">
                     NOVO
                   </Badge>
-                  <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                    {!obra.tipografiaUrl && (
-                      <h4 className="font-display font-semibold text-xs line-clamp-2">
-                        {obra.titulo}
-                      </h4>
+                  <div className="absolute bottom-0 left-0 right-0 p-1.5 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                    <h4 className="font-display font-semibold text-[10px] line-clamp-2 leading-tight">
+                      {obra.titulo}
+                    </h4>
+                    {obra.generos?.[0] && (
+                      <p className="text-[9px] text-primary font-medium mt-0.5 truncate">
+                        {obra.generos[0]}
+                      </p>
                     )}
-                    <p className="text-[10px] text-primary font-medium mt-0.5 truncate">
-                      {obra.generos?.[0]}
-                    </p>
                   </div>
                 </div>
               </Link>
@@ -244,9 +235,9 @@ function ObrasRecentes() {
 
         <button
           onClick={() => scroll("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-2 p-2 rounded-full bg-background/90 border border-border text-foreground shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-opacity hover:bg-secondary"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
