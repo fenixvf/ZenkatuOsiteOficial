@@ -625,6 +625,63 @@ paths:
         "204":
           description: Removed
 
+  /usuarios/{uid}/historico:
+    get:
+      operationId: getUsuarioHistorico
+      tags: [usuarios]
+      summary: Get user watch history
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Watch history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoricoItem"
+    post:
+      operationId: addToHistorico
+      tags: [usuarios]
+      summary: Add or update episode in watch history
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistoricoInput"
+      responses:
+        "201":
+          description: Added or updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoricoRaw"
+    delete:
+      operationId: clearHistorico
+      tags: [usuarios]
+      summary: Clear all watch history for user
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Cleared
+
   /stats/admin:
     get:
       operationId: getAdminStats
@@ -996,6 +1053,75 @@ components:
       properties:
         nome:
           type: string
+
+    HistoricoItem:
+      type: object
+      required:
+        - id
+        - uid
+        - episodioId
+        - obraId
+        - watchedAt
+        - episodioNumero
+        - episodioTitulo
+        - episodioTemporada
+        - obraTitulo
+        - obraSlug
+        - obraCapaUrl
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        episodioId:
+          type: integer
+        obraId:
+          type: integer
+        watchedAt:
+          type: string
+        episodioNumero:
+          type: integer
+        episodioTitulo:
+          type: string
+        episodioTemporada:
+          type: integer
+        obraTitulo:
+          type: string
+        obraSlug:
+          type: string
+        obraCapaUrl:
+          type: string
+
+    HistoricoRaw:
+      type: object
+      required:
+        - id
+        - uid
+        - episodioId
+        - obraId
+        - watchedAt
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        episodioId:
+          type: integer
+        obraId:
+          type: integer
+        watchedAt:
+          type: string
+
+    HistoricoInput:
+      type: object
+      required:
+        - episodioId
+        - obraId
+      properties:
+        episodioId:
+          type: integer
+        obraId:
+          type: integer
 
     AdminStats:
       type: object

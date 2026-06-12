@@ -7,8 +7,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "./firebase";
-import { useUpsertUsuario, useGetUsuario } from "@workspace/api-client-react";
-import { Usuario } from "@workspace/api-zod";
+import { useUpsertUsuario, useGetUsuario, type Usuario } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface AuthContextType {

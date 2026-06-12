@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
@@ -7,6 +7,8 @@ import {
   useUploadAvatar,
   useGetUsuarioLista,
   useRemoveFromLista,
+  useGetUsuarioHistorico,
+  useClearHistorico,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -19,9 +21,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Loader2, Save, Trash2, BookmarkX } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export default function Perfil() {
   const { currentUser, userProfile, loading } = useAuth();
@@ -32,6 +46,7 @@ export default function Perfil() {
   const updateUsuario = useUpdateUsuario();
   const uploadAvatar = useUploadAvatar();
   const removeFromLista = useRemoveFromLista();
+  const clearHistorico = useClearHistorico();
 
   const [username, setUsername] = useState(userProfile?.username || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -51,8 +66,24 @@ export default function Perfil() {
   );
   const lista = Array.isArray(listaRaw) ? listaRaw : [];
 
+  const { data: historicoRaw, isLoading: historicoLoading } = useGetUsuarioHistorico(
+    currentUser?.uid || "",
+    {
+      query: {
+        enabled: !!currentUser?.uid,
+        queryKey: ["getUsuarioHistorico", currentUser?.uid || ""],
+      },
+    },
+  );
+  const historico = Array.isArray(historicoRaw) ? historicoRaw : [];
+
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      setLocation("/login");
+    }
+  }, [loading, currentUser, setLocation]);
+
   if (!loading && !currentUser) {
-    setLocation("/login");
     return null;
   }
 
@@ -108,7 +139,6 @@ export default function Perfil() {
         const ctx = canvas.getContext("2d");
         const SIZE = 500;
 
-        // Center-crop to square first, then scale to SIZE×SIZE
         const minDim = Math.min(img.width, img.height);
         const sx = (img.width - minDim) / 2;
         const sy = (img.height - minDim) / 2;
@@ -117,7 +147,6 @@ export default function Perfil() {
         canvas.height = SIZE;
         ctx?.drawImage(img, sx, sy, minDim, minDim, 0, 0, SIZE, SIZE);
 
-        // Show immediate preview
         setPreviewUrl(canvas.toDataURL("image/webp", 0.75));
 
         canvas.toBlob(
@@ -162,7 +191,6 @@ export default function Perfil() {
       img.src = event.target?.result as string;
     };
     reader.readAsDataURL(file);
-    // Reset input so same file can be picked again
     e.target.value = "";
   };
 
@@ -176,6 +204,19 @@ export default function Perfil() {
       toast({ title: "Removido da lista" });
     } catch {
       toast({ title: "Erro ao remover", variant: "destructive" });
+    }
+  };
+
+  const handleClearHistorico = async () => {
+    if (!currentUser) return;
+    try {
+      await clearHistorico.mutateAsync({ uid: currentUser.uid });
+      queryClient.invalidateQueries({
+        queryKey: ["getUsuarioHistorico", currentUser.uid],
+      });
+      toast({ title: "Histórico limpo" });
+    } catch {
+      toast({ title: "Erro ao limpar histórico", variant: "destructive" });
     }
   };
 
@@ -198,6 +239,7 @@ export default function Perfil() {
       </div>
 
       <div className="grid gap-6">
+        {/* Informações Pessoais */}
         <Card className="border-border bg-card/50 backdrop-blur">
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
@@ -293,6 +335,7 @@ export default function Perfil() {
           </CardContent>
         </Card>
 
+        {/* Minha Lista */}
         <Card className="border-border bg-card/50 backdrop-blur">
           <CardHeader>
             <CardTitle>Minha Lista</CardTitle>
@@ -345,17 +388,84 @@ export default function Perfil() {
           </CardContent>
         </Card>
 
+        {/* Histórico */}
         <Card className="border-border bg-card/50 backdrop-blur">
-          <CardHeader>
-            <CardTitle>Histórico</CardTitle>
-            <CardDescription>
-              Episódios assistidos recentemente.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-start justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <History className="w-5 h-5" />
+                Histórico
+              </CardTitle>
+              <CardDescription>
+                Episódios assistidos recentemente.
+              </CardDescription>
+            </div>
+            {historico.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive shrink-0">
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Limpar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Limpar histórico?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Todos os episódios assistidos serão removidos do seu histórico. Essa ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleClearHistorico}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      Limpar histórico
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
-              <p>Nenhum episódio no histórico ainda.</p>
-            </div>
+            {historicoLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : historico.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
+                <History className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p>Nenhum episódio no histórico ainda.</p>
+                <p className="text-xs mt-1">Assista algum episódio para ele aparecer aqui.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {historico.map((item) => (
+                  <Link key={item.id} href={`/obra/${item.obraSlug}`}>
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
+                      <img
+                        src={item.obraCapaUrl || `https://placehold.co/56x80/0F1C2E/1E3A8A`}
+                        alt={item.obraTitulo}
+                        className="w-12 h-16 object-cover rounded flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                          {item.obraTitulo}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          T{item.episodioTemporada} E{item.episodioNumero} — {item.episodioTitulo}
+                        </p>
+                        <p className="text-xs text-muted-foreground/60 mt-1 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(item.watchedAt), { addSuffix: true, locale: ptBR })}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

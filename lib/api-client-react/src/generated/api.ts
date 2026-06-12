@@ -31,6 +31,9 @@ import type {
   Genero,
   GeneroInput,
   HealthStatus,
+  HistoricoInput,
+  HistoricoItem,
+  HistoricoRaw,
   ListaInput,
   ListaItem,
   Obra,
@@ -2417,6 +2420,225 @@ export const useRemoveFromLista = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getRemoveFromListaMutationOptions(options));
+    }
+
+export const getGetUsuarioHistoricoUrl = (uid: string,) => {
+
+
+
+
+  return `/api/usuarios/${uid}/historico`
+}
+
+/**
+ * @summary Get user watch history
+ */
+export const getUsuarioHistorico = async (uid: string, options?: RequestInit): Promise<HistoricoItem[]> => {
+
+  return customFetch<HistoricoItem[]>(getGetUsuarioHistoricoUrl(uid),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUsuarioHistoricoQueryKey = (uid: string,) => {
+    return [
+    `/api/usuarios/${uid}/historico`
+    ] as const;
+    }
+
+
+export const getGetUsuarioHistoricoQueryOptions = <TData = Awaited<ReturnType<typeof getUsuarioHistorico>>, TError = ErrorType<unknown>>(uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsuarioHistorico>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUsuarioHistoricoQueryKey(uid);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsuarioHistorico>>> = ({ signal }) => getUsuarioHistorico(uid, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(uid), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsuarioHistorico>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUsuarioHistoricoQueryResult = NonNullable<Awaited<ReturnType<typeof getUsuarioHistorico>>>
+export type GetUsuarioHistoricoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get user watch history
+ */
+
+export function useGetUsuarioHistorico<TData = Awaited<ReturnType<typeof getUsuarioHistorico>>, TError = ErrorType<unknown>>(
+ uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsuarioHistorico>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUsuarioHistoricoQueryOptions(uid,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAddToHistoricoUrl = (uid: string,) => {
+
+
+
+
+  return `/api/usuarios/${uid}/historico`
+}
+
+/**
+ * @summary Add or update episode in watch history
+ */
+export const addToHistorico = async (uid: string,
+    historicoInput: HistoricoInput, options?: RequestInit): Promise<HistoricoRaw> => {
+
+  return customFetch<HistoricoRaw>(getAddToHistoricoUrl(uid),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      historicoInput,)
+  }
+);}
+
+
+
+
+export const getAddToHistoricoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addToHistorico>>, TError,{uid: string;data: BodyType<HistoricoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addToHistorico>>, TError,{uid: string;data: BodyType<HistoricoInput>}, TContext> => {
+
+const mutationKey = ['addToHistorico'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addToHistorico>>, {uid: string;data: BodyType<HistoricoInput>}> = (props) => {
+          const {uid,data} = props ?? {};
+
+          return  addToHistorico(uid,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddToHistoricoMutationResult = NonNullable<Awaited<ReturnType<typeof addToHistorico>>>
+    export type AddToHistoricoMutationBody = BodyType<HistoricoInput>
+    export type AddToHistoricoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add or update episode in watch history
+ */
+export const useAddToHistorico = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addToHistorico>>, TError,{uid: string;data: BodyType<HistoricoInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addToHistorico>>,
+        TError,
+        {uid: string;data: BodyType<HistoricoInput>},
+        TContext
+      > => {
+      return useMutation(getAddToHistoricoMutationOptions(options));
+    }
+
+export const getClearHistoricoUrl = (uid: string,) => {
+
+
+
+
+  return `/api/usuarios/${uid}/historico`
+}
+
+/**
+ * @summary Clear all watch history for user
+ */
+export const clearHistorico = async (uid: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getClearHistoricoUrl(uid),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getClearHistoricoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearHistorico>>, TError,{uid: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearHistorico>>, TError,{uid: string}, TContext> => {
+
+const mutationKey = ['clearHistorico'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearHistorico>>, {uid: string}> = (props) => {
+          const {uid} = props ?? {};
+
+          return  clearHistorico(uid,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearHistoricoMutationResult = NonNullable<Awaited<ReturnType<typeof clearHistorico>>>
+
+    export type ClearHistoricoMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Clear all watch history for user
+ */
+export const useClearHistorico = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearHistorico>>, TError,{uid: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clearHistorico>>,
+        TError,
+        {uid: string},
+        TContext
+      > => {
+      return useMutation(getClearHistoricoMutationOptions(options));
     }
 
 export const getGetAdminStatsUrl = () => {

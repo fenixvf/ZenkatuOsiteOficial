@@ -655,6 +655,50 @@ export const RemoveFromListaParams = zod.object({
 
 
 /**
+ * @summary Get user watch history
+ */
+export const GetUsuarioHistoricoParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+export const GetUsuarioHistoricoResponseItem = zod.object({
+  "id": zod.number(),
+  "uid": zod.string(),
+  "episodioId": zod.number(),
+  "obraId": zod.number(),
+  "watchedAt": zod.string(),
+  "episodioNumero": zod.number(),
+  "episodioTitulo": zod.string(),
+  "episodioTemporada": zod.number(),
+  "obraTitulo": zod.string(),
+  "obraSlug": zod.string(),
+  "obraCapaUrl": zod.string()
+})
+export const GetUsuarioHistoricoResponse = zod.array(GetUsuarioHistoricoResponseItem)
+
+
+/**
+ * @summary Add or update episode in watch history
+ */
+export const AddToHistoricoParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+export const AddToHistoricoBody = zod.object({
+  "episodioId": zod.number(),
+  "obraId": zod.number()
+})
+
+
+/**
+ * @summary Clear all watch history for user
+ */
+export const ClearHistoricoParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+
+/**
  * @summary Get admin dashboard statistics
  */
 export const GetAdminStatsResponse = zod.object({

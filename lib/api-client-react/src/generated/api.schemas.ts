@@ -194,6 +194,33 @@ export interface GeneroInput {
   nome: string;
 }
 
+export interface HistoricoItem {
+  id: number;
+  uid: string;
+  episodioId: number;
+  obraId: number;
+  watchedAt: string;
+  episodioNumero: number;
+  episodioTitulo: string;
+  episodioTemporada: number;
+  obraTitulo: string;
+  obraSlug: string;
+  obraCapaUrl: string;
+}
+
+export interface HistoricoRaw {
+  id: number;
+  uid: string;
+  episodioId: number;
+  obraId: number;
+  watchedAt: string;
+}
+
+export interface HistoricoInput {
+  episodioId: number;
+  obraId: number;
+}
+
 export interface AdminStats {
   totalObras: number;
   totalEpisodios: number;

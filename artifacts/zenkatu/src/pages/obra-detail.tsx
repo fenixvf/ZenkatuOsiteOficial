@@ -17,6 +17,7 @@ import {
   useGetUsuarioLista,
   useAddToLista,
   useRemoveFromLista,
+  useAddToHistorico,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth-context";
 import { useQueryClient } from "@tanstack/react-query";
@@ -46,6 +47,7 @@ function Player({ content }: { content: string }) {
         videoRef.current.src = trimmed;
       }
     }
+    return undefined;
   }, [trimmed]);
 
   // HTML embed (iframe code, etc.)
@@ -89,20 +91,22 @@ function Player({ content }: { content: string }) {
   );
 }
 
+type ComentarioShape = {
+  id: number;
+  obraId: number;
+  userId: string;
+  username: string;
+  userPhoto?: string | null;
+  texto: string;
+  parentId?: number | null;
+  editado?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+};
+
 interface ComentarioItemProps {
-  comentario: {
-    id: number;
-    obraId: number;
-    userId: string;
-    username: string;
-    userPhoto?: string | null;
-    texto: string;
-    parentId?: number | null;
-    editado: boolean;
-    createdAt: string;
-    updatedAt: string;
-  };
-  replies: typeof comentario[];
+  comentario: ComentarioShape;
+  replies: ComentarioShape[];
   currentUserId?: string;
   isAdmin: boolean;
   onDelete: (id: number) => void;
@@ -288,22 +292,26 @@ export default function ObraDetail() {
   }, [obra?.id, incrementView]);
 
   const { data: episodiosRaw, isLoading: loadingEpisodios } = useListObraEpisodios(obra?.id || 0, {
-    query: { enabled: !!obra?.id }
+    query: { enabled: !!obra?.id, queryKey: ["listObraEpisodios", obra?.id || 0] },
   });
   const episodios = Array.isArray(episodiosRaw) ? episodiosRaw : [];
 
   const { data: comentariosRaw, isLoading: loadingComentarios } = useListComentarios(obra?.id || 0, {
-    query: { enabled: !!obra?.id }
+    query: { enabled: !!obra?.id, queryKey: ["listComentarios", obra?.id || 0] },
   });
   const comentarios = Array.isArray(comentariosRaw) ? comentariosRaw : [];
 
   const { data: listaObrasRaw } = useGetUsuarioLista(currentUser?.uid || "", {
-    query: { enabled: !!currentUser?.uid }
+    query: {
+      enabled: !!currentUser?.uid,
+      queryKey: ["getUsuarioLista", currentUser?.uid || ""],
+    },
   });
   const listaObras = Array.isArray(listaObrasRaw) ? listaObrasRaw : [];
 
   const addToLista = useAddToLista();
   const removeFromLista = useRemoveFromLista();
+  const addToHistorico = useAddToHistorico();
 
   const isInLista = obra ? listaObras.some(o => o.id === obra.id) : false;
 
@@ -334,10 +342,21 @@ export default function ObraDetail() {
 
   useEffect(() => {
     if (episodios.length > 0 && !activeEpisodeId) {
-      setActiveEpisodeId(episodios[0].id);
-      setSelectedSeason(episodios[0].temporada);
+      const first = episodios[0];
+      setActiveEpisodeId(first.id);
+      setSelectedSeason(first.temporada);
+      if (currentUser?.uid && obra?.id) {
+        addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } });
+      }
     }
-  }, [episodios, activeEpisodeId]);
+  }, [episodios, activeEpisodeId, obra?.id]);
+
+  const handleSelectEpisode = (episodioId: number) => {
+    setActiveEpisodeId(episodioId);
+    if (currentUser?.uid && obra?.id) {
+      addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId, obraId: obra.id } });
+    }
+  };
 
   const seasons = Array.from(new Set(episodios.map(ep => ep.temporada))).sort((a, b) => a - b);
   const filteredEpisodes = episodios.filter(ep => ep.temporada === selectedSeason).sort((a, b) => a.numero - b.numero);
@@ -349,13 +368,13 @@ export default function ObraDetail() {
 
     try {
       await createComentario.mutateAsync({
+        obraId: obra.id,
         data: {
           userId: currentUser.uid,
           username: userProfile.username || currentUser.displayName || "Usuário",
           userPhoto: userProfile.photoUrl || currentUser.photoURL || null,
           texto: newComment.trim(),
           parentId: null,
-          obraId: obra.id
         }
       });
       setNewComment("");
@@ -385,13 +404,13 @@ export default function ObraDetail() {
     if (!currentUser || !userProfile || !obra?.id) return;
     try {
       await createComentario.mutateAsync({
+        obraId: obra.id,
         data: {
           userId: currentUser.uid,
           username: userProfile.username || currentUser.displayName || "Usuário",
           userPhoto: userProfile.photoUrl || currentUser.photoURL || null,
           texto: text,
           parentId,
-          obraId: obra.id
         }
       });
       queryClient.invalidateQueries({ queryKey: getListComentariosQueryKey(obra.id) });
@@ -634,7 +653,7 @@ export default function ObraDetail() {
                 filteredEpisodes.map(ep => (
                   <button
                     key={ep.id}
-                    onClick={() => setActiveEpisodeId(ep.id)}
+                    onClick={() => handleSelectEpisode(ep.id)}
                     className={`w-full flex gap-3 p-2 rounded-lg transition-all border text-left group
                       ${activeEpisodeId === ep.id
                         ? "bg-primary/10 border-primary shadow-[0_0_10px_rgba(59,130,246,0.15)]"

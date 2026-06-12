@@ -6,6 +6,7 @@ import comentariosRouter from "./comentarios";
 import usuariosRouter from "./usuarios";
 import statsRouter from "./stats";
 import listaRouter from "./lista";
+import historicoRouter from "./historico";
 import generosRouter from "./generos";
 
 const router: IRouter = Router();
@@ -17,6 +18,7 @@ router.use(comentariosRouter);
 router.use(usuariosRouter);
 router.use(statsRouter);
 router.use(listaRouter);
+router.use(historicoRouter);
 router.use(generosRouter);
 
 export default router;
