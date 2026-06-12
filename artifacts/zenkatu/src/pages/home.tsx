@@ -191,16 +191,16 @@ function ObrasRecentes() {
 
         <div
           ref={scrollRef}
-          className="flex gap-2.5 overflow-x-auto pb-2 snap-x snap-mandatory scroll-smooth px-1"
+          className="flex gap-2.5 overflow-x-auto pb-2 scroll-smooth px-1"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {obras.map((obra, idx) => (
             <motion.div
               key={obra.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
-              className="min-w-[110px] md:min-w-[130px] flex-shrink-0 snap-start"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: idx * 0.04 }}
+              className="w-[110px] md:w-[130px] shrink-0"
             >
               <Link href={`/obra/${obra.slug}`}>
                 <div className="group relative aspect-[2/3] rounded-md overflow-hidden border border-border bg-card transition-all hover:scale-[1.03] hover:border-primary/50 hover:shadow-[0_0_12px_rgba(59,130,246,0.25)]">
