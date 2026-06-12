@@ -79,6 +79,9 @@ export default function Perfil() {
         uid: currentUser!.uid,
         data: { username },
       });
+      queryClient.invalidateQueries({
+        queryKey: ["getUsuario", currentUser!.uid],
+      });
       toast({
         title: "Perfil atualizado",
         description: "Seu nome de usuário foi salvo.",
