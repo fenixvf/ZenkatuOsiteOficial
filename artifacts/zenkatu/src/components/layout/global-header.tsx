@@ -191,7 +191,7 @@ function DesktopSearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => hasQuery && setOpen(true)}
-          placeholder="Buscar animes..."
+          placeholder="Buscar projeto..."
           className="pl-9 pr-8 bg-secondary/60 border-border focus-visible:ring-primary/50 h-9 rounded-xl"
         />
         <AnimatePresence>
@@ -268,7 +268,7 @@ function MobileSearchOverlay({ onClose }: { onClose: () => void }) {
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar animes..."
+            placeholder="Buscar projeto..."
             className="w-full h-11 pl-9 pr-4 rounded-xl bg-secondary/60 border border-border text-sm outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
