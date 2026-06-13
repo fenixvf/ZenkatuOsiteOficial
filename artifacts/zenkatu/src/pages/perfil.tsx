@@ -368,10 +368,20 @@ export default function Perfil() {
                           alt={obra.titulo}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <p className="absolute bottom-0 left-0 right-0 p-2 text-xs font-medium line-clamp-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                          {obra.titulo}
-                        </p>
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
+                          {obra.tipografiaUrl ? (
+                            <img
+                              src={obra.tipografiaUrl}
+                              alt={obra.titulo}
+                              className="max-h-8 w-auto object-contain drop-shadow-lg"
+                            />
+                          ) : (
+                            <p className="text-xs font-medium line-clamp-2 drop-shadow">
+                              {obra.titulo}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </Link>
                     <button
@@ -444,11 +454,22 @@ export default function Perfil() {
                 {historico.map((item) => (
                   <Link key={item.id} href={`/obra/${item.obraSlug}`}>
                     <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
-                      <img
-                        src={item.obraCapaUrl || `https://placehold.co/56x80/0F1C2E/1E3A8A`}
-                        alt={item.obraTitulo}
-                        className="w-12 h-16 object-cover rounded flex-shrink-0"
-                      />
+                      <div className="relative w-12 h-16 flex-shrink-0">
+                        <img
+                          src={item.obraCapaUrl || `https://placehold.co/56x80/0F1C2E/1E3A8A`}
+                          alt={item.obraTitulo}
+                          className="w-full h-full object-cover rounded"
+                        />
+                        {item.obraTipografiaUrl && (
+                          <div className="absolute inset-0 flex items-end justify-start p-0.5 bg-gradient-to-t from-background/80 to-transparent rounded">
+                            <img
+                              src={item.obraTipografiaUrl}
+                              alt={item.obraTitulo}
+                              className="max-h-4 w-auto object-contain drop-shadow"
+                            />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
                           {item.obraTitulo}

@@ -82,6 +82,8 @@ export interface Episodio {
   obraSlug?: string | null;
   /** @nullable */
   obraCapaUrl?: string | null;
+  /** @nullable */
+  obraTipografiaUrl?: string | null;
   temporada: number;
   numero: number;
   titulo: string;
@@ -208,6 +210,8 @@ export interface HistoricoItem {
   obraTitulo: string;
   obraSlug: string;
   obraCapaUrl: string;
+  /** @nullable */
+  obraTipografiaUrl?: string | null;
 }
 
 export interface HistoricoRaw {

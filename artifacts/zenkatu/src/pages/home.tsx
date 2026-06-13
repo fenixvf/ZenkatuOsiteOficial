@@ -213,18 +213,21 @@ function ObrasRecentes() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 pointer-events-none" />
                   <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground border-none px-1 py-0 text-[9px] font-bold shadow-md">
                     NOVO
                   </Badge>
-                  <div className="absolute bottom-0 left-0 right-0 p-1.5 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                    <h4 className="font-display font-semibold text-[10px] line-clamp-2 leading-tight">
-                      {obra.titulo}
-                    </h4>
-                    {obra.generos?.[0] && (
-                      <p className="text-[9px] text-primary font-medium mt-0.5 truncate">
-                        {obra.generos[0]}
-                      </p>
+                  <div className="absolute bottom-0 left-0 right-0 px-1.5 pb-1.5">
+                    {obra.tipografiaUrl ? (
+                      <img
+                        src={obra.tipografiaUrl}
+                        alt={obra.titulo}
+                        className="max-h-7 w-auto object-contain drop-shadow-lg"
+                      />
+                    ) : (
+                      <h4 className="font-display font-semibold text-[10px] line-clamp-2 leading-tight drop-shadow">
+                        {obra.titulo}
+                      </h4>
                     )}
                   </div>
                 </div>
@@ -346,6 +349,15 @@ function EpisodiosRecentes() {
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Play className="w-10 h-10 text-primary-foreground fill-primary-foreground opacity-90" />
                   </div>
+                  {ep.obraTipografiaUrl && (
+                    <div className="absolute bottom-7 left-2 z-10">
+                      <img
+                        src={ep.obraTipografiaUrl}
+                        alt={ep.obraTitulo ?? ""}
+                        className="max-h-6 w-auto object-contain drop-shadow-lg"
+                      />
+                    </div>
+                  )}
                   <Badge className="absolute bottom-2 right-2 bg-background/80 text-foreground backdrop-blur-sm border-none">
                     T{ep.temporada} E{ep.numero}
                   </Badge>

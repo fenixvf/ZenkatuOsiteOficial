@@ -14,6 +14,7 @@ router.get("/episodios", async (req, res) => {
         obraTitulo: obrasTable.titulo,
         obraSlug: obrasTable.slug,
         obraCapaUrl: obrasTable.capaUrl,
+        obraTipografiaUrl: obrasTable.tipografiaUrl,
         temporada: episodiosTable.temporada,
         numero: episodiosTable.numero,
         titulo: episodiosTable.titulo,
@@ -24,7 +25,7 @@ router.get("/episodios", async (req, res) => {
       .from(episodiosTable)
       .leftJoin(obrasTable, eq(episodiosTable.obraId, obrasTable.id))
       .orderBy(desc(episodiosTable.publishedAt))
-      .limit(20);
+      .limit(7);
     res.json(rows.map(serializeEpisodio));
   } catch (e) {
     req.log.error(e);
@@ -167,6 +168,7 @@ function serializeEpisodio(ep: {
   obraTitulo: string | null;
   obraSlug?: string | null;
   obraCapaUrl: string | null;
+  obraTipografiaUrl?: string | null;
   temporada: number;
   numero: number;
   titulo: string;
@@ -180,6 +182,7 @@ function serializeEpisodio(ep: {
     obraTitulo: ep.obraTitulo,
     obraSlug: ep.obraSlug ?? null,
     obraCapaUrl: ep.obraCapaUrl,
+    obraTipografiaUrl: ep.obraTipografiaUrl ?? null,
     temporada: ep.temporada,
     numero: ep.numero,
     titulo: ep.titulo,

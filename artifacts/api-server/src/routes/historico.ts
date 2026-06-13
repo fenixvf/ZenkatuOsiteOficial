@@ -20,6 +20,7 @@ router.get("/usuarios/:uid/historico", async (req, res) => {
         obraTitulo: obrasTable.titulo,
         obraSlug: obrasTable.slug,
         obraCapaUrl: obrasTable.capaUrl,
+        obraTipografiaUrl: obrasTable.tipografiaUrl,
       })
       .from(historicoTable)
       .innerJoin(episodiosTable, eq(historicoTable.episodioId, episodiosTable.id))
