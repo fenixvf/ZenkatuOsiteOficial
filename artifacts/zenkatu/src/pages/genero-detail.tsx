@@ -80,10 +80,20 @@ export default function GeneroDetail() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
+                    {obra.tipografiaUrl ? (
+                      <img
+                        src={obra.tipografiaUrl}
+                        alt={obra.titulo}
+                        className="max-h-9 w-auto object-contain drop-shadow-lg"
+                      />
+                    ) : (
+                      <h4 className="font-display font-semibold text-sm line-clamp-2 drop-shadow">{obra.titulo}</h4>
+                    )}
+                  </div>
                   <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all">
-                    <h4 className="font-display font-semibold text-sm line-clamp-2">{obra.titulo}</h4>
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1 mt-7">
                       <Badge className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary border-none">
                         {obra.status}
                       </Badge>
