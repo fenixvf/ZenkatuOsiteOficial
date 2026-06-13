@@ -16,6 +16,36 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    (function () {
+      function block(e) {
+        if (
+          e.keyCode === 123 ||
+          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
+          (e.ctrlKey && e.keyCode === 85)
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+      document.addEventListener("keydown", block, true);
+      document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+        return false;
+      });
+      var threshold = 160;
+      setInterval(function () {
+        var before = performance.now();
+        (function () {}).constructor("debugger")();
+        var after = performance.now();
+        if (after - before > threshold) {
+          document.body.innerHTML = "";
+          window.location.reload();
+        }
+      }, 1000);
+    })();
+  </script>
   </head>
   <body>
     <div id="root"></div>
