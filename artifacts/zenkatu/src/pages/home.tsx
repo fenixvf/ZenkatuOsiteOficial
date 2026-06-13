@@ -4,15 +4,17 @@ import {
   useListTop10Obras,
   useListEpisodiosRecentes,
   useGetUsuarioHistorico,
+  useClearHistorico,
 } from "@workspace/api-client-react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Play, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Info, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
+import { useQueryClient } from "@tanstack/react-query";
 
 function HeroCarousel() {
   const { data: bannerObras, isLoading } = useListBannerObras();
@@ -153,6 +155,8 @@ function HeroCarousel() {
 function ContinuarAssistindo() {
   const { currentUser } = useAuth();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const clearHistorico = useClearHistorico();
 
   const { data: historicoRaw, isLoading } = useGetUsuarioHistorico(
     currentUser?.uid || "",
@@ -167,7 +171,16 @@ function ContinuarAssistindo() {
   const scroll = (dir: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir === "left" ? -480 : 480, behavior: "smooth" });
+    el.scrollBy({ left: dir === "left" ? -360 : 360, behavior: "smooth" });
+  };
+
+  const handleClear = () => {
+    if (!currentUser?.uid) return;
+    clearHistorico.mutate({ uid: currentUser.uid }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["getUsuarioHistorico", currentUser.uid] });
+      },
+    });
   };
 
   if (!currentUser) return null;
@@ -175,10 +188,10 @@ function ContinuarAssistindo() {
   if (isLoading) {
     return (
       <div>
-        <div className="h-8 w-56 bg-secondary/60 rounded mb-6" />
-        <div className="flex gap-3 overflow-x-hidden p-1">
+        <div className="h-7 w-52 bg-secondary/60 rounded mb-4" />
+        <div className="flex gap-2.5 overflow-x-hidden p-1">
           {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="min-w-[200px] aspect-video rounded-lg flex-shrink-0" />
+            <Skeleton key={i} className="min-w-[152px] aspect-video rounded-lg flex-shrink-0" />
           ))}
         </div>
       </div>
@@ -187,7 +200,6 @@ function ContinuarAssistindo() {
 
   const historico = Array.isArray(historicoRaw) ? historicoRaw : [];
 
-  // Deduplicate by obraId, keeping only the most recent episode per obra
   const seen = new Set<number>();
   const items = historico.filter((h) => {
     if (seen.has(h.obraId)) return false;
@@ -199,7 +211,20 @@ function ContinuarAssistindo() {
 
   return (
     <div>
-      <SectionTitle title="Continuar Assistindo" />
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-display text-xl md:text-2xl font-bold tracking-wide border-l-4 border-primary pl-4 text-foreground">
+          Continuar Assistindo
+        </h3>
+        <button
+          onClick={handleClear}
+          disabled={clearHistorico.isPending}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Limpar
+        </button>
+      </div>
+
       <div className="relative">
         <button
           onClick={() => scroll("left")}
@@ -210,7 +235,7 @@ function ContinuarAssistindo() {
 
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto pb-2 scroll-smooth px-1"
+          className="flex gap-2.5 overflow-x-auto pb-2 scroll-smooth px-1"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {items.map((item, idx) => (
@@ -219,43 +244,33 @@ function ContinuarAssistindo() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: idx * 0.05 }}
-              className="min-w-[200px] md:min-w-[220px] shrink-0"
+              className="w-[152px] md:w-[168px] shrink-0"
             >
               <Link href={`/obra/${item.obraSlug}?ep=${item.episodioId}`}>
-                <div className="group relative rounded-lg overflow-hidden border border-border bg-card hover:border-primary/50 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                <div className="group relative rounded-md overflow-hidden border border-border bg-card hover:border-primary/50 transition-all hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]">
                   <div className="aspect-video relative">
                     <img
                       src={
+                        (item as any).episodioThumbnailUrl ||
                         item.obraCapaUrl ||
-                        `https://placehold.co/640x360/0F1C2E/1E3A8A?text=${item.obraTitulo}`
+                        `https://placehold.co/640x360/0F1C2E/1E3A8A?text=Ep${item.episodioNumero}`
                       }
-                      alt={item.obraTitulo ?? ""}
+                      alt={item.episodioTitulo ?? ""}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play className="w-10 h-10 text-white fill-white opacity-90" />
+                      <Play className="w-7 h-7 text-white fill-white opacity-90" />
                     </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent pointer-events-none" />
-                    {item.obraTipografiaUrl ? (
-                      <div className="absolute bottom-7 left-2 z-10">
-                        <img
-                          src={item.obraTipografiaUrl}
-                          alt={item.obraTitulo ?? ""}
-                          className="max-h-7 w-auto object-contain"
-                          style={{ filter: "drop-shadow(0 0 3px rgba(0,0,0,0.85))" }}
-                        />
-                      </div>
-                    ) : null}
-                    <Badge className="absolute bottom-2 right-2 bg-background/80 text-foreground backdrop-blur-sm border-none text-[10px]">
+                    <Badge className="absolute bottom-1.5 right-1.5 bg-background/80 text-foreground backdrop-blur-sm border-none text-[9px] px-1 py-0">
                       T{item.episodioTemporada} E{item.episodioNumero}
                     </Badge>
                   </div>
-                  <div className="px-2.5 py-2">
-                    <p className="font-display font-semibold text-xs line-clamp-1 group-hover:text-primary transition-colors">
+                  <div className="px-2 py-1.5">
+                    <p className="font-display font-semibold text-[11px] line-clamp-1 group-hover:text-primary transition-colors">
                       {item.obraTitulo}
                     </p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
+                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
                       {item.episodioTitulo}
                     </p>
                   </div>

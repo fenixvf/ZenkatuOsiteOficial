@@ -17,6 +17,7 @@ router.get("/usuarios/:uid/historico", async (req, res) => {
         episodioNumero: episodiosTable.numero,
         episodioTitulo: episodiosTable.titulo,
         episodioTemporada: episodiosTable.temporada,
+        episodioThumbnailUrl: episodiosTable.thumbnailUrl,
         obraTitulo: obrasTable.titulo,
         obraSlug: obrasTable.slug,
         obraCapaUrl: obrasTable.capaUrl,
