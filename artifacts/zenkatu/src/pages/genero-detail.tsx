@@ -86,7 +86,7 @@ export default function GeneroDetail() {
                       <img
                         src={obra.tipografiaUrl}
                         alt={obra.titulo}
-                        className="max-h-9 w-auto object-contain drop-shadow-lg"
+                        className="max-h-14 w-auto object-contain drop-shadow-lg"
                       />
                     ) : (
                       <h4 className="font-display font-semibold text-sm line-clamp-2 drop-shadow">{obra.titulo}</h4>
