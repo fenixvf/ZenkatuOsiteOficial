@@ -354,7 +354,8 @@ function EpisodiosRecentes() {
                       <img
                         src={ep.obraTipografiaUrl}
                         alt={ep.obraTitulo ?? ""}
-                        className="max-h-6 w-auto object-contain drop-shadow-lg"
+                        className="max-h-9 w-auto object-contain"
+                        style={{ filter: "drop-shadow(0 0 3px rgba(0,0,0,0.85)) drop-shadow(0 1px 4px rgba(0,0,0,0.7))" }}
                       />
                     </div>
                   )}
