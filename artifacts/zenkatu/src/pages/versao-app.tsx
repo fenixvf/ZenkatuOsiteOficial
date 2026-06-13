@@ -1,4 +1,4 @@
-import { Download, Smartphone, Wifi, Zap, Shield } from "lucide-react";
+import { Download, Smartphone, Star, Zap, Shield } from "lucide-react";
 
 const APK_URL = "https://archive.org/download/Zenkatuapp/Zenkatuapp.apk";
 
@@ -24,8 +24,8 @@ export default function VersaoApp() {
             <span className="text-xs text-muted-foreground">Rápido</span>
           </div>
           <div className="rounded-xl bg-secondary/40 border border-border/50 p-4 flex flex-col items-center gap-2">
-            <Wifi className="w-5 h-5 text-primary" />
-            <span className="text-xs text-muted-foreground">Offline</span>
+            <Star className="w-5 h-5 text-primary" />
+            <span className="text-xs text-muted-foreground">Facilidade</span>
           </div>
           <div className="rounded-xl bg-secondary/40 border border-border/50 p-4 flex flex-col items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
