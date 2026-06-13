@@ -357,6 +357,11 @@ export default function ObraDetail() {
       const ep = episodios.find(e => e.id === activeEpisodeId);
       if (ep) {
         setSelectedSeason(ep.temporada);
+        if (currentUser?.uid && obra?.id) {
+          addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: ep.id, obraId: obra.id } }, {
+            onSuccess: () => queryClient.invalidateQueries({ queryKey: ["getUsuarioHistorico", currentUser.uid] }),
+          });
+        }
       } else {
         const first = episodios[0];
         setActiveEpisodeId(first.id);
