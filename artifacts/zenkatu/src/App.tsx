@@ -19,6 +19,7 @@ import AdminObras from "@/pages/admin-obras";
 import AdminObrasForm from "@/pages/admin-obras-form";
 import AdminEpisodios from "@/pages/admin-episodios";
 import AdminGeneros from "@/pages/admin-generos";
+import VersaoApp from "@/pages/versao-app";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -62,6 +63,7 @@ function Router() {
         <Route path="/generos" component={Generos} />
         <Route path="/genero/:slug" component={GeneroDetail} />
         <Route path="/ranking" component={Ranking} />
+        <Route path="/versao-app" component={VersaoApp} />
 
         {/* Admin Routes */}
         <Route path="/admin">

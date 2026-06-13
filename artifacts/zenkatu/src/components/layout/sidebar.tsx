@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Layers,
   Film,
+  Smartphone,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -196,6 +197,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       <NavLink href="/" icon={Home} label="Início" onClick={onClose} />
       <NavLink href="/ranking" icon={TrendingUp} label="Ranking" onClick={onClose} />
+      <NavLink href="/versao-app" icon={Smartphone} label="Versão app" onClick={onClose} />
       <GeneroSection onClose={onClose} />
 
       {isAdmin && (
