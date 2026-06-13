@@ -362,7 +362,9 @@ export default function ObraDetail() {
         setActiveEpisodeId(first.id);
         setSelectedSeason(first.temporada);
         if (currentUser?.uid && obra?.id) {
-          addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } });
+          addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } }, {
+            onSuccess: () => queryClient.invalidateQueries({ queryKey: ["getUsuarioHistorico", currentUser.uid] }),
+          });
         }
       }
     } else {
@@ -370,7 +372,9 @@ export default function ObraDetail() {
       setActiveEpisodeId(first.id);
       setSelectedSeason(first.temporada);
       if (currentUser?.uid && obra?.id) {
-        addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } });
+        addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId: first.id, obraId: obra.id } }, {
+          onSuccess: () => queryClient.invalidateQueries({ queryKey: ["getUsuarioHistorico", currentUser.uid] }),
+        });
       }
     }
   }, [episodios, obra?.id]);
@@ -378,7 +382,9 @@ export default function ObraDetail() {
   const handleSelectEpisode = (episodioId: number) => {
     setActiveEpisodeId(episodioId);
     if (currentUser?.uid && obra?.id) {
-      addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId, obraId: obra.id } });
+      addToHistorico.mutate({ uid: currentUser.uid, data: { episodioId, obraId: obra.id } }, {
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["getUsuarioHistorico", currentUser.uid] }),
+      });
     }
   };
 
