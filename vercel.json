@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm run build:render",
+  "outputDirectory": "artifacts/zenkatu/dist/public",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/index" }
+  ],
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 30
+    }
+  }
+}
