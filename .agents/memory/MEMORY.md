@@ -1,2 +1,3 @@
 - [Orval Params collision](orval-params-collision.md) — GET endpoints with query params cause TS2308; remove query params from spec, filter client-side.
 - [Zenkatu stack](zenkatu-stack.md) — Firebase Auth + PostgreSQL mirror pattern; VITE_ env vars required for frontend Firebase access.
+- [Supabase connection](supabase-connection.md) — Supabase direct host is IPv6-only (Replit is IPv4); must use pooler. Correct pooler host: aws-1-sa-east-1.pooler.supabase.com:6543, user: postgres.{ref}. Main API Server on 8099, artifact API Server on 8080 (PORT env var), vite proxy → 8099.
