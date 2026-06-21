@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "pnpm run build:render",
+  "buildCommand": "pnpm -w run build:render",
   "outputDirectory": "artifacts/zenkatu/dist/public",
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api/index" }
