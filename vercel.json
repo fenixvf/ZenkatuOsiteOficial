@@ -2,8 +2,10 @@
   "version": 2,
   "framework": null,
   "buildCommand": "pnpm -w run build:render",
+  "outputDirectory": "artifacts/zenkatu/dist/public",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.mjs" }
+    { "source": "/api/(.*)", "destination": "/api/index.mjs" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
   "env": {
     "NODE_ENV": "production"
@@ -11,8 +13,7 @@
   "functions": {
     "api/index.mjs": {
       "runtime": "nodejs20.x",
-      "maxDuration": 30,
-      "includeFiles": "artifacts/zenkatu/dist/public/**"
+      "maxDuration": 30
     }
   }
 }
