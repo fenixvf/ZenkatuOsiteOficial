@@ -2,10 +2,10 @@
   "version": 2,
   "buildCommand": "pnpm -w run build:render",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
   "functions": {
-    "api/index.js": {
+    "api/index.mjs": {
       "runtime": "nodejs20.x",
       "maxDuration": 30,
       "includeFiles": "artifacts/zenkatu/dist/public/**"

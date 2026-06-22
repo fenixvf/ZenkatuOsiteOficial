@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
 
 globalThis.require = createRequire(import.meta.url);
 
@@ -41,6 +41,7 @@ const plugins = [esbuildPluginPino({ transports: ["pino-pretty"] })];
 
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
+  const apiDir = path.resolve(artifactDir, "../../api");
   await rm(distDir, { recursive: true, force: true });
 
   // Main server entry (with app.listen — for Replit / Render / Railway)
@@ -58,13 +59,16 @@ async function buildAll() {
     banner,
   });
 
-  // Vercel handler entry (exports app without listen — for serverless)
+  // Vercel handler: bundle into api/_handler/ (underscore prefix = not a Vercel route).
+  // A thin api/index.mjs re-exports it so Vercel gets pre-compiled JS with no TypeScript.
+  const handlerDir = path.resolve(apiDir, "_handler");
+  await rm(handlerDir, { recursive: true, force: true });
   await esbuild({
-    entryPoints: [path.resolve(artifactDir, "src/handler.ts")],
+    entryPoints: [{ in: path.resolve(artifactDir, "src/handler.ts"), out: "index" }],
     platform: "node",
     bundle: true,
     format: "esm",
-    outdir: distDir,
+    outdir: handlerDir,
     outExtension: { ".js": ".mjs" },
     logLevel: "info",
     external,
@@ -72,6 +76,10 @@ async function buildAll() {
     plugins,
     banner,
   });
+  await writeFile(
+    path.resolve(apiDir, "index.mjs"),
+    'export { default } from "./_handler/index.mjs";\n',
+  );
 }
 
 buildAll().catch((err) => {
