@@ -11,7 +11,7 @@
     "api/index.mjs": {
       "runtime": "nodejs20.x",
       "maxDuration": 30,
-      "includeFiles": "api/_handler/**,artifacts/zenkatu/dist/public/**"
+      "includeFiles": "artifacts/zenkatu/dist/public/**"
     }
   }
 }
