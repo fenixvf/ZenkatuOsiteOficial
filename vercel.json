@@ -4,11 +4,14 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index.mjs" }
   ],
+  "env": {
+    "NODE_ENV": "production"
+  },
   "functions": {
     "api/index.mjs": {
       "runtime": "nodejs20.x",
       "maxDuration": 30,
-      "includeFiles": "artifacts/zenkatu/dist/public/**"
+      "includeFiles": "api/_handler/**,artifacts/zenkatu/dist/public/**"
     }
   }
 }
