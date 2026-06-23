@@ -57233,6 +57233,14 @@ var generos_default = router9;
 // src/routes/config.ts
 var import_express10 = __toESM(require_express2(), 1);
 var router10 = (0, import_express10.Router)();
+async function ensureTable() {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS site_config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+}
 async function getConfigMap() {
   const rows = await db.select().from(siteConfigTable);
   const config2 = {};
@@ -57243,6 +57251,7 @@ async function getConfigMap() {
 }
 router10.get("/config", async (req, res) => {
   try {
+    await ensureTable();
     res.json(await getConfigMap());
   } catch (e) {
     req.log.error(e);
@@ -57251,6 +57260,7 @@ router10.get("/config", async (req, res) => {
 });
 router10.patch("/config", async (req, res) => {
   try {
+    await ensureTable();
     const updates = req.body;
     for (const [key, value] of Object.entries(updates)) {
       if (value === "" || value === null || value === void 0) continue;

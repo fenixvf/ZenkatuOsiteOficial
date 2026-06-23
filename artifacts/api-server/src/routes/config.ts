@@ -1,8 +1,18 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { siteConfigTable } from "@workspace/db";
+import { sql } from "drizzle-orm";
 
 const router = Router();
+
+async function ensureTable() {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS site_config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    )
+  `);
+}
 
 async function getConfigMap(): Promise<Record<string, string>> {
   const rows = await db.select().from(siteConfigTable);
@@ -15,6 +25,7 @@ async function getConfigMap(): Promise<Record<string, string>> {
 
 router.get("/config", async (req, res) => {
   try {
+    await ensureTable();
     res.json(await getConfigMap());
   } catch (e) {
     req.log.error(e);
@@ -24,6 +35,7 @@ router.get("/config", async (req, res) => {
 
 router.patch("/config", async (req, res) => {
   try {
+    await ensureTable();
     const updates = req.body as Record<string, string>;
     for (const [key, value] of Object.entries(updates)) {
       if (value === "" || value === null || value === undefined) continue;
