@@ -57253,6 +57253,7 @@ router10.patch("/config", async (req, res) => {
   try {
     const updates = req.body;
     for (const [key, value] of Object.entries(updates)) {
+      if (value === "" || value === null || value === void 0) continue;
       await db.insert(siteConfigTable).values({ key, value }).onConflictDoUpdate({ target: siteConfigTable.key, set: { value } });
     }
     res.json(await getConfigMap());
