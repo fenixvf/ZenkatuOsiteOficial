@@ -32,10 +32,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export default function Perfil() {
   const { currentUser, userProfile, loading } = useAuth();
@@ -47,6 +49,16 @@ export default function Perfil() {
   const uploadAvatar = useUploadAvatar();
   const removeFromLista = useRemoveFromLista();
   const clearHistorico = useClearHistorico();
+
+  const push = usePushNotifications(currentUser?.uid ?? null);
+  const [localPrefs, setLocalPrefs] = useState({ notifyEpisodios: true, notifyObras: true });
+  const [prefsSaving, setPrefsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!push.isLoading) {
+      setLocalPrefs(push.preferences);
+    }
+  }, [push.isLoading, push.preferences]);
 
   const [username, setUsername] = useState(userProfile?.username || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -334,6 +346,127 @@ export default function Perfil() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Notificações Push */}
+        {push.isSupported && (
+          <Card className="border-border bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                Notificações Push
+              </CardTitle>
+              <CardDescription>
+                Receba avisos no navegador sobre novos episódios e projetos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {push.isLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : push.isSubscribed ? (
+                <>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
+                    <Bell className="w-4 h-4 text-primary shrink-0" />
+                    <p className="text-sm text-primary font-medium">Notificações ativadas neste dispositivo.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-sm font-medium text-foreground">O que deseja receber:</p>
+
+                    <div className="flex items-center justify-between py-2 border-b border-border/50">
+                      <div>
+                        <p className="text-sm font-medium">Novos episódios</p>
+                        <p className="text-xs text-muted-foreground">Quando um episódio for lançado</p>
+                      </div>
+                      <Switch
+                        checked={localPrefs.notifyEpisodios}
+                        onCheckedChange={(checked) => setLocalPrefs((p) => ({ ...p, notifyEpisodios: checked }))}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <div>
+                        <p className="text-sm font-medium">Novos projetos</p>
+                        <p className="text-xs text-muted-foreground">Quando uma nova obra for adicionada</p>
+                      </div>
+                      <Switch
+                        checked={localPrefs.notifyObras}
+                        onCheckedChange={(checked) => setLocalPrefs((p) => ({ ...p, notifyObras: checked }))}
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <Button
+                        size="sm"
+                        disabled={prefsSaving || (localPrefs.notifyEpisodios === push.preferences.notifyEpisodios && localPrefs.notifyObras === push.preferences.notifyObras)}
+                        onClick={async () => {
+                          setPrefsSaving(true);
+                          try {
+                            await push.updatePreferences(localPrefs);
+                            toast({ title: "Preferências salvas!" });
+                          } catch {
+                            toast({ title: "Erro ao salvar preferências", variant: "destructive" });
+                          } finally {
+                            setPrefsSaving(false);
+                          }
+                        }}
+                        className="gap-2"
+                      >
+                        {prefsSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                        Salvar preferências
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive gap-2"
+                        onClick={async () => {
+                          try {
+                            await push.unsubscribe();
+                            toast({ title: "Notificações desativadas." });
+                          } catch {
+                            toast({ title: "Erro ao desativar", variant: "destructive" });
+                          }
+                        }}
+                      >
+                        <BellOff className="w-3 h-3" />
+                        Desativar
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-4 space-y-4">
+                  <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mx-auto">
+                    <BellOff className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Notificações desativadas</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ative para receber avisos sobre novos episódios e projetos diretamente no navegador.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={async () => {
+                      try {
+                        await push.subscribe(localPrefs);
+                        toast({ title: "Notificações ativadas!" });
+                      } catch (e: any) {
+                        const msg = e.message?.includes("negada") ? "Permissão negada. Ative nas configurações do navegador." : "Erro ao ativar notificações.";
+                        toast({ title: msg, variant: "destructive" });
+                      }
+                    }}
+                    disabled={push.isLoading}
+                    className="gap-2"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Ativar notificações
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Minha Lista */}
         <Card className="border-border bg-card/50 backdrop-blur">

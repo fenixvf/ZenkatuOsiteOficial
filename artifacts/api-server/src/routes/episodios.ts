@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { episodiosTable, obrasTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
+import { sendPushToAll } from "../lib/push-notifications";
 
 const router = Router();
 
@@ -72,6 +73,7 @@ router.post("/obras/:obraId/episodios", async (req, res) => {
       return;
     }
     const { temporada, numero, titulo, thumbnailUrl, playerContent, publishedAt } = req.body;
+    const [obra] = await db.select().from(obrasTable).where(eq(obrasTable.id, obraId));
     const [ep] = await db.insert(episodiosTable).values({
       obraId,
       temporada: temporada ?? 1,
@@ -81,7 +83,26 @@ router.post("/obras/:obraId/episodios", async (req, res) => {
       playerContent,
       publishedAt: publishedAt ? new Date(publishedAt) : new Date(),
     }).returning();
-    res.status(201).json(serializeEpisodio({ ...ep, obraTitulo: null, obraCapaUrl: null }));
+    res.status(201).json(serializeEpisodio({ ...ep, obraTitulo: obra?.titulo ?? null, obraSlug: obra?.slug ?? null, obraCapaUrl: obra?.capaUrl ?? null }));
+
+    setImmediate(async () => {
+      try {
+        const t = temporada ?? 1;
+        const obraNome = obra?.titulo ?? "Nova obra";
+        const obraSlug = obra?.slug ?? "";
+        await sendPushToAll(
+          {
+            title: `Novo episódio de ${obraNome}`,
+            body: `T${t}E${numero} — ${titulo} já está disponível!`,
+            image: thumbnailUrl ?? obra?.capaUrl ?? undefined,
+            url: obraSlug ? `/obra/${obraSlug}` : "/",
+          },
+          "episodio"
+        );
+      } catch (pushErr) {
+        req.log.error({ pushErr }, "Erro ao enviar push de episódio");
+      }
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });

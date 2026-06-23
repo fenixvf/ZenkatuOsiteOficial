@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { obrasTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
+import { sendPushToAll } from "../lib/push-notifications";
 
 const router = Router();
 
@@ -125,6 +126,22 @@ router.post("/obras", async (req, res) => {
       cast: cast ?? [],
     }).returning();
     res.status(201).json(serializeObra(obra));
+
+    setImmediate(async () => {
+      try {
+        await sendPushToAll(
+          {
+            title: `Nova obra: ${titulo}`,
+            body: `${titulo} (${ano}) já está disponível no Zenkatu!`,
+            image: capaUrl ?? undefined,
+            url: `/obra/${slug}`,
+          },
+          "obra"
+        );
+      } catch (pushErr) {
+        req.log.error({ pushErr }, "Erro ao enviar push de obra");
+      }
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });

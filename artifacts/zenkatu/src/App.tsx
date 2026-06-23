@@ -20,6 +20,7 @@ import AdminObrasForm from "@/pages/admin-obras-form";
 import AdminEpisodios from "@/pages/admin-episodios";
 import AdminGeneros from "@/pages/admin-generos";
 import AdminConfig from "@/pages/admin-config";
+import AdminNotificacoes from "@/pages/admin-notificacoes";
 import VersaoApp from "@/pages/versao-app";
 import NotFound from "@/pages/not-found";
 
@@ -84,6 +85,9 @@ function Router() {
         </Route>
         <Route path="/admin/config">
           <AdminRoute component={AdminConfig} />
+        </Route>
+        <Route path="/admin/notificacoes">
+          <AdminRoute component={AdminNotificacoes} />
         </Route>
 
         <Route component={NotFound} />

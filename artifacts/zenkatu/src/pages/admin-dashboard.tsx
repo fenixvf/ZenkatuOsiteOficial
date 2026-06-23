@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Layers, Film, Users, MessageSquare } from "lucide-react";
+import { Layers, Film, Users, MessageSquare, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminDashboard() {
@@ -79,6 +79,19 @@ export default function AdminDashboard() {
               <div>
                 <h3 className="font-bold text-lg">Nova Obra</h3>
                 <p className="text-sm text-muted-foreground">Adicionar anime ao catálogo</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/admin/notificacoes">
+          <Card className="border-border bg-gradient-to-br from-orange-500/10 to-transparent hover:from-orange-500/20 border-orange-500/30 hover:border-orange-500 transition-all cursor-pointer group">
+            <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+              <div className="p-4 rounded-full bg-orange-500/20 text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                <Bell className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Notificações Push</h3>
+                <p className="text-sm text-muted-foreground">Enviar aviso personalizado</p>
               </div>
             </CardContent>
           </Card>
