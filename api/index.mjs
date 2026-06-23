@@ -64063,7 +64063,11 @@ async function sendPushToAll(payload, type) {
   if (type === "episodio" && !await isAutoEnabled("push_auto_episodios")) return { sent: 0, failed: 0, skipped: true };
   if (type === "obra" && !await isAutoEnabled("push_auto_obras")) return { sent: 0, failed: 0, skipped: true };
   let vapidSubs = await db.select().from(pushSubscriptionsTable);
-  let onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
+  let onesignalSubs = [];
+  try {
+    onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
+  } catch {
+  }
   if (type === "episodio") {
     vapidSubs = vapidSubs.filter((s) => s.notifyEpisodios);
     onesignalSubs = onesignalSubs.filter((s) => s.notifyEpisodios);
@@ -64073,6 +64077,7 @@ async function sendPushToAll(payload, type) {
   }
   const [vapidResult, onesignalResult] = await Promise.all([
     (async () => {
+      if (vapidSubs.length === 0) return { sent: 0, failed: 0 };
       const results = await Promise.allSettled(
         vapidSubs.map(
           (sub) => import_web_push.default.sendNotification(

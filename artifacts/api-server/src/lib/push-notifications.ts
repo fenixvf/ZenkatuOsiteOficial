@@ -35,7 +35,14 @@ export async function sendPushToAll(payload: PushPayload, type: NotificationType
   if (type === "obra" && !(await isAutoEnabled("push_auto_obras"))) return { sent: 0, failed: 0, skipped: true };
 
   let vapidSubs = await db.select().from(pushSubscriptionsTable);
-  let onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
+
+  // Buscar assinaturas OneSignal com segurança — tabela pode não existir em produção ainda
+  let onesignalSubs: typeof onesignalSubscriptionsTable.$inferSelect[] = [];
+  try {
+    onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
+  } catch {
+    // Tabela ainda não existe neste ambiente — ignorar silenciosamente
+  }
 
   if (type === "episodio") {
     vapidSubs = vapidSubs.filter((s) => s.notifyEpisodios);
@@ -47,6 +54,7 @@ export async function sendPushToAll(payload: PushPayload, type: NotificationType
 
   const [vapidResult, onesignalResult] = await Promise.all([
     (async () => {
+      if (vapidSubs.length === 0) return { sent: 0, failed: 0 };
       const results = await Promise.allSettled(
         vapidSubs.map((sub) =>
           webpush.sendNotification(

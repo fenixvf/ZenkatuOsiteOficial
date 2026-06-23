@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const API_BASE = "/api";
 
@@ -18,7 +18,11 @@ function medianOnesignalGetStatus(): Promise<{ isSubscribed: boolean; userId: st
         userId: data?.userId ?? data?.playerId ?? null,
       });
     };
-    (window as any).median.onesignal.getStatus({ callback: cbName });
+    try {
+      (window as any).median.onesignal.getStatus({ callback: cbName });
+    } catch {
+      resolve({ isSubscribed: false, userId: null });
+    }
   });
 }
 
@@ -32,7 +36,11 @@ function medianOnesignalRegister(): Promise<{ isSubscribed: boolean; userId: str
         userId: data?.userId ?? data?.playerId ?? null,
       });
     };
-    (window as any).median.onesignal.register({ callback: cbName });
+    try {
+      (window as any).median.onesignal.register({ callback: cbName });
+    } catch {
+      resolve({ isSubscribed: false, userId: null });
+    }
   });
 }
 
@@ -84,6 +92,8 @@ export function usePushNotifications(uid: string | null): UsePushNotificationsRe
   });
 
   const native = isMedianApp();
+  // Evitar registrar duas vezes o mesmo player ID na mesma sessão
+  const registeredPlayerRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (native) {
@@ -97,6 +107,7 @@ export function usePushNotifications(uid: string | null): UsePushNotificationsRe
     }
 
     if (!uid) {
+      // Ainda sem login — não registrar nada, mas manter isLoading false
       setIsLoading(false);
       return;
     }
@@ -109,6 +120,23 @@ export function usePushNotifications(uid: string | null): UsePushNotificationsRe
           if (status.isSubscribed && status.userId) {
             setIsSubscribed(true);
             setCurrentEndpoint(status.userId);
+
+            // Se o Median já registrou o dispositivo (antes do login), salvar agora
+            if (registeredPlayerRef.current !== status.userId) {
+              registeredPlayerRef.current = status.userId;
+              await fetch(`${API_BASE}/push/onesignal-subscribe`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  uid,
+                  playerId: status.userId,
+                  notifyEpisodios: true,
+                  notifyObras: true,
+                }),
+              });
+            }
+
+            // Buscar preferências salvas
             const res = await fetch(`${API_BASE}/push/onesignal-preferences/${uid}`);
             if (res.ok) {
               const subs = await res.json();
@@ -161,6 +189,7 @@ export function usePushNotifications(uid: string | null): UsePushNotificationsRe
           if (!result.isSubscribed || !result.userId) {
             throw new Error("Permissão negada");
           }
+          registeredPlayerRef.current = result.userId;
           await fetch(`${API_BASE}/push/onesignal-subscribe`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -224,6 +253,7 @@ export function usePushNotifications(uid: string | null): UsePushNotificationsRe
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ uid, playerId: currentEndpoint }),
           });
+          registeredPlayerRef.current = null;
         }
         setIsSubscribed(false);
         setCurrentEndpoint(null);

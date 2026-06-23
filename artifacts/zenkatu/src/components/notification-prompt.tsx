@@ -19,13 +19,14 @@ export function NotificationPrompt() {
       !push.isLoading &&
       push.isSupported &&
       !push.isSubscribed &&
+      !push.isNativeApp &&        // não mostrar dentro do app Median
       currentUser &&
       !localStorage.getItem(DISMISSED_KEY)
     ) {
       const timer = setTimeout(() => setVisible(true), 2500);
       return () => clearTimeout(timer);
     }
-  }, [push.isLoading, push.isSupported, push.isSubscribed, currentUser]);
+  }, [push.isLoading, push.isSupported, push.isSubscribed, push.isNativeApp, currentUser]);
 
   const handleDismiss = () => {
     setVisible(false);
