@@ -1,8 +1,22 @@
-import { Download, Smartphone, Star, Zap, Shield } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Download, Smartphone, Star, Zap, Shield, Loader2 } from "lucide-react";
 
-const APK_URL = "https://archive.org/download/Zenkatuapp/Zenkatuapp.apk";
+async function fetchConfig(): Promise<Record<string, string>> {
+  const res = await fetch("/api/config");
+  if (!res.ok) throw new Error("Erro ao carregar configurações");
+  return res.json();
+}
+
+const FALLBACK_URL = "https://archive.org/download/Zenkatuapp/Zenkatuapp.apk";
 
 export default function VersaoApp() {
+  const { data: config, isLoading } = useQuery({
+    queryKey: ["site-config"],
+    queryFn: fetchConfig,
+  });
+
+  const apkUrl = config?.["appDownloadUrl"] || FALLBACK_URL;
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
       <div className="w-full max-w-md text-center space-y-8">
@@ -33,14 +47,20 @@ export default function VersaoApp() {
           </div>
         </div>
 
-        <a
-          href={APK_URL}
-          download
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20"
-        >
-          <Download className="w-5 h-5" />
-          Baixar APK
-        </a>
+        {isLoading ? (
+          <div className="flex items-center justify-center w-full py-4">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <a
+            href={apkUrl}
+            download
+            className="flex items-center justify-center gap-3 w-full py-4 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 active:scale-95 transition-all shadow-lg shadow-primary/20"
+          >
+            <Download className="w-5 h-5" />
+            Baixar APK
+          </a>
+        )}
 
         <p className="text-xs text-muted-foreground/60">
           Apenas para Android. Ative "Fontes desconhecidas" nas configurações do

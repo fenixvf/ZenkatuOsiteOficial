@@ -11,6 +11,7 @@ import {
   Layers,
   Film,
   Smartphone,
+  Settings,
   X,
 } from "lucide-react";
 import { useState } from "react";
@@ -161,6 +162,7 @@ function AdminSection({ onClose }: { onClose: () => void }) {
                 { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
                 { href: "/admin/obras", label: "Obras", icon: Layers },
                 { href: "/admin/generos", label: "Gêneros", icon: Tags },
+                { href: "/admin/config", label: "Configurações", icon: Settings },
               ].map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} onClick={onClose}>
                   <div

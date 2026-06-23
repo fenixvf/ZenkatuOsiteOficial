@@ -19,6 +19,7 @@ import AdminObras from "@/pages/admin-obras";
 import AdminObrasForm from "@/pages/admin-obras-form";
 import AdminEpisodios from "@/pages/admin-episodios";
 import AdminGeneros from "@/pages/admin-generos";
+import AdminConfig from "@/pages/admin-config";
 import VersaoApp from "@/pages/versao-app";
 import NotFound from "@/pages/not-found";
 
@@ -80,6 +81,9 @@ function Router() {
         </Route>
         <Route path="/admin/generos">
           <AdminRoute component={AdminGeneros} />
+        </Route>
+        <Route path="/admin/config">
+          <AdminRoute component={AdminConfig} />
         </Route>
 
         <Route component={NotFound} />

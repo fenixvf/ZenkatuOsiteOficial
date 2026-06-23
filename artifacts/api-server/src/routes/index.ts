@@ -8,6 +8,7 @@ import statsRouter from "./stats";
 import listaRouter from "./lista";
 import historicoRouter from "./historico";
 import generosRouter from "./generos";
+import configRouter from "./config";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(statsRouter);
 router.use(listaRouter);
 router.use(historicoRouter);
 router.use(generosRouter);
+router.use(configRouter);
 
 export default router;

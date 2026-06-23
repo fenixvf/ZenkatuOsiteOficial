@@ -6,3 +6,4 @@ export * from "./lista";
 export * from "./historico";
 export * from "./profileImages";
 export * from "./generos";
+export * from "./siteConfig";

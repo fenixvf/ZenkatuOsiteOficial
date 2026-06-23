@@ -204,6 +204,97 @@ function GeneroMultiSelect({
   );
 }
 
+type SocialLinks = NonNullable<CastMember["links"]>;
+type SocialKey = keyof SocialLinks;
+
+const SOCIAL_PLATFORMS: Array<{
+  key: SocialKey;
+  label: string;
+  icon: React.ElementType;
+  match: (url: string) => boolean;
+  color: string;
+}> = [
+  { key: "youtube", label: "YouTube", icon: Youtube, match: u => /youtube\.com|youtu\.be/.test(u), color: "text-red-500" },
+  { key: "instagram", label: "Instagram", icon: Instagram, match: u => /instagram\.com/.test(u), color: "text-pink-500" },
+  { key: "discord", label: "Discord", icon: MessageCircle, match: u => /discord\.(gg|com)/.test(u), color: "text-indigo-400" },
+  { key: "twitter", label: "Twitter / X", icon: Twitter, match: u => /twitter\.com|x\.com/.test(u), color: "text-sky-400" },
+  { key: "tiktok", label: "TikTok", icon: Music, match: u => /tiktok\.com/.test(u), color: "text-foreground" },
+  { key: "site", label: "Site", icon: Globe, match: () => true, color: "text-primary" },
+];
+
+function detectPlatform(url: string): SocialKey {
+  for (const p of SOCIAL_PLATFORMS) {
+    if (p.key !== "site" && p.match(url)) return p.key;
+  }
+  return "site";
+}
+
+function SocialLinksEditor({
+  links,
+  onChange,
+}: {
+  links: SocialLinks;
+  onChange: (links: SocialLinks) => void;
+}) {
+  const [inputUrl, setInputUrl] = useState("");
+
+  const addLink = () => {
+    const url = inputUrl.trim();
+    if (!url) return;
+    const key = detectPlatform(url);
+    onChange({ ...links, [key]: url });
+    setInputUrl("");
+  };
+
+  const removeLink = (key: SocialKey) => {
+    const updated = { ...links };
+    delete updated[key];
+    onChange(updated);
+  };
+
+  const activeLinks = SOCIAL_PLATFORMS.filter(p => links[p.key]);
+
+  return (
+    <div className="space-y-3">
+      {activeLinks.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {activeLinks.map(({ key, label, icon: Icon, color }) => (
+            <div
+              key={key}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border bg-secondary/50 text-xs font-medium"
+            >
+              <Icon className={`w-3.5 h-3.5 ${color}`} />
+              <span className="text-foreground max-w-[120px] truncate">{label}</span>
+              <button
+                type="button"
+                onClick={() => removeLink(key)}
+                className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center gap-2">
+        <Input
+          value={inputUrl}
+          onChange={e => setInputUrl(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addLink(); } }}
+          placeholder="Cole o link (Instagram, Discord, YouTube...) e pressione Enter"
+          className="bg-background h-8 text-xs flex-1"
+        />
+        <Button type="button" size="sm" variant="outline" className="h-8 px-3 text-xs shrink-0" onClick={addLink}>
+          <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground/70">
+        Cole qualquer link — o ícone da rede social é detectado automaticamente.
+      </p>
+    </div>
+  );
+}
+
 const emptyCastMember = (): CastMember => ({
   nome: "",
   papel: "",
@@ -336,26 +427,10 @@ function CastEditor({ cast, onChange }: { cast: CastMember[]; onChange: (c: Cast
 
             <div className="border-t border-border pt-4 space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Redes Sociais</p>
-              <div className="grid grid-cols-1 gap-3">
-                {([
-                  { key: "youtube", label: "YouTube", icon: Youtube, placeholder: "https://youtube.com/@canal" },
-                  { key: "instagram", label: "Instagram", icon: Instagram, placeholder: "https://instagram.com/usuario" },
-                  { key: "discord", label: "Discord", icon: MessageCircle, placeholder: "https://discord.gg/convite" },
-                  { key: "twitter", label: "Twitter / X", icon: Twitter, placeholder: "https://twitter.com/usuario" },
-                  { key: "tiktok", label: "TikTok", icon: Music, placeholder: "https://tiktok.com/@usuario" },
-                  { key: "site", label: "Site / Portfólio", icon: Globe, placeholder: "https://meusite.com" },
-                ] as const).map(({ key, label, icon: Icon, placeholder }) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <Input
-                      value={draft.links?.[key] || ""}
-                      onChange={e => setLink(key, e.target.value)}
-                      placeholder={placeholder}
-                      className="bg-background h-8 text-xs"
-                    />
-                  </div>
-                ))}
-              </div>
+              <SocialLinksEditor
+                links={draft.links ?? {}}
+                onChange={links => setDraft(d => ({ ...d, links }))}
+              />
             </div>
           </div>
           <DialogFooter>
