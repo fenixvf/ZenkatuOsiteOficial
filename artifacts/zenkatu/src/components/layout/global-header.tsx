@@ -11,8 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Search, X, Menu, TrendingUp, Clock } from "lucide-react";
+import { Search, X, Menu, TrendingUp, Clock, Bell, BellOff, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { useToast } from "@/hooks/use-toast";
 import { useSearchObras } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logoImg from "/logo.png";
@@ -309,6 +311,8 @@ interface GlobalHeaderProps {
 export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
   const { currentUser, userProfile, isAdmin, signOut } = useAuth();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const { toast } = useToast();
+  const push = usePushNotifications(currentUser?.uid ?? null);
 
   return (
     <>
@@ -385,6 +389,41 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
                       Ver Perfil
                     </Link>
                   </DropdownMenuItem>
+                  {push.isSupported && (
+                    <DropdownMenuItem
+                      className="cursor-pointer gap-2"
+                      disabled={push.isLoading}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        if (push.isLoading) return;
+                        if (push.isSubscribed) {
+                          push.unsubscribe().then(() =>
+                            toast({ title: "Notificações desativadas." })
+                          ).catch(() =>
+                            toast({ title: "Erro ao desativar", variant: "destructive" })
+                          );
+                        } else {
+                          push.subscribe().then(() =>
+                            toast({ title: "Notificações ativadas!" })
+                          ).catch((e: any) => {
+                            const msg = e.message?.includes("negada")
+                              ? "Permissão negada. Ative nas configurações do navegador."
+                              : "Erro ao ativar notificações.";
+                            toast({ title: msg, variant: "destructive" });
+                          });
+                        }
+                      }}
+                    >
+                      {push.isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      ) : push.isSubscribed ? (
+                        <Bell className="w-4 h-4 text-primary" />
+                      ) : (
+                        <BellOff className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      {push.isSubscribed ? "Notificações ativas" : "Ativar notificações"}
+                    </DropdownMenuItem>
+                  )}
                   {isAdmin && (
                     <DropdownMenuItem asChild>
                       <Link href="/admin" className="cursor-pointer w-full block">
