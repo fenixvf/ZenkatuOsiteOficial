@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { useListGeneros } from "@workspace/api-client-react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Home,
   TrendingUp,
@@ -9,17 +10,23 @@ import {
   ChevronDown,
   LayoutDashboard,
   Layers,
-  Film,
   Smartphone,
   Settings,
   X,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { detectPlatform, parseSocialLinks } from "@/lib/social-platforms";
 
 interface SidebarProps {
   open: boolean;
   onClose: () => void;
+}
+
+async function fetchConfig(): Promise<Record<string, string>> {
+  const res = await fetch("/api/config");
+  if (!res.ok) throw new Error("Erro ao carregar configurações");
+  return res.json();
 }
 
 function NavLink({
@@ -126,6 +133,48 @@ function GeneroSection({ onClose }: { onClose: () => void }) {
   );
 }
 
+function SocialLinksSection({ onClose }: { onClose: () => void }) {
+  const { data: config } = useQuery({
+    queryKey: ["site-config"],
+    queryFn: fetchConfig,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const links = parseSocialLinks(config?.["socialLinks"]);
+  const title = config?.["socialLinksTitle"] || "Comunidade";
+
+  if (!config || links.length === 0) return null;
+
+  return (
+    <div className="mt-1">
+      <div className="px-3 py-2">
+        <span className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
+          {title}
+        </span>
+      </div>
+      <div className="space-y-0.5">
+        {links.map((link, idx) => {
+          const platform = detectPlatform(link.url);
+          const Icon = platform.icon;
+          return (
+            <a
+              key={idx}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onClose}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all"
+            >
+              <Icon className={cn("w-4 h-4 shrink-0", platform.color)} />
+              <span className="truncate">{platform.label}</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AdminSection({ onClose }: { onClose: () => void }) {
   const [location] = useLocation();
   const [expanded, setExpanded] = useState(location.startsWith("/admin"));
@@ -201,6 +250,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <NavLink href="/ranking" icon={TrendingUp} label="Ranking" onClick={onClose} />
       <NavLink href="/versao-app" icon={Smartphone} label="Versão app" onClick={onClose} />
       <GeneroSection onClose={onClose} />
+
+      <SocialLinksSection onClose={onClose} />
 
       {isAdmin && (
         <>

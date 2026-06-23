@@ -27,7 +27,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Save, X, Plus, Trash2, Users, Youtube, Instagram, MessageCircle, Twitter, Globe, Music } from "lucide-react";
+import { ArrowLeft, Loader2, Save, X, Plus, Trash2, Users } from "lucide-react";
+import { SOCIAL_PLATFORMS, detectPlatform, type SocialPlatformKey } from "@/lib/social-platforms";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 import {
@@ -205,29 +206,6 @@ function GeneroMultiSelect({
 }
 
 type SocialLinks = NonNullable<CastMember["links"]>;
-type SocialKey = keyof SocialLinks;
-
-const SOCIAL_PLATFORMS: Array<{
-  key: SocialKey;
-  label: string;
-  icon: React.ElementType;
-  match: (url: string) => boolean;
-  color: string;
-}> = [
-  { key: "youtube", label: "YouTube", icon: Youtube, match: u => /youtube\.com|youtu\.be/.test(u), color: "text-red-500" },
-  { key: "instagram", label: "Instagram", icon: Instagram, match: u => /instagram\.com/.test(u), color: "text-pink-500" },
-  { key: "discord", label: "Discord", icon: MessageCircle, match: u => /discord\.(gg|com)/.test(u), color: "text-indigo-400" },
-  { key: "twitter", label: "Twitter / X", icon: Twitter, match: u => /twitter\.com|x\.com/.test(u), color: "text-sky-400" },
-  { key: "tiktok", label: "TikTok", icon: Music, match: u => /tiktok\.com/.test(u), color: "text-foreground" },
-  { key: "site", label: "Site", icon: Globe, match: () => true, color: "text-primary" },
-];
-
-function detectPlatform(url: string): SocialKey {
-  for (const p of SOCIAL_PLATFORMS) {
-    if (p.key !== "site" && p.match(url)) return p.key;
-  }
-  return "site";
-}
 
 function SocialLinksEditor({
   links,
@@ -241,18 +219,18 @@ function SocialLinksEditor({
   const addLink = () => {
     const url = inputUrl.trim();
     if (!url) return;
-    const key = detectPlatform(url);
-    onChange({ ...links, [key]: url });
+    const platform = detectPlatform(url);
+    onChange({ ...links, [platform.key]: url });
     setInputUrl("");
   };
 
-  const removeLink = (key: SocialKey) => {
+  const removeLink = (key: SocialPlatformKey) => {
     const updated = { ...links };
     delete updated[key];
     onChange(updated);
   };
 
-  const activeLinks = SOCIAL_PLATFORMS.filter(p => links[p.key]);
+  const activeLinks = SOCIAL_PLATFORMS.filter(p => links[p.key as SocialPlatformKey]);
 
   return (
     <div className="space-y-3">
@@ -267,7 +245,7 @@ function SocialLinksEditor({
               <span className="text-foreground max-w-[120px] truncate">{label}</span>
               <button
                 type="button"
-                onClick={() => removeLink(key)}
+                onClick={() => removeLink(key as SocialPlatformKey)}
                 className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
               >
                 <X className="w-3 h-3" />
