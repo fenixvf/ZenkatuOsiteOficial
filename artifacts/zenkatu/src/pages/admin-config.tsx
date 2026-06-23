@@ -15,13 +15,28 @@ async function fetchConfig(): Promise<Record<string, string>> {
 }
 
 async function patchConfig(updates: Record<string, string>): Promise<Record<string, string>> {
-  const res = await fetch("/api/config", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updates),
-  });
-  if (!res.ok) throw new Error("Erro ao salvar configurações");
-  return res.json();
+  let res: Response;
+  try {
+    res = await fetch("/api/config", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+  } catch (networkErr) {
+    console.error("[config] network error:", networkErr);
+    throw networkErr;
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => "(sem corpo)");
+    console.error("[config] HTTP error:", res.status, body);
+    throw new Error(`HTTP ${res.status}: ${body}`);
+  }
+  try {
+    return await res.json();
+  } catch (parseErr) {
+    console.error("[config] JSON parse error:", parseErr);
+    throw parseErr;
+  }
 }
 
 function SidebarLinksEditor({
@@ -116,8 +131,9 @@ export default function AdminConfig() {
       queryClient.invalidateQueries({ queryKey: ["site-config"] });
       toast({ title: "Configurações salvas com sucesso" });
     },
-    onError: () => {
-      toast({ title: "Erro ao salvar configurações", variant: "destructive" });
+    onError: (err) => {
+      console.error("[config] mutation error:", err);
+      toast({ title: "Erro ao salvar configurações", description: String(err), variant: "destructive" });
     },
   });
 
