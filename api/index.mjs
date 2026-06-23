@@ -63978,7 +63978,11 @@ if (!connectionString) {
     "SUPABASE_DATABASE_URL or DATABASE_URL must be set."
   );
 }
-var pool = new Pool3({ connectionString });
+var isSupabase = connectionString.includes("supabase.com");
+var pool = new Pool3({
+  connectionString,
+  ...isSupabase ? { ssl: { rejectUnauthorized: false } } : {}
+});
 var db = drizzle(pool, { schema: schema_exports });
 
 // src/routes/obras.ts
