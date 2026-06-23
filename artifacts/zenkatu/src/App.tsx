@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { NotificationPrompt } from "@/components/notification-prompt";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -107,6 +108,7 @@ function App() {
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
             <Router />
+            <NotificationPrompt />
           </WouterRouter>
           <Toaster />
         </TooltipProvider>
