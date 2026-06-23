@@ -26,6 +26,7 @@ router.patch("/config", async (req, res) => {
   try {
     const updates = req.body as Record<string, string>;
     for (const [key, value] of Object.entries(updates)) {
+      if (value === "" || value === null || value === undefined) continue;
       await db
         .insert(siteConfigTable)
         .values({ key, value })

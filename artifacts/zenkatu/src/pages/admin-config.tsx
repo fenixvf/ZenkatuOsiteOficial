@@ -185,6 +185,7 @@ export default function AdminConfig() {
               placeholder="https://..."
               className="bg-background"
             />
+            <p className="text-xs text-muted-foreground/60">Deixar em branco mantém o valor atual salvo.</p>
           </div>
         </div>
 
