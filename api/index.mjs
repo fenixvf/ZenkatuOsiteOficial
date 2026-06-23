@@ -763,8 +763,8 @@ var require_depd = __commonJS({
       return deprecate;
     }
     function eehaslisteners(emitter, type) {
-      var count3 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count3 > 0;
+      var count2 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count2 > 0;
     }
     function isignored(namespace) {
       if (process.noDeprecation) {
@@ -18333,14 +18333,14 @@ var require_urlencoded = __commonJS({
       };
     }
     function parameterCount(body, limit) {
-      let count3 = 0;
+      let count2 = 0;
       let index = -1;
       do {
-        count3++;
-        if (count3 > limit) return void 0;
+        count2++;
+        if (count2 > limit) return void 0;
         index = body.indexOf("&", index + 1);
       } while (index !== -1);
-      return count3;
+      return count2;
     }
   }
 });
@@ -21553,13 +21553,13 @@ var require_mediaType = __commonJS({
       return spec.q > 0;
     }
     function quoteCount(string4) {
-      var count3 = 0;
+      var count2 = 0;
       var index = 0;
       while ((index = string4.indexOf('"', index)) !== -1) {
-        count3++;
+        count2++;
         index++;
       }
-      return count3;
+      return count2;
     }
     function splitKeyValuePair(str) {
       var index = str.indexOf("=");
@@ -22864,8 +22864,8 @@ var require_send = __commonJS({
       }
     }
     function hasListeners(emitter, type) {
-      var count3 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count3 > 0;
+      var count2 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count2 > 0;
     }
     function normalizeList(val, name2) {
       var list = [].concat(val || []);
@@ -29231,11 +29231,11 @@ var require_binaryParsers = __commonJS({
         var array2 = [];
         var i2;
         if (dimension.length > 1) {
-          var count3 = dimension.shift();
-          for (i2 = 0; i2 < count3; i2++) {
+          var count2 = dimension.shift();
+          for (i2 = 0; i2 < count2; i2++) {
             array2[i2] = parse3(dimension, elementType2);
           }
-          dimension.unshift(count3);
+          dimension.unshift(count2);
         } else {
           for (i2 = 0; i2 < dimension[0]; i2++) {
             array2[i2] = parseElement(elementType2);
@@ -52458,6 +52458,7 @@ __export(schema_exports, {
   insertUserSchema: () => insertUserSchema,
   listaObrasTable: () => listaObrasTable,
   obrasTable: () => obrasTable,
+  onesignalSubscriptionsTable: () => onesignalSubscriptionsTable,
   profileImagesTable: () => profileImagesTable,
   pushSubscriptionsTable: () => pushSubscriptionsTable,
   siteConfigTable: () => siteConfigTable,
@@ -56299,8 +56300,8 @@ function az_default() {
 }
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v4/locales/be.js
-function getBelarusianPlural(count3, one, few, many) {
-  const absCount = Math.abs(count3);
+function getBelarusianPlural(count2, one, few, many) {
+  const absCount = Math.abs(count2);
   const lastDigit = absCount % 10;
   const lastTwoDigits = absCount % 100;
   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
@@ -59445,8 +59446,8 @@ function pt_default() {
 }
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v4/locales/ru.js
-function getRussianPlural(count3, one, few, many) {
-  const absCount = Math.abs(count3);
+function getRussianPlural(count2, one, few, many) {
+  const absCount = Math.abs(count2);
   const lastDigit = absCount % 10;
   const lastTwoDigits = absCount % 100;
   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
@@ -63970,6 +63971,16 @@ var pushSubscriptionsTable = pgTable("push_subscriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// ../../lib/db/src/schema/onesignalSubscriptions.ts
+var onesignalSubscriptionsTable = pgTable("onesignal_subscriptions", {
+  id: serial("id").primaryKey(),
+  uid: varchar("uid", { length: 128 }).notNull().references(() => usersTable.uid, { onDelete: "cascade" }),
+  playerId: text("player_id").notNull().unique(),
+  notifyEpisodios: boolean("notify_episodios").default(true).notNull(),
+  notifyObras: boolean("notify_obras").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 // ../../lib/db/src/index.ts
 var { Pool: Pool3 } = esm_default;
 var connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
@@ -63991,6 +64002,51 @@ init_drizzle_orm();
 // src/lib/push-notifications.ts
 var import_web_push = __toESM(require_src2(), 1);
 init_drizzle_orm();
+
+// src/lib/onesignal.ts
+async function sendOnesignalToPlayerIds(payload, playerIds) {
+  if (playerIds.length === 0) return { sent: 0, failed: 0 };
+  const appId = process.env.ONESIGNAL_APP_ID;
+  const apiKey = process.env.ONESIGNAL_API_KEY;
+  if (!appId || !apiKey) {
+    return { sent: 0, failed: 0 };
+  }
+  const CHUNK = 2e3;
+  let sent = 0;
+  let failed = 0;
+  for (let i = 0; i < playerIds.length; i += CHUNK) {
+    const chunk = playerIds.slice(i, i + CHUNK);
+    try {
+      const body = {
+        app_id: appId,
+        include_player_ids: chunk,
+        headings: { en: payload.title },
+        contents: { en: payload.body }
+      };
+      if (payload.image) body.big_picture = payload.image;
+      if (payload.url) body.url = payload.url;
+      const res = await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${apiKey}`
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        sent += data.recipients ?? chunk.length;
+      } else {
+        failed += chunk.length;
+      }
+    } catch {
+      failed += chunk.length;
+    }
+  }
+  return { sent, failed };
+}
+
+// src/lib/push-notifications.ts
 var vapidConfigured = process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY;
 if (vapidConfigured) {
   import_web_push.default.setVapidDetails(
@@ -64006,32 +64062,47 @@ async function isAutoEnabled(key) {
 async function sendPushToAll(payload, type) {
   if (type === "episodio" && !await isAutoEnabled("push_auto_episodios")) return { sent: 0, failed: 0, skipped: true };
   if (type === "obra" && !await isAutoEnabled("push_auto_obras")) return { sent: 0, failed: 0, skipped: true };
-  let subs = await db.select().from(pushSubscriptionsTable);
+  let vapidSubs = await db.select().from(pushSubscriptionsTable);
+  let onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
   if (type === "episodio") {
-    subs = subs.filter((s) => s.notifyEpisodios);
+    vapidSubs = vapidSubs.filter((s) => s.notifyEpisodios);
+    onesignalSubs = onesignalSubs.filter((s) => s.notifyEpisodios);
   } else if (type === "obra") {
-    subs = subs.filter((s) => s.notifyObras);
+    vapidSubs = vapidSubs.filter((s) => s.notifyObras);
+    onesignalSubs = onesignalSubs.filter((s) => s.notifyObras);
   }
-  const results = await Promise.allSettled(
-    subs.map(
-      (sub) => import_web_push.default.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        JSON.stringify(payload)
-      )
+  const [vapidResult, onesignalResult] = await Promise.all([
+    (async () => {
+      const results = await Promise.allSettled(
+        vapidSubs.map(
+          (sub) => import_web_push.default.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            JSON.stringify(payload)
+          )
+        )
+      );
+      const failed = results.map((r, i) => ({ r, sub: vapidSubs[i] })).filter(({ r }) => r.status === "rejected");
+      if (failed.length > 0) {
+        const expiredIds = failed.filter(({ r }) => {
+          const err = r.reason;
+          return err?.statusCode === 410 || err?.statusCode === 404;
+        }).map(({ sub }) => sub.id);
+        if (expiredIds.length > 0) {
+          const { inArray: inArray2 } = await Promise.resolve().then(() => (init_drizzle_orm(), drizzle_orm_exports));
+          await db.delete(pushSubscriptionsTable).where(inArray2(pushSubscriptionsTable.id, expiredIds));
+        }
+      }
+      return { sent: vapidSubs.length - failed.length, failed: failed.length };
+    })(),
+    sendOnesignalToPlayerIds(
+      payload,
+      onesignalSubs.map((s) => s.playerId)
     )
-  );
-  const failed = results.map((r, i) => ({ r, sub: subs[i] })).filter(({ r }) => r.status === "rejected");
-  if (failed.length > 0) {
-    const expiredIds = failed.filter(({ r }) => {
-      const err = r.reason;
-      return err?.statusCode === 410 || err?.statusCode === 404;
-    }).map(({ sub }) => sub.id);
-    if (expiredIds.length > 0) {
-      const { inArray: inArray2 } = await Promise.resolve().then(() => (init_drizzle_orm(), drizzle_orm_exports));
-      await db.delete(pushSubscriptionsTable).where(inArray2(pushSubscriptionsTable.id, expiredIds));
-    }
-  }
-  return { sent: subs.length - failed.length, failed: failed.length };
+  ]);
+  return {
+    sent: vapidResult.sent + onesignalResult.sent,
+    failed: vapidResult.failed + onesignalResult.failed
+  };
 }
 
 // src/routes/obras.ts
@@ -64973,6 +65044,77 @@ router11.patch("/push/preferences/:uid", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router11.post("/push/onesignal-subscribe", async (req, res) => {
+  try {
+    const { uid, playerId, notifyEpisodios, notifyObras } = req.body;
+    if (!uid || !playerId) {
+      res.status(400).json({ error: "uid e playerId s\xE3o obrigat\xF3rios" });
+      return;
+    }
+    await db.insert(onesignalSubscriptionsTable).values({
+      uid,
+      playerId,
+      notifyEpisodios: notifyEpisodios !== false,
+      notifyObras: notifyObras !== false
+    }).onConflictDoUpdate({
+      target: onesignalSubscriptionsTable.playerId,
+      set: {
+        uid,
+        notifyEpisodios: notifyEpisodios !== false,
+        notifyObras: notifyObras !== false
+      }
+    });
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.delete("/push/onesignal-subscribe", async (req, res) => {
+  try {
+    const { uid, playerId } = req.body;
+    if (!uid || !playerId) {
+      res.status(400).json({ error: "uid e playerId s\xE3o obrigat\xF3rios" });
+      return;
+    }
+    await db.delete(onesignalSubscriptionsTable).where(and(eq(onesignalSubscriptionsTable.uid, uid), eq(onesignalSubscriptionsTable.playerId, playerId)));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.get("/push/onesignal-preferences/:uid", async (req, res) => {
+  try {
+    const subs = await db.select().from(onesignalSubscriptionsTable).where(eq(onesignalSubscriptionsTable.uid, req.params.uid));
+    res.json(subs);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.patch("/push/onesignal-preferences/:uid", async (req, res) => {
+  try {
+    const { playerId, notifyEpisodios, notifyObras } = req.body;
+    if (!playerId) {
+      res.status(400).json({ error: "playerId \xE9 obrigat\xF3rio" });
+      return;
+    }
+    const [updated] = await db.update(onesignalSubscriptionsTable).set({
+      notifyEpisodios: notifyEpisodios !== false,
+      notifyObras: notifyObras !== false
+    }).where(
+      and(
+        eq(onesignalSubscriptionsTable.uid, req.params.uid),
+        eq(onesignalSubscriptionsTable.playerId, playerId)
+      )
+    ).returning();
+    res.json(updated || {});
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 router11.get("/push/stats", async (req, res) => {
   try {
     const { adminEmail } = req.query;
@@ -64980,19 +65122,21 @@ router11.get("/push/stats", async (req, res) => {
       res.status(403).json({ error: "Acesso negado" });
       return;
     }
-    const subs = await db.select().from(pushSubscriptionsTable);
-    const total = subs.length;
-    const wantEpisodios = subs.filter((s) => s.notifyEpisodios).length;
-    const wantObras = subs.filter((s) => s.notifyObras).length;
+    const [vapidSubs, onesignalSubs] = await Promise.all([
+      db.select().from(pushSubscriptionsTable),
+      db.select().from(onesignalSubscriptionsTable)
+    ]);
     const configRows = await db.select().from(siteConfigTable).where(
       sql`${siteConfigTable.key} IN ('push_auto_episodios', 'push_auto_obras')`
     );
     const configMap = {};
     for (const row of configRows) configMap[row.key] = row.value;
     res.json({
-      total,
-      wantEpisodios,
-      wantObras,
+      total: vapidSubs.length + onesignalSubs.length,
+      totalVapid: vapidSubs.length,
+      totalOnesignal: onesignalSubs.length,
+      wantEpisodios: vapidSubs.filter((s) => s.notifyEpisodios).length + onesignalSubs.filter((s) => s.notifyEpisodios).length,
+      wantObras: vapidSubs.filter((s) => s.notifyObras).length + onesignalSubs.filter((s) => s.notifyObras).length,
       autoEpisodios: configMap["push_auto_episodios"] !== "false",
       autoObras: configMap["push_auto_obras"] !== "false"
     });
@@ -65024,7 +65168,7 @@ router11.patch("/push/settings", async (req, res) => {
 });
 router11.post("/push/send-custom", async (req, res) => {
   try {
-    const { adminUid, adminEmail, title, body, image, url: url2 } = req.body;
+    const { adminEmail, title, body, image, url: url2 } = req.body;
     if (adminEmail !== ADMIN_EMAIL2) {
       res.status(403).json({ error: "Acesso negado" });
       return;
