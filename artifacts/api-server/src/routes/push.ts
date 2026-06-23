@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { pushSubscriptionsTable, siteConfigTable, onesignalSubscriptionsTable } from "@workspace/db";
+import { pushSubscriptionsTable, siteConfigTable, onesignalSubscriptionsTable, notificacoesHistoricoTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { sendPushToAll, type PushPayload } from "../lib/push-notifications";
 
@@ -280,6 +280,22 @@ router.post("/push/send-custom", async (req, res) => {
     const payload: PushPayload = { title, body, image, url: url || "/" };
     const result = await sendPushToAll(payload, "custom");
     res.json(result);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Histórico público de notificações ────────────────────────────────────────
+
+router.get("/push/historico", async (req, res) => {
+  try {
+    const rows = await db
+      .select()
+      .from(notificacoesHistoricoTable)
+      .orderBy(sql`${notificacoesHistoricoTable.sentAt} DESC`)
+      .limit(10);
+    res.json(rows);
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Search, X, Menu, TrendingUp, Clock, Bell, BellOff, Loader2 } from "lucide-react";
+import { NotificationBell } from "@/components/notification-bell";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { useToast } from "@/hooks/use-toast";
@@ -351,6 +352,10 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
             >
               <Search className="w-5 h-5" />
             </button>
+
+            {currentUser && (
+              <NotificationBell isSubscribed={push.isSubscribed} />
+            )}
 
             {currentUser ? (
               <DropdownMenu>

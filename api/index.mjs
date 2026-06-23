@@ -52457,6 +52457,7 @@ __export(schema_exports, {
   insertObraSchema: () => insertObraSchema,
   insertUserSchema: () => insertUserSchema,
   listaObrasTable: () => listaObrasTable,
+  notificacoesHistoricoTable: () => notificacoesHistoricoTable,
   obrasTable: () => obrasTable,
   onesignalSubscriptionsTable: () => onesignalSubscriptionsTable,
   profileImagesTable: () => profileImagesTable,
@@ -63981,6 +63982,17 @@ var onesignalSubscriptionsTable = pgTable("onesignal_subscriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// ../../lib/db/src/schema/notificacoesHistorico.ts
+var notificacoesHistoricoTable = pgTable("notificacoes_historico", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  image: text("image"),
+  url: text("url"),
+  type: varchar("type", { length: 32 }).notNull().default("custom"),
+  sentAt: timestamp("sent_at").defaultNow().notNull()
+});
+
 // ../../lib/db/src/index.ts
 var { Pool: Pool3 } = esm_default;
 var connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
@@ -64099,11 +64111,18 @@ async function sendPushToAll(payload, type) {
       }
       return { sent: vapidSubs.length - failed.length, failed: failed.length };
     })(),
-    sendOnesignalToPlayerIds(
-      payload,
-      onesignalSubs.map((s) => s.playerId)
-    )
+    sendOnesignalToPlayerIds(payload, onesignalSubs.map((s) => s.playerId))
   ]);
+  try {
+    await db.insert(notificacoesHistoricoTable).values({
+      title: payload.title,
+      body: payload.body,
+      image: payload.image ?? null,
+      url: payload.url ?? null,
+      type
+    });
+  } catch {
+  }
   return {
     sent: vapidResult.sent + onesignalResult.sent,
     failed: vapidResult.failed + onesignalResult.failed
@@ -65185,6 +65204,15 @@ router11.post("/push/send-custom", async (req, res) => {
     const payload = { title, body, image, url: url2 || "/" };
     const result = await sendPushToAll(payload, "custom");
     res.json(result);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.get("/push/historico", async (req, res) => {
+  try {
+    const rows = await db.select().from(notificacoesHistoricoTable).orderBy(sql`${notificacoesHistoricoTable.sentAt} DESC`).limit(10);
+    res.json(rows);
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });

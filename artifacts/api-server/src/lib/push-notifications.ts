@@ -1,7 +1,12 @@
 import webpush from "web-push";
 import { db } from "@workspace/db";
-import { pushSubscriptionsTable, siteConfigTable, onesignalSubscriptionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import {
+  pushSubscriptionsTable,
+  siteConfigTable,
+  onesignalSubscriptionsTable,
+  notificacoesHistoricoTable,
+} from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
 import { sendOnesignalToPlayerIds } from "./onesignal";
 
 const vapidConfigured =
@@ -30,18 +35,29 @@ async function isAutoEnabled(key: string): Promise<boolean> {
   return !row || row.value !== "false";
 }
 
+export async function getNotificacoesHistorico(limit = 10) {
+  try {
+    return await db
+      .select()
+      .from(notificacoesHistoricoTable)
+      .orderBy(desc(notificacoesHistoricoTable.sentAt))
+      .limit(limit);
+  } catch {
+    return [];
+  }
+}
+
 export async function sendPushToAll(payload: PushPayload, type: NotificationType) {
   if (type === "episodio" && !(await isAutoEnabled("push_auto_episodios"))) return { sent: 0, failed: 0, skipped: true };
   if (type === "obra" && !(await isAutoEnabled("push_auto_obras"))) return { sent: 0, failed: 0, skipped: true };
 
   let vapidSubs = await db.select().from(pushSubscriptionsTable);
 
-  // Buscar assinaturas OneSignal com segurança — tabela pode não existir em produção ainda
   let onesignalSubs: typeof onesignalSubscriptionsTable.$inferSelect[] = [];
   try {
     onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
   } catch {
-    // Tabela ainda não existe neste ambiente — ignorar silenciosamente
+    // tabela pode não existir em produção ainda
   }
 
   if (type === "episodio") {
@@ -84,11 +100,21 @@ export async function sendPushToAll(payload: PushPayload, type: NotificationType
 
       return { sent: vapidSubs.length - failed.length, failed: failed.length };
     })(),
-    sendOnesignalToPlayerIds(
-      payload,
-      onesignalSubs.map((s) => s.playerId)
-    ),
+    sendOnesignalToPlayerIds(payload, onesignalSubs.map((s) => s.playerId)),
   ]);
+
+  // Salvar no histórico (sem bloquear o retorno)
+  try {
+    await db.insert(notificacoesHistoricoTable).values({
+      title: payload.title,
+      body: payload.body,
+      image: payload.image ?? null,
+      url: payload.url ?? null,
+      type,
+    });
+  } catch {
+    // histórico é opcional, não deve quebrar o envio
+  }
 
   return {
     sent: vapidResult.sent + onesignalResult.sent,
