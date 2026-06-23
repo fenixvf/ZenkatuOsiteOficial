@@ -1,12 +1,14 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { pushSubscriptionsTable, siteConfigTable } from "@workspace/db";
-import { eq, and, count, sql } from "drizzle-orm";
+import { pushSubscriptionsTable, siteConfigTable, onesignalSubscriptionsTable } from "@workspace/db";
+import { eq, and, sql } from "drizzle-orm";
 import { sendPushToAll, type PushPayload } from "../lib/push-notifications";
 
 const router = Router();
 
 const ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
+
+// ── VAPID (web browser) ──────────────────────────────────────────────────────
 
 router.get("/push/vapid-public-key", (_req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || "" });
@@ -105,6 +107,99 @@ router.patch("/push/preferences/:uid", async (req, res) => {
   }
 });
 
+// ── OneSignal (app nativo Median.co) ────────────────────────────────────────
+
+router.post("/push/onesignal-subscribe", async (req, res) => {
+  try {
+    const { uid, playerId, notifyEpisodios, notifyObras } = req.body;
+    if (!uid || !playerId) {
+      res.status(400).json({ error: "uid e playerId são obrigatórios" });
+      return;
+    }
+
+    await db
+      .insert(onesignalSubscriptionsTable)
+      .values({
+        uid,
+        playerId,
+        notifyEpisodios: notifyEpisodios !== false,
+        notifyObras: notifyObras !== false,
+      })
+      .onConflictDoUpdate({
+        target: onesignalSubscriptionsTable.playerId,
+        set: {
+          uid,
+          notifyEpisodios: notifyEpisodios !== false,
+          notifyObras: notifyObras !== false,
+        },
+      });
+
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/push/onesignal-subscribe", async (req, res) => {
+  try {
+    const { uid, playerId } = req.body;
+    if (!uid || !playerId) {
+      res.status(400).json({ error: "uid e playerId são obrigatórios" });
+      return;
+    }
+    await db
+      .delete(onesignalSubscriptionsTable)
+      .where(and(eq(onesignalSubscriptionsTable.uid, uid), eq(onesignalSubscriptionsTable.playerId, playerId)));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/push/onesignal-preferences/:uid", async (req, res) => {
+  try {
+    const subs = await db
+      .select()
+      .from(onesignalSubscriptionsTable)
+      .where(eq(onesignalSubscriptionsTable.uid, req.params.uid));
+    res.json(subs);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/push/onesignal-preferences/:uid", async (req, res) => {
+  try {
+    const { playerId, notifyEpisodios, notifyObras } = req.body;
+    if (!playerId) {
+      res.status(400).json({ error: "playerId é obrigatório" });
+      return;
+    }
+    const [updated] = await db
+      .update(onesignalSubscriptionsTable)
+      .set({
+        notifyEpisodios: notifyEpisodios !== false,
+        notifyObras: notifyObras !== false,
+      })
+      .where(
+        and(
+          eq(onesignalSubscriptionsTable.uid, req.params.uid),
+          eq(onesignalSubscriptionsTable.playerId, playerId)
+        )
+      )
+      .returning();
+    res.json(updated || {});
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ── Stats & admin ────────────────────────────────────────────────────────────
+
 router.get("/push/stats", async (req, res) => {
   try {
     const { adminEmail } = req.query;
@@ -112,10 +207,10 @@ router.get("/push/stats", async (req, res) => {
       res.status(403).json({ error: "Acesso negado" });
       return;
     }
-    const subs = await db.select().from(pushSubscriptionsTable);
-    const total = subs.length;
-    const wantEpisodios = subs.filter((s) => s.notifyEpisodios).length;
-    const wantObras = subs.filter((s) => s.notifyObras).length;
+    const [vapidSubs, onesignalSubs] = await Promise.all([
+      db.select().from(pushSubscriptionsTable),
+      db.select().from(onesignalSubscriptionsTable),
+    ]);
 
     const configRows = await db
       .select()
@@ -127,9 +222,15 @@ router.get("/push/stats", async (req, res) => {
     for (const row of configRows) configMap[row.key] = row.value;
 
     res.json({
-      total,
-      wantEpisodios,
-      wantObras,
+      total: vapidSubs.length + onesignalSubs.length,
+      totalVapid: vapidSubs.length,
+      totalOnesignal: onesignalSubs.length,
+      wantEpisodios:
+        vapidSubs.filter((s) => s.notifyEpisodios).length +
+        onesignalSubs.filter((s) => s.notifyEpisodios).length,
+      wantObras:
+        vapidSubs.filter((s) => s.notifyObras).length +
+        onesignalSubs.filter((s) => s.notifyObras).length,
       autoEpisodios: configMap["push_auto_episodios"] !== "false",
       autoObras: configMap["push_auto_obras"] !== "false",
     });
@@ -167,7 +268,7 @@ router.patch("/push/settings", async (req, res) => {
 
 router.post("/push/send-custom", async (req, res) => {
   try {
-    const { adminUid, adminEmail, title, body, image, url } = req.body;
+    const { adminEmail, title, body, image, url } = req.body;
     if (adminEmail !== ADMIN_EMAIL) {
       res.status(403).json({ error: "Acesso negado" });
       return;

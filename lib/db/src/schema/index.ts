@@ -8,3 +8,4 @@ export * from "./profileImages";
 export * from "./generos";
 export * from "./siteConfig";
 export * from "./pushSubscriptions";
+export * from "./onesignalSubscriptions";
