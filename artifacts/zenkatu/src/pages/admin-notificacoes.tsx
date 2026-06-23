@@ -1,18 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Loader2, Send, ArrowLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Bell, Loader2, Send, ArrowLeft, Users, Film, Layers, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+
+interface PushStats {
+  total: number;
+  wantEpisodios: number;
+  wantObras: number;
+  autoEpisodios: boolean;
+  autoObras: boolean;
+}
 
 export default function AdminNotificacoes() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
+
+  const [stats, setStats] = useState<PushStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const [autoEpisodios, setAutoEpisodios] = useState(true);
+  const [autoObras, setAutoObras] = useState(true);
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -20,6 +37,44 @@ export default function AdminNotificacoes() {
   const [url, setUrl] = useState("/");
   const [isSending, setIsSending] = useState(false);
   const [lastResult, setLastResult] = useState<{ sent: number; failed: number } | null>(null);
+
+  const email = currentUser?.email;
+
+  useEffect(() => {
+    if (!email) return;
+    setStatsLoading(true);
+    fetch(`/api/push/stats?adminEmail=${encodeURIComponent(email)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setStats(data);
+        setAutoEpisodios(data.autoEpisodios);
+        setAutoObras(data.autoObras);
+      })
+      .catch(() => toast({ title: "Erro ao carregar estatísticas", variant: "destructive" }))
+      .finally(() => setStatsLoading(false));
+  }, [email]);
+
+  const handleSaveSettings = async () => {
+    setSettingsSaving(true);
+    try {
+      const res = await fetch("/api/push/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminEmail: email, autoEpisodios, autoObras }),
+      });
+      if (!res.ok) throw new Error();
+      setStats((s) => s ? { ...s, autoEpisodios, autoObras } : s);
+      toast({ title: "Configurações salvas!" });
+    } catch {
+      toast({ title: "Erro ao salvar configurações", variant: "destructive" });
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  const settingsChanged = stats
+    ? autoEpisodios !== stats.autoEpisodios || autoObras !== stats.autoObras
+    : false;
 
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
@@ -33,7 +88,7 @@ export default function AdminNotificacoes() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          adminEmail: currentUser?.email,
+          adminEmail: email,
           title: title.trim(),
           body: body.trim(),
           image: image.trim() || undefined,
@@ -45,7 +100,7 @@ export default function AdminNotificacoes() {
       setLastResult(data);
       toast({
         title: "Notificação enviada!",
-        description: `${data.sent} entregues, ${data.failed} falhas.`,
+        description: `${data.sent} entregues${data.failed > 0 ? `, ${data.failed} falhas` : ""}.`,
       });
       setTitle("");
       setBody("");
@@ -75,91 +130,200 @@ export default function AdminNotificacoes() {
             <Bell className="w-7 h-7 text-primary" />
             Notificações Push
           </h1>
-          <p className="text-muted-foreground mt-1">Envie notificações personalizadas para os usuários inscritos.</p>
+          <p className="text-muted-foreground mt-1">Gerencie inscritos e envie notificações para os usuários.</p>
         </div>
       </div>
 
-      <Card className="border-border bg-card/50 backdrop-blur">
-        <CardHeader>
-          <CardTitle>Enviar Notificação Personalizada</CardTitle>
-          <CardDescription>
-            A notificação será entregue a todos os usuários que ativaram push e não filtraram o tipo.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="notif-title">Título *</Label>
-            <Input
-              id="notif-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Ex: Grande novidade no Zenkatu!"
-              className="bg-background"
-              maxLength={80}
-            />
-            <p className="text-xs text-muted-foreground">{title.length}/80 caracteres</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notif-body">Mensagem *</Label>
-            <Textarea
-              id="notif-body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Ex: Confira as novidades desta semana na plataforma!"
-              className="bg-background resize-none"
-              rows={3}
-              maxLength={200}
-            />
-            <p className="text-xs text-muted-foreground">{body.length}/200 caracteres</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notif-image">URL da Imagem (opcional)</Label>
-            <Input
-              id="notif-image"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://..."
-              className="bg-background"
-            />
-            <p className="text-xs text-muted-foreground">Imagem exibida junto à notificação (alguns navegadores suportam).</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notif-url">URL de destino ao clicar</Label>
-            <Input
-              id="notif-url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="/"
-              className="bg-background"
-            />
-          </div>
-
-          {lastResult && (
-            <div className="p-3 rounded-lg bg-secondary/50 border border-border text-sm">
-              <span className="text-green-400 font-medium">{lastResult.sent} enviadas com sucesso</span>
-              {lastResult.failed > 0 && (
-                <span className="text-muted-foreground ml-2">· {lastResult.failed} falhas (subscriptions expiradas removidas)</span>
-              )}
-            </div>
-          )}
-
-          <Button
-            onClick={handleSend}
-            disabled={isSending || !title.trim() || !body.trim()}
-            className="w-full gap-2"
-          >
-            {isSending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+      <div className="grid gap-6">
+        {/* Estatísticas */}
+        <Card className="border-border bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Inscritos
+            </CardTitle>
+            <CardDescription>Usuários que ativaram notificações push neste site.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {statsLoading ? (
+              <div className="grid grid-cols-3 gap-4">
+                {[0, 1, 2].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-xl" />
+                ))}
+              </div>
             ) : (
-              <Send className="w-4 h-4" />
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-secondary/50 border border-border">
+                  <Users className="w-5 h-5 text-muted-foreground mb-1" />
+                  <p className="text-2xl font-bold font-display">{stats?.total ?? 0}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Total</p>
+                </div>
+                <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <Film className="w-5 h-5 text-purple-400 mb-1" />
+                  <p className="text-2xl font-bold font-display text-purple-400">{stats?.wantEpisodios ?? 0}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Episódios</p>
+                </div>
+                <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <Layers className="w-5 h-5 text-blue-400 mb-1" />
+                  <p className="text-2xl font-bold font-display text-blue-400">{stats?.wantObras ?? 0}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Projetos</p>
+                </div>
+              </div>
             )}
-            {isSending ? "Enviando..." : "Enviar para todos os inscritos"}
-          </Button>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Configurações automáticas */}
+        <Card className="border-border bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings2 className="w-5 h-5 text-primary" />
+              Notificações Automáticas
+            </CardTitle>
+            <CardDescription>
+              Controle se o site deve disparar notificações automaticamente ao criar conteúdo novo.
+              Edições <strong>não</strong> geram notificações independentemente desta configuração.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {statsLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-12 rounded-lg" />
+                <Skeleton className="h-12 rounded-lg" />
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-background/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-500/10">
+                      <Film className="w-4 h-4 text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Novos episódios</p>
+                      <p className="text-xs text-muted-foreground">Notificar quando um episódio for criado</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={autoEpisodios}
+                    onCheckedChange={setAutoEpisodios}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-background/50">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-500/10">
+                      <Layers className="w-4 h-4 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Novos projetos</p>
+                      <p className="text-xs text-muted-foreground">Notificar quando uma nova obra for adicionada</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={autoObras}
+                    onCheckedChange={setAutoObras}
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaving || !settingsChanged}
+                  size="sm"
+                  className="gap-2"
+                >
+                  {settingsSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Salvar configurações
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Enviar notificação personalizada */}
+        <Card className="border-border bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Send className="w-5 h-5 text-primary" />
+              Enviar Notificação Personalizada
+            </CardTitle>
+            <CardDescription>
+              Enviada para <strong>todos os inscritos</strong>, ignorando os filtros individuais de categoria.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="notif-title">Título *</Label>
+              <Input
+                id="notif-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Ex: Grande novidade no Zenkatu!"
+                className="bg-background"
+                maxLength={80}
+              />
+              <p className="text-xs text-muted-foreground text-right">{title.length}/80</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notif-body">Mensagem *</Label>
+              <Textarea
+                id="notif-body"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="Ex: Confira as novidades desta semana na plataforma!"
+                className="bg-background resize-none"
+                rows={3}
+                maxLength={200}
+              />
+              <p className="text-xs text-muted-foreground text-right">{body.length}/200</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="notif-image">URL da Imagem (opcional)</Label>
+                <Input
+                  id="notif-image"
+                  value={image}
+                  onChange={(e) => setImage(e.target.value)}
+                  placeholder="https://..."
+                  className="bg-background"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="notif-url">URL ao clicar</Label>
+                <Input
+                  id="notif-url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="/"
+                  className="bg-background"
+                />
+              </div>
+            </div>
+
+            {lastResult && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-sm flex items-center gap-2">
+                <Bell className="w-4 h-4 text-green-400 shrink-0" />
+                <span>
+                  <span className="text-green-400 font-medium">{lastResult.sent} entregues</span>
+                  {lastResult.failed > 0 && (
+                    <span className="text-muted-foreground ml-1">· {lastResult.failed} falhas removidas automaticamente</span>
+                  )}
+                </span>
+              </div>
+            )}
+
+            <Button
+              onClick={handleSend}
+              disabled={isSending || !title.trim() || !body.trim()}
+              className="w-full gap-2"
+            >
+              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {isSending ? "Enviando..." : `Enviar para ${stats?.total ?? 0} inscrito${(stats?.total ?? 0) !== 1 ? "s" : ""}`}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </motion.div>
   );
 }

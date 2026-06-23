@@ -1,6 +1,7 @@
 import webpush from "web-push";
 import { db } from "@workspace/db";
-import { pushSubscriptionsTable } from "@workspace/db";
+import { pushSubscriptionsTable, siteConfigTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 
 webpush.setVapidDetails(
   process.env.VAPID_EMAIL || "mailto:admin@zenkatu.com",
@@ -18,7 +19,15 @@ export interface PushPayload {
   url?: string;
 }
 
+async function isAutoEnabled(key: string): Promise<boolean> {
+  const [row] = await db.select().from(siteConfigTable).where(eq(siteConfigTable.key, key));
+  return !row || row.value !== "false";
+}
+
 export async function sendPushToAll(payload: PushPayload, type: NotificationType) {
+  if (type === "episodio" && !(await isAutoEnabled("push_auto_episodios"))) return { sent: 0, failed: 0, skipped: true };
+  if (type === "obra" && !(await isAutoEnabled("push_auto_obras"))) return { sent: 0, failed: 0, skipped: true };
+
   let subs = await db.select().from(pushSubscriptionsTable);
 
   if (type === "episodio") {

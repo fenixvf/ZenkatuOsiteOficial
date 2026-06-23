@@ -763,8 +763,8 @@ var require_depd = __commonJS({
       return deprecate;
     }
     function eehaslisteners(emitter, type) {
-      var count2 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count2 > 0;
+      var count3 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count3 > 0;
     }
     function isignored(namespace) {
       if (process.noDeprecation) {
@@ -18333,14 +18333,14 @@ var require_urlencoded = __commonJS({
       };
     }
     function parameterCount(body, limit) {
-      let count2 = 0;
+      let count3 = 0;
       let index = -1;
       do {
-        count2++;
-        if (count2 > limit) return void 0;
+        count3++;
+        if (count3 > limit) return void 0;
         index = body.indexOf("&", index + 1);
       } while (index !== -1);
-      return count2;
+      return count3;
     }
   }
 });
@@ -21553,13 +21553,13 @@ var require_mediaType = __commonJS({
       return spec.q > 0;
     }
     function quoteCount(string4) {
-      var count2 = 0;
+      var count3 = 0;
       var index = 0;
       while ((index = string4.indexOf('"', index)) !== -1) {
-        count2++;
+        count3++;
         index++;
       }
-      return count2;
+      return count3;
     }
     function splitKeyValuePair(str) {
       var index = str.indexOf("=");
@@ -22864,8 +22864,8 @@ var require_send = __commonJS({
       }
     }
     function hasListeners(emitter, type) {
-      var count2 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count2 > 0;
+      var count3 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count3 > 0;
     }
     function normalizeList(val, name2) {
       var list = [].concat(val || []);
@@ -29231,11 +29231,11 @@ var require_binaryParsers = __commonJS({
         var array2 = [];
         var i2;
         if (dimension.length > 1) {
-          var count2 = dimension.shift();
-          for (i2 = 0; i2 < count2; i2++) {
+          var count3 = dimension.shift();
+          for (i2 = 0; i2 < count3; i2++) {
             array2[i2] = parse3(dimension, elementType2);
           }
-          dimension.unshift(count2);
+          dimension.unshift(count3);
         } else {
           for (i2 = 0; i2 < dimension[0]; i2++) {
             array2[i2] = parseElement(elementType2);
@@ -56299,8 +56299,8 @@ function az_default() {
 }
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v4/locales/be.js
-function getBelarusianPlural(count2, one, few, many) {
-  const absCount = Math.abs(count2);
+function getBelarusianPlural(count3, one, few, many) {
+  const absCount = Math.abs(count3);
   const lastDigit = absCount % 10;
   const lastTwoDigits = absCount % 100;
   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
@@ -59445,8 +59445,8 @@ function pt_default() {
 }
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v4/locales/ru.js
-function getRussianPlural(count2, one, few, many) {
-  const absCount = Math.abs(count2);
+function getRussianPlural(count3, one, few, many) {
+  const absCount = Math.abs(count3);
   const lastDigit = absCount % 10;
   const lastTwoDigits = absCount % 100;
   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
@@ -63986,12 +63986,19 @@ init_drizzle_orm();
 
 // src/lib/push-notifications.ts
 var import_web_push = __toESM(require_src2(), 1);
+init_drizzle_orm();
 import_web_push.default.setVapidDetails(
   process.env.VAPID_EMAIL || "mailto:admin@zenkatu.com",
   process.env.VAPID_PUBLIC_KEY || "",
   process.env.VAPID_PRIVATE_KEY || ""
 );
+async function isAutoEnabled(key) {
+  const [row] = await db.select().from(siteConfigTable).where(eq(siteConfigTable.key, key));
+  return !row || row.value !== "false";
+}
 async function sendPushToAll(payload, type) {
+  if (type === "episodio" && !await isAutoEnabled("push_auto_episodios")) return { sent: 0, failed: 0, skipped: true };
+  if (type === "obra" && !await isAutoEnabled("push_auto_obras")) return { sent: 0, failed: 0, skipped: true };
   let subs = await db.select().from(pushSubscriptionsTable);
   if (type === "episodio") {
     subs = subs.filter((s) => s.notifyEpisodios);
@@ -64954,6 +64961,55 @@ router11.patch("/push/preferences/:uid", async (req, res) => {
       )
     ).returning();
     res.json(updated || {});
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.get("/push/stats", async (req, res) => {
+  try {
+    const { adminEmail } = req.query;
+    if (adminEmail !== ADMIN_EMAIL2) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const subs = await db.select().from(pushSubscriptionsTable);
+    const total = subs.length;
+    const wantEpisodios = subs.filter((s) => s.notifyEpisodios).length;
+    const wantObras = subs.filter((s) => s.notifyObras).length;
+    const configRows = await db.select().from(siteConfigTable).where(
+      sql`${siteConfigTable.key} IN ('push_auto_episodios', 'push_auto_obras')`
+    );
+    const configMap = {};
+    for (const row of configRows) configMap[row.key] = row.value;
+    res.json({
+      total,
+      wantEpisodios,
+      wantObras,
+      autoEpisodios: configMap["push_auto_episodios"] !== "false",
+      autoObras: configMap["push_auto_obras"] !== "false"
+    });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.patch("/push/settings", async (req, res) => {
+  try {
+    const { adminEmail, autoEpisodios, autoObras } = req.body;
+    if (adminEmail !== ADMIN_EMAIL2) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const updates = [];
+    if (autoEpisodios !== void 0)
+      updates.push({ key: "push_auto_episodios", value: String(autoEpisodios) });
+    if (autoObras !== void 0)
+      updates.push({ key: "push_auto_obras", value: String(autoObras) });
+    for (const { key, value } of updates) {
+      await db.insert(siteConfigTable).values({ key, value }).onConflictDoUpdate({ target: siteConfigTable.key, set: { value } });
+    }
+    res.json({ ok: true });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
