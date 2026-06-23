@@ -3,11 +3,16 @@ import { db } from "@workspace/db";
 import { pushSubscriptionsTable, siteConfigTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || "mailto:admin@zenkatu.com",
-  process.env.VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-);
+const vapidConfigured =
+  process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY;
+
+if (vapidConfigured) {
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || "mailto:admin@zenkatu.com",
+    process.env.VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
+}
 
 export type NotificationType = "episodio" | "obra" | "custom";
 

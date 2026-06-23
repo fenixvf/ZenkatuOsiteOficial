@@ -63991,11 +63991,14 @@ init_drizzle_orm();
 // src/lib/push-notifications.ts
 var import_web_push = __toESM(require_src2(), 1);
 init_drizzle_orm();
-import_web_push.default.setVapidDetails(
-  process.env.VAPID_EMAIL || "mailto:admin@zenkatu.com",
-  process.env.VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-);
+var vapidConfigured = process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY;
+if (vapidConfigured) {
+  import_web_push.default.setVapidDetails(
+    process.env.VAPID_EMAIL || "mailto:admin@zenkatu.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+}
 async function isAutoEnabled(key) {
   const [row] = await db.select().from(siteConfigTable).where(eq(siteConfigTable.key, key));
   return !row || row.value !== "false";
