@@ -304,6 +304,50 @@ router.post("/zenkatuber/reject/:id", async (req, res) => {
   }
 });
 
+// Conceder Zenkatuber manualmente (admin) — para parceiros antigos
+router.post("/zenkatuber/grant", async (req, res) => {
+  try {
+    const { adminUid, email, whatsapp, instagram, discord } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+
+    if (!email) {
+      res.status(400).json({ error: "E-mail é obrigatório" });
+      return;
+    }
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email.trim().toLowerCase()));
+
+    if (!user) {
+      res.status(404).json({ error: "Usuário não encontrado. O usuário precisa ter feito login ao menos uma vez." });
+      return;
+    }
+
+    await db
+      .update(usersTable)
+      .set({
+        isZenkatuber: true,
+        verifiedAt: new Date(),
+        contactWhatsapp: whatsapp || user.contactWhatsapp,
+        contactInstagram: instagram || user.contactInstagram,
+        contactDiscord: discord || user.contactDiscord,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.uid, user.uid));
+
+    res.json({ ok: true, message: `${user.username || user.email} agora é Zenkatuber!`, username: user.username || user.email });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Revogar Zenkatuber (admin)
 router.post("/zenkatuber/revoke/:uid", async (req, res) => {
   try {

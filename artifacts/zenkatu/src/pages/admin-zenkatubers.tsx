@@ -30,6 +30,7 @@ import {
   ShieldAlert,
   Settings2,
   Users2,
+  UserPlus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -91,6 +92,44 @@ export default function AdminZenkatubers() {
     requireFandub: true,
     enabled: true,
   });
+
+  const [grantEmail, setGrantEmail] = useState("");
+  const [grantWhatsapp, setGrantWhatsapp] = useState("");
+  const [grantInstagram, setGrantInstagram] = useState("");
+  const [grantDiscord, setGrantDiscord] = useState("");
+  const [granting, setGranting] = useState(false);
+
+  const handleGrant = async () => {
+    if (!currentUser?.uid || !grantEmail.trim()) return;
+    setGranting(true);
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/grant`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adminUid: currentUser.uid,
+          email: grantEmail.trim(),
+          whatsapp: grantWhatsapp.trim() || undefined,
+          instagram: grantInstagram.trim() || undefined,
+          discord: grantDiscord.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast({ title: data.message || "Zenkatuber concedido!" });
+        setGrantEmail("");
+        setGrantWhatsapp("");
+        setGrantInstagram("");
+        setGrantDiscord("");
+      } else {
+        toast({ title: data.error || "Erro ao conceder Zenkatuber", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao conceder Zenkatuber", variant: "destructive" });
+    } finally {
+      setGranting(false);
+    }
+  };
 
   const fetchConfig = async () => {
     try {
@@ -297,6 +336,72 @@ export default function AdminZenkatubers() {
             </Button>
           </div>
         )}
+      </div>
+
+      {/* Adicionar parceiro manualmente */}
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-5">
+          <UserPlus className="w-5 h-5 text-muted-foreground" />
+          <h2 className="font-semibold text-foreground">Adicionar parceiro manualmente</h2>
+          <span className="text-xs text-muted-foreground ml-1">— para criadores que já eram parceiros antes do sistema</span>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">E-mail da conta *</Label>
+            <Input
+              type="email"
+              placeholder="email@exemplo.com"
+              value={grantEmail}
+              onChange={(e) => setGrantEmail(e.target.value)}
+              className="bg-background max-w-sm"
+            />
+            <p className="text-xs text-muted-foreground">O usuário precisa ter feito login ao menos uma vez na plataforma.</p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm">WhatsApp (opcional)</Label>
+              <Input
+                placeholder="+55 11 9..."
+                value={grantWhatsapp}
+                onChange={(e) => setGrantWhatsapp(e.target.value)}
+                className="bg-background"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Instagram (opcional)</Label>
+              <Input
+                placeholder="@usuario"
+                value={grantInstagram}
+                onChange={(e) => setGrantInstagram(e.target.value)}
+                className="bg-background"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Discord (opcional)</Label>
+              <Input
+                placeholder="usuario#0000"
+                value={grantDiscord}
+                onChange={(e) => setGrantDiscord(e.target.value)}
+                className="bg-background"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleGrant}
+            disabled={granting || !grantEmail.trim()}
+            className="gap-2"
+          >
+            {granting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <BadgeCheck className="w-4 h-4" />
+            )}
+            Conceder selo Zenkatuber
+          </Button>
+        </div>
       </div>
 
       {/* Solicitações */}

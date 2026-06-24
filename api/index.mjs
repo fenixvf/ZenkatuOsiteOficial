@@ -65586,6 +65586,37 @@ router12.post("/zenkatuber/reject/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router12.post("/zenkatuber/grant", async (req, res) => {
+  try {
+    const { adminUid, email: email3, whatsapp, instagram, discord } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    if (!email3) {
+      res.status(400).json({ error: "E-mail \xE9 obrigat\xF3rio" });
+      return;
+    }
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email3.trim().toLowerCase()));
+    if (!user) {
+      res.status(404).json({ error: "Usu\xE1rio n\xE3o encontrado. O usu\xE1rio precisa ter feito login ao menos uma vez." });
+      return;
+    }
+    await db.update(usersTable).set({
+      isZenkatuber: true,
+      verifiedAt: /* @__PURE__ */ new Date(),
+      contactWhatsapp: whatsapp || user.contactWhatsapp,
+      contactInstagram: instagram || user.contactInstagram,
+      contactDiscord: discord || user.contactDiscord,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(usersTable.uid, user.uid));
+    res.json({ ok: true, message: `${user.username || user.email} agora \xE9 Zenkatuber!`, username: user.username || user.email });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 router12.post("/zenkatuber/revoke/:uid", async (req, res) => {
   try {
     const { adminUid } = req.body;
