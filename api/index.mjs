@@ -64047,6 +64047,8 @@ var zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
   fandubLink: text("fandub_link").notNull(),
   categoria: varchar("categoria", { length: 50 }).notNull(),
   equipe: text("equipe"),
+  redesocial: varchar("redesocial", { length: 30 }),
+  seguidores: integer("seguidores"),
   aceitouTermos: boolean("aceitou_termos").default(false).notNull(),
   status: varchar("status", { length: 20 }).default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull()
@@ -65364,15 +65366,112 @@ async function isAdmin(uid) {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
   return user?.role === "admin";
 }
+var CONFIG_KEYS = {
+  minFollowers: "zenkatuber_min_followers",
+  minAge: "zenkatuber_min_age",
+  requireFandub: "zenkatuber_require_fandub",
+  enabled: "zenkatuber_enabled"
+};
+var CONFIG_DEFAULTS = {
+  zenkatuber_min_followers: "500",
+  zenkatuber_min_age: "16",
+  zenkatuber_require_fandub: "true",
+  zenkatuber_enabled: "true"
+};
+async function getConfig() {
+  const rows = await db.select().from(siteConfigTable).where(
+    eq(siteConfigTable.key, CONFIG_KEYS.minFollowers)
+  );
+  const allRows = await db.select().from(siteConfigTable);
+  const map2 = { ...CONFIG_DEFAULTS };
+  for (const row of allRows) {
+    if (Object.values(CONFIG_KEYS).includes(row.key)) {
+      map2[row.key] = row.value;
+    }
+  }
+  return map2;
+}
+router12.get("/zenkatuber/config", async (req, res) => {
+  try {
+    const cfg = await getConfig();
+    res.json({
+      minFollowers: parseInt(cfg[CONFIG_KEYS.minFollowers] ?? "500"),
+      minAge: parseInt(cfg[CONFIG_KEYS.minAge] ?? "16"),
+      requireFandub: cfg[CONFIG_KEYS.requireFandub] !== "false",
+      enabled: cfg[CONFIG_KEYS.enabled] !== "false"
+    });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.patch("/zenkatuber/config", async (req, res) => {
+  try {
+    const { adminUid, minFollowers, minAge, requireFandub, enabled } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const updates = [];
+    if (minFollowers !== void 0) updates.push({ key: CONFIG_KEYS.minFollowers, value: String(minFollowers) });
+    if (minAge !== void 0) updates.push({ key: CONFIG_KEYS.minAge, value: String(minAge) });
+    if (requireFandub !== void 0) updates.push({ key: CONFIG_KEYS.requireFandub, value: String(requireFandub) });
+    if (enabled !== void 0) updates.push({ key: CONFIG_KEYS.enabled, value: String(enabled) });
+    for (const { key, value } of updates) {
+      const existing = await db.select().from(siteConfigTable).where(eq(siteConfigTable.key, key));
+      if (existing.length > 0) {
+        await db.update(siteConfigTable).set({ value }).where(eq(siteConfigTable.key, key));
+      } else {
+        await db.insert(siteConfigTable).values({ key, value });
+      }
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 router12.post("/zenkatuber/solicitar", async (req, res) => {
   try {
-    const { uid, email: email3, username, whatsapp, instagram, discord, fandubLink, categoria, equipe, aceitouTermos } = req.body;
-    if (!uid || !email3 || !fandubLink || !categoria) {
-      res.status(400).json({ error: "uid, email, fandubLink e categoria s\xE3o obrigat\xF3rios" });
+    const {
+      uid,
+      email: email3,
+      username,
+      whatsapp,
+      instagram,
+      discord,
+      fandubLink,
+      categoria,
+      equipe,
+      redesocial,
+      seguidores,
+      aceitouTermos
+    } = req.body;
+    if (!uid || !email3 || !categoria) {
+      res.status(400).json({ error: "uid, email e categoria s\xE3o obrigat\xF3rios" });
       return;
     }
     if (!aceitouTermos) {
       res.status(400).json({ error: "\xC9 necess\xE1rio aceitar os termos" });
+      return;
+    }
+    const cfg = await getConfig();
+    const minFollowers = parseInt(cfg[CONFIG_KEYS.minFollowers] ?? "500");
+    const requireFandub = cfg[CONFIG_KEYS.requireFandub] !== "false";
+    const enabled = cfg[CONFIG_KEYS.enabled] !== "false";
+    if (!enabled) {
+      res.status(403).json({ error: "O programa Zenkatuber est\xE1 temporariamente fechado para novas solicita\xE7\xF5es." });
+      return;
+    }
+    if (requireFandub && !fandubLink) {
+      res.status(400).json({ error: "\xC9 obrigat\xF3rio informar um link de trabalho anterior" });
+      return;
+    }
+    if (minFollowers > 0 && (!seguidores || seguidores < minFollowers)) {
+      res.status(400).json({
+        error: `\xC9 necess\xE1rio ter pelo menos ${minFollowers.toLocaleString("pt-BR")} seguidores em alguma rede social`
+      });
       return;
     }
     const [existing] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
@@ -65392,9 +65491,11 @@ router12.post("/zenkatuber/solicitar", async (req, res) => {
       whatsapp: whatsapp || null,
       instagram: instagram || null,
       discord: discord || null,
-      fandubLink,
+      fandubLink: fandubLink || "",
       categoria,
       equipe: equipe || null,
+      redesocial: redesocial || null,
+      seguidores: seguidores ? parseInt(seguidores) : null,
       aceitouTermos: true,
       status: "pending"
     }).returning();

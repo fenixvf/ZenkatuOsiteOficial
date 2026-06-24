@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 
 export const zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
   id: serial("id").primaryKey(),
@@ -11,6 +11,8 @@ export const zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
   fandubLink: text("fandub_link").notNull(),
   categoria: varchar("categoria", { length: 50 }).notNull(),
   equipe: text("equipe"),
+  redesocial: varchar("redesocial", { length: 30 }),
+  seguidores: integer("seguidores"),
   aceitouTermos: boolean("aceitou_termos").default(false).notNull(),
   status: varchar("status", { length: 20 }).default("pending").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
