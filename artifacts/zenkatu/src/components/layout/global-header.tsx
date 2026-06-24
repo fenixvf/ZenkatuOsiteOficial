@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Search, X, Menu, TrendingUp, Clock, Bell, BellOff, Loader2 } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { usePushNotificationsContext } from "@/lib/push-notifications-context";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchObras } from "@workspace/api-client-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -313,7 +313,7 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
   const { currentUser, userProfile, isAdmin, signOut } = useAuth();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { toast } = useToast();
-  const push = usePushNotifications(currentUser?.uid ?? null);
+  const push = usePushNotificationsContext();
 
   return (
     <>

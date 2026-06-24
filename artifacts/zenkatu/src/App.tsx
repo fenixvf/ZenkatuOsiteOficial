@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { PushNotificationsProvider } from "@/lib/push-notifications-context";
 import { NotificationPrompt } from "@/components/notification-prompt";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useEffect } from "react";
@@ -112,13 +113,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
-            <Router />
-            <NotificationPrompt />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
+        <PushNotificationsProvider>
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
+              <Router />
+              <NotificationPrompt />
+            </WouterRouter>
+            <Toaster />
+          </TooltipProvider>
+        </PushNotificationsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

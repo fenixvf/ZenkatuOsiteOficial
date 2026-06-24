@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, X, Sparkles } from "lucide-react";
-import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { usePushNotificationsContext } from "@/lib/push-notifications-context";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
@@ -9,7 +9,7 @@ const DISMISSED_KEY = "zenkatu:notif-prompt-dismissed";
 
 export function NotificationPrompt() {
   const { currentUser } = useAuth();
-  const push = usePushNotifications(currentUser?.uid ?? null);
+  const push = usePushNotificationsContext();
   const { toast } = useToast();
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);

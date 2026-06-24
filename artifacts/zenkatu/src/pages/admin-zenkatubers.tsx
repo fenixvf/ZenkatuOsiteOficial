@@ -31,11 +31,26 @@ import {
   Settings2,
   Users2,
   UserPlus,
+  Pencil,
+  Save,
+  Trash2,
+  List,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const API_BASE = "/api";
+
+type ActiveZenkatuber = {
+  uid: string;
+  email: string;
+  username?: string | null;
+  photoUrl?: string | null;
+  contactWhatsapp?: string | null;
+  contactInstagram?: string | null;
+  contactDiscord?: string | null;
+  verifiedAt?: string | null;
+};
 
 type ZenkatuberRequest = {
   id: number;
@@ -93,11 +108,103 @@ export default function AdminZenkatubers() {
     enabled: true,
   });
 
+  const [activeZenkatubers, setActiveZenkatubers] = useState<ActiveZenkatuber[]>([]);
+  const [activeLoading, setActiveLoading] = useState(true);
+  const [editingUid, setEditingUid] = useState<string | null>(null);
+  const [editFields, setEditFields] = useState({ whatsapp: "", instagram: "", discord: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [revokingUid, setRevokingUid] = useState<string | null>(null);
+
   const [grantEmail, setGrantEmail] = useState("");
   const [grantWhatsapp, setGrantWhatsapp] = useState("");
   const [grantInstagram, setGrantInstagram] = useState("");
   const [grantDiscord, setGrantDiscord] = useState("");
   const [granting, setGranting] = useState(false);
+
+  const fetchActiveZenkatubers = async () => {
+    if (!currentUser?.uid) return;
+    setActiveLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/list/${currentUser.uid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setActiveZenkatubers(Array.isArray(data) ? data : []);
+      }
+    } catch {
+    } finally {
+      setActiveLoading(false);
+    }
+  };
+
+  const startEdit = (z: ActiveZenkatuber) => {
+    setEditingUid(z.uid);
+    setEditFields({
+      whatsapp: z.contactWhatsapp ?? "",
+      instagram: z.contactInstagram ?? "",
+      discord: z.contactDiscord ?? "",
+    });
+  };
+
+  const saveEdit = async (uid: string) => {
+    if (!currentUser?.uid) return;
+    setSavingEdit(true);
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/edit/${uid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          adminUid: currentUser.uid,
+          whatsapp: editFields.whatsapp.trim() || null,
+          instagram: editFields.instagram.trim() || null,
+          discord: editFields.discord.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        setActiveZenkatubers((prev) =>
+          prev.map((z) =>
+            z.uid === uid
+              ? {
+                  ...z,
+                  contactWhatsapp: editFields.whatsapp.trim() || null,
+                  contactInstagram: editFields.instagram.trim() || null,
+                  contactDiscord: editFields.discord.trim() || null,
+                }
+              : z
+          )
+        );
+        setEditingUid(null);
+        toast({ title: "Contato atualizado!" });
+      } else {
+        toast({ title: "Erro ao salvar", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao salvar", variant: "destructive" });
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleRevoke = async (uid: string, username: string | null | undefined) => {
+    if (!currentUser?.uid) return;
+    setRevokingUid(uid);
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/revoke/${uid}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUid: currentUser.uid }),
+      });
+      if (res.ok) {
+        setActiveZenkatubers((prev) => prev.filter((z) => z.uid !== uid));
+        toast({ title: `Selo de ${username || "usuário"} removido.` });
+      } else {
+        toast({ title: "Erro ao revogar", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao revogar", variant: "destructive" });
+    } finally {
+      setRevokingUid(null);
+    }
+  };
 
   const handleGrant = async () => {
     if (!currentUser?.uid || !grantEmail.trim()) return;
@@ -186,6 +293,7 @@ export default function AdminZenkatubers() {
   useEffect(() => {
     fetchConfig();
     fetchRequests();
+    fetchActiveZenkatubers();
   }, [currentUser?.uid]);
 
   const handleApprove = async (id: number) => {
@@ -402,6 +510,200 @@ export default function AdminZenkatubers() {
             Conceder selo Zenkatuber
           </Button>
         </div>
+      </div>
+
+      {/* Zenkatubers Ativos */}
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <List className="w-5 h-5 text-muted-foreground" />
+            <h2 className="font-semibold text-foreground">Zenkatubers ativos</h2>
+            {activeZenkatubers.length > 0 && (
+              <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-500/10">
+                {activeZenkatubers.length}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {activeLoading ? (
+          <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
+            <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
+          </div>
+        ) : activeZenkatubers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-border rounded-2xl">
+            <BadgeCheck className="w-10 h-10 text-muted-foreground/20 mb-3" />
+            <p className="text-sm text-muted-foreground">Nenhum Zenkatuber ativo ainda.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border/40">
+            <AnimatePresence>
+              {activeZenkatubers.map((z) => (
+                <motion.div
+                  key={z.uid}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -20, height: 0 }}
+                  className="py-4 first:pt-0 last:pb-0"
+                >
+                  {editingUid === z.uid ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        {z.photoUrl && (
+                          <img src={z.photoUrl} alt="" className="w-7 h-7 rounded-full object-cover" />
+                        )}
+                        <span className="font-semibold text-sm text-foreground">{z.username || z.email}</span>
+                        <span className="text-xs text-muted-foreground">{z.email}</span>
+                      </div>
+                      <div className="grid sm:grid-cols-3 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-xs">WhatsApp</Label>
+                          <Input
+                            placeholder="+55 11 9..."
+                            value={editFields.whatsapp}
+                            onChange={(e) => setEditFields((f) => ({ ...f, whatsapp: e.target.value }))}
+                            className="bg-background h-8 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Instagram</Label>
+                          <Input
+                            placeholder="@usuario"
+                            value={editFields.instagram}
+                            onChange={(e) => setEditFields((f) => ({ ...f, instagram: e.target.value }))}
+                            className="bg-background h-8 text-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Discord</Label>
+                          <Input
+                            placeholder="usuario#0000"
+                            value={editFields.discord}
+                            onChange={(e) => setEditFields((f) => ({ ...f, discord: e.target.value }))}
+                            className="bg-background h-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="gap-1.5 h-8"
+                          onClick={() => saveEdit(z.uid)}
+                          disabled={savingEdit}
+                        >
+                          {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                          Salvar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8"
+                          onClick={() => setEditingUid(null)}
+                          disabled={savingEdit}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {z.photoUrl ? (
+                          <img src={z.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            <BadgeCheck className="w-4 h-4 text-primary" />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-foreground">{z.username || z.email}</span>
+                            <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400 bg-blue-500/10 px-1.5 py-0">
+                              Zenkatuber
+                            </Badge>
+                          </div>
+                          <div className="flex gap-2 mt-1 flex-wrap">
+                            {z.contactWhatsapp && (
+                              <span className="text-xs text-green-400 flex items-center gap-1">
+                                <MessageCircle className="w-3 h-3" /> {z.contactWhatsapp}
+                              </span>
+                            )}
+                            {z.contactInstagram && (
+                              <span className="text-xs text-pink-400 flex items-center gap-1">
+                                <Instagram className="w-3 h-3" /> {z.contactInstagram}
+                              </span>
+                            )}
+                            {z.contactDiscord && (
+                              <span className="text-xs text-indigo-400 flex items-center gap-1">
+                                <MessageCircle className="w-3 h-3" /> {z.contactDiscord}
+                              </span>
+                            )}
+                            {!z.contactWhatsapp && !z.contactInstagram && !z.contactDiscord && (
+                              <span className="text-xs text-muted-foreground/50">Sem contatos cadastrados</span>
+                            )}
+                          </div>
+                          {z.verifiedAt && (
+                            <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                              Verificado em {format(new Date(z.verifiedAt), "dd/MM/yyyy", { locale: ptBR })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5 text-xs"
+                          onClick={() => startEdit(z)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Editar
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 gap-1.5 text-xs border-red-500/40 text-red-400 hover:bg-red-500/10"
+                              disabled={revokingUid === z.uid}
+                            >
+                              {revokingUid === z.uid ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                              Revogar
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-card border-border">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2">
+                                <ShieldAlert className="w-5 h-5 text-destructive" />
+                                Revogar Zenkatuber?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                O selo de <strong>{z.username || z.email}</strong> será removido. Isso pode ser concedido novamente depois.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-transparent border-border">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleRevoke(z.uid, z.username)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Revogar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
 
       {/* Solicitações */}

@@ -348,6 +348,65 @@ router.post("/zenkatuber/grant", async (req, res) => {
   }
 });
 
+// Listar todos os Zenkatubers ativos (admin)
+router.get("/zenkatuber/list/:adminUid", async (req, res) => {
+  try {
+    const admin = await isAdmin(req.params.adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+
+    const zenkatubers = await db
+      .select({
+        uid: usersTable.uid,
+        email: usersTable.email,
+        username: usersTable.username,
+        photoUrl: usersTable.photoUrl,
+        contactWhatsapp: usersTable.contactWhatsapp,
+        contactInstagram: usersTable.contactInstagram,
+        contactDiscord: usersTable.contactDiscord,
+        verifiedAt: usersTable.verifiedAt,
+        updatedAt: usersTable.updatedAt,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.isZenkatuber, true))
+      .orderBy(usersTable.verifiedAt);
+
+    res.json(zenkatubers);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Editar dados de contato de um Zenkatuber (admin)
+router.patch("/zenkatuber/edit/:uid", async (req, res) => {
+  try {
+    const { adminUid, whatsapp, instagram, discord } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+
+    await db
+      .update(usersTable)
+      .set({
+        contactWhatsapp: whatsapp ?? null,
+        contactInstagram: instagram ?? null,
+        contactDiscord: discord ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.uid, req.params.uid));
+
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Revogar Zenkatuber (admin)
 router.post("/zenkatuber/revoke/:uid", async (req, res) => {
   try {
