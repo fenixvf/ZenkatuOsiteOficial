@@ -95,6 +95,7 @@ PORT = "8080"
 VAPID_PUBLIC_KEY = "BDcpgwLcLJ6wtvtEL1hMWdE2g-kwRi6ZWcdvAghgXc-1TUk6o5ZFvEyaGHqDpMrLDp4KnUSmFyE_oLt5woTeCTM"
 VAPID_PRIVATE_KEY = "28kw1gbCTHrmQvMU7AqIcJh8cOm5TY4fiK4KqJy-jyU"
 VAPID_EMAIL = "mailto:admin@zenkatu.com"
+SUPABASE_DATABASE_URL = "postgresql://postgres.uaggmlgoyhqmzlycfpyo:M4ur1c18m1m2@aws-1-sa-east-1.pooler.supabase.com:6543/postgres"
 
 [nix]
 channel = "stable-25_05"
