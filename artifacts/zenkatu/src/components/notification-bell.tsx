@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, ExternalLink, Megaphone } from "lucide-react";
+import { Bell, ExternalLink, Megaphone, BellOff } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useLocation } from "wouter";
@@ -18,18 +18,19 @@ interface Notificacao {
   sentAt: string;
 }
 
-function useNotificacoes(isSubscribed: boolean) {
+function useNotificacoes() {
   const [notifs, setNotifs] = useState<Notificacao[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isSubscribed) return;
     fetch(`${API_BASE}/push/historico`)
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setNotifs(data.slice(0, 3)))
-      .catch(() => {});
-  }, [isSubscribed]);
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  return notifs;
+  return { notifs, loading };
 }
 
 function useUnreadCount(notifs: Notificacao[]) {
@@ -55,7 +56,7 @@ export function NotificationBell({ isSubscribed }: { isSubscribed: boolean }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [, setLocation] = useLocation();
 
-  const notifs = useNotificacoes(isSubscribed);
+  const { notifs, loading } = useNotificacoes();
   const { unread, markAllRead } = useUnreadCount(notifs);
 
   // Fechar ao clicar fora
@@ -74,7 +75,8 @@ export function NotificationBell({ isSubscribed }: { isSubscribed: boolean }) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  if (!isSubscribed || notifs.length === 0) return null;
+  // Só mostra se estiver inscrito
+  if (!isSubscribed) return null;
 
   const handleOpen = () => {
     setOpen((v) => !v);
@@ -130,53 +132,73 @@ export function NotificationBell({ isSubscribed }: { isSubscribed: boolean }) {
                 <Megaphone className="w-4 h-4 text-primary" />
                 <span className="text-sm font-semibold">Notificações</span>
               </div>
-              <span className="text-xs text-muted-foreground">Últimas {notifs.length}</span>
+              {notifs.length > 0 && (
+                <span className="text-xs text-muted-foreground">Últimas {notifs.length}</span>
+              )}
             </div>
 
-            {/* Lista */}
-            <div className="divide-y divide-border/40">
-              {notifs.map((n, i) => (
-                <motion.button
-                  key={n.id}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => handleNotifClick(n.url)}
-                  className="w-full flex items-start gap-3 px-4 py-3 hover:bg-secondary/60 transition-colors text-left group"
-                >
-                  {n.image ? (
-                    <img
-                      src={n.image}
-                      alt=""
-                      className="w-10 h-10 rounded-lg object-cover shrink-0 mt-0.5"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Bell className="w-4 h-4 text-primary" />
+            {/* Lista ou estado vazio */}
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full"
+                />
+              </div>
+            ) : notifs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                <BellOff className="w-8 h-8 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground">Nenhuma notificação ainda</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  Você vai ver os avisos de novos episódios aqui.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/40">
+                {notifs.map((n, i) => (
+                  <motion.button
+                    key={n.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => handleNotifClick(n.url)}
+                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-secondary/60 transition-colors text-left group"
+                  >
+                    {n.image ? (
+                      <img
+                        src={n.image}
+                        alt=""
+                        className="w-10 h-10 rounded-lg object-cover shrink-0 mt-0.5"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Bell className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground line-clamp-1 leading-snug">
+                        {n.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+                        {n.body}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                        {formatDistanceToNow(new Date(n.sentAt), {
+                          addSuffix: true,
+                          locale: ptBR,
+                        })}
+                      </p>
                     </div>
-                  )}
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground line-clamp-1 leading-snug">
-                      {n.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
-                      {n.body}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">
-                      {formatDistanceToNow(new Date(n.sentAt), {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}
-                    </p>
-                  </div>
-
-                  {n.url && (
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground shrink-0 mt-1 transition-colors" />
-                  )}
-                </motion.button>
-              ))}
-            </div>
+                    {n.url && (
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-muted-foreground shrink-0 mt-1 transition-colors" />
+                    )}
+                  </motion.button>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
