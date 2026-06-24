@@ -473,8 +473,7 @@ export default function Perfil() {
         )}
 
         {/* Zenkatuber */}
-        {!isAdmin && (
-          <Card className="border-border bg-card/50 backdrop-blur">
+        <Card className="border-border bg-card/50 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BadgeCheck className="w-5 h-5 text-blue-400" />
@@ -509,7 +508,6 @@ export default function Perfil() {
               )}
             </CardContent>
           </Card>
-        )}
 
         {/* Minha Lista */}
         <Card className="border-border bg-card/50 backdrop-blur">
