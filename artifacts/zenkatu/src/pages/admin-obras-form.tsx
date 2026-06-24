@@ -11,6 +11,7 @@ import {
   getListObrasQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -429,6 +430,7 @@ export default function AdminObrasForm() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
 
   const createObra = useCreateObra();
   const updateObra = useUpdateObra();
@@ -491,10 +493,15 @@ export default function AdminObrasForm() {
     try {
       const payload = { ...data, tipografiaUrl: data.tipografiaUrl || null, cast };
       if (isEditing) {
-        await updateObra.mutateAsync({ obraId: Number(id), data: payload });
+        await updateObra.mutateAsync({
+          obraId: Number(id),
+          data: { ...payload, callerUid: currentUser?.uid },
+        });
         toast({ title: "Obra atualizada com sucesso" });
       } else {
-        await createObra.mutateAsync({ data: payload });
+        await createObra.mutateAsync({
+          data: { ...payload, ownerId: currentUser?.uid ?? null },
+        });
         toast({ title: "Obra criada com sucesso" });
       }
       queryClient.invalidateQueries({ queryKey: getListObrasQueryKey() });

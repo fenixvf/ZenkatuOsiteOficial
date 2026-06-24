@@ -20501,27 +20501,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router13;
+    module.exports = Router14;
     module.exports.Route = Route;
-    function Router13(options) {
-      if (!(this instanceof Router13)) {
-        return new Router13(options);
+    function Router14(options) {
+      if (!(this instanceof Router14)) {
+        return new Router14(options);
       }
       const opts = options || {};
-      function router13(req, res, next) {
-        router13.handle(req, res, next);
+      function router14(req, res, next) {
+        router14.handle(req, res, next);
       }
-      Object.setPrototypeOf(router13, this);
-      router13.caseSensitive = opts.caseSensitive;
-      router13.mergeParams = opts.mergeParams;
-      router13.params = {};
-      router13.strict = opts.strict;
-      router13.stack = [];
-      return router13;
+      Object.setPrototypeOf(router14, this);
+      router14.caseSensitive = opts.caseSensitive;
+      router14.mergeParams = opts.mergeParams;
+      router14.params = {};
+      router14.strict = opts.strict;
+      router14.stack = [];
+      return router14;
     }
-    Router13.prototype = function() {
+    Router14.prototype = function() {
     };
-    Router13.prototype.param = function param2(name2, fn) {
+    Router14.prototype.param = function param2(name2, fn) {
       if (!name2) {
         throw new TypeError("argument name is required");
       }
@@ -20541,7 +20541,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router13.prototype.handle = function handle(req, res, callback) {
+    Router14.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20668,7 +20668,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router13.prototype.use = function use(handler) {
+    Router14.prototype.use = function use(handler) {
       let offset = 0;
       let path2 = "/";
       if (typeof handler !== "function") {
@@ -20701,7 +20701,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router13.prototype.route = function route(path2) {
+    Router14.prototype.route = function route(path2) {
       const route2 = new Route(path2);
       const layer = new Layer(path2, {
         sensitive: this.caseSensitive,
@@ -20716,7 +20716,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router13.prototype[method] = function(path2) {
+      Router14.prototype[method] = function(path2) {
         const route = this.route(path2);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -20899,13 +20899,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router13 = require_router();
+    var Router14 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router13 = null;
+      var router14 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -20914,13 +20914,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router13 === null) {
-            router13 = new Router13({
+          if (router14 === null) {
+            router14 = new Router14({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router13;
+          return router14;
         }
       });
     };
@@ -20991,15 +20991,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router13 = this.router;
+      var router14 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router13.use(path2, fn2);
+          return router14.use(path2, fn2);
         }
         debug(".use app under %s", path2);
         fn2.mountpath = path2;
         fn2.parent = this;
-        router13.use(path2, function mounted_app(req, res, next) {
+        router14.use(path2, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -23572,7 +23572,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router13 = require_router();
+    var Router14 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23594,8 +23594,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router13.Route;
-    exports.Router = Router13;
+    exports.Route = Router14.Route;
+    exports.Router = Router14;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -44252,14 +44252,14 @@ var require_src2 = __commonJS({
 });
 
 // src/app.ts
-var import_express13 = __toESM(require_express2(), 1);
+var import_express14 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 import path from "path";
 import { fileURLToPath } from "url";
 
 // src/routes/index.ts
-var import_express12 = __toESM(require_express2(), 1);
+var import_express13 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -48183,6 +48183,7 @@ var ListObrasResponseItem = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48200,7 +48201,8 @@ var CreateObraBody = objectType({
   "bannerUrl": stringType(),
   "tipografiaUrl": stringType().nullish(),
   "showInBanner": booleanType().optional(),
-  "bannerOrder": numberType().nullish()
+  "bannerOrder": numberType().nullish(),
+  "ownerId": stringType().nullish()
 });
 var ListBannerObrasResponseItem = objectType({
   "id": numberType(),
@@ -48218,6 +48220,7 @@ var ListBannerObrasResponseItem = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48238,6 +48241,7 @@ var ListTop10ObrasResponseItem = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48258,6 +48262,7 @@ var ListObrasRecentesResponseItem = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48281,6 +48286,7 @@ var GetObraResponse = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48318,6 +48324,7 @@ var UpdateObraResponse = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48343,6 +48350,7 @@ var GetObraBySlugResponse = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48365,6 +48373,7 @@ var SearchObrasResponseItem = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48388,6 +48397,7 @@ var IncrementObraViewResponse = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48484,6 +48494,8 @@ var ListComentariosResponseItem = objectType({
   "texto": stringType(),
   "parentId": numberType().nullish(),
   "editado": booleanType().optional(),
+  "isZenkatuber": booleanType().optional(),
+  "verifiedAt": stringType().nullish(),
   "createdAt": stringType(),
   "updatedAt": stringType().optional()
 });
@@ -48513,6 +48525,8 @@ var UpdateComentarioResponse = objectType({
   "texto": stringType(),
   "parentId": numberType().nullish(),
   "editado": booleanType().optional(),
+  "isZenkatuber": booleanType().optional(),
+  "verifiedAt": stringType().nullish(),
   "createdAt": stringType(),
   "updatedAt": stringType().optional()
 });
@@ -48529,6 +48543,11 @@ var GetUsuarioResponse = objectType({
   "username": stringType().nullish(),
   "photoUrl": stringType().nullish(),
   "role": stringType().optional(),
+  "isZenkatuber": booleanType().optional(),
+  "verifiedAt": stringType().nullish(),
+  "contactWhatsapp": stringType().nullish(),
+  "contactInstagram": stringType().nullish(),
+  "contactDiscord": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48546,6 +48565,11 @@ var UpdateUsuarioResponse = objectType({
   "username": stringType().nullish(),
   "photoUrl": stringType().nullish(),
   "role": stringType().optional(),
+  "isZenkatuber": booleanType().optional(),
+  "verifiedAt": stringType().nullish(),
+  "contactWhatsapp": stringType().nullish(),
+  "contactInstagram": stringType().nullish(),
+  "contactDiscord": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48562,6 +48586,11 @@ var UpsertUsuarioResponse = objectType({
   "username": stringType().nullish(),
   "photoUrl": stringType().nullish(),
   "role": stringType().optional(),
+  "isZenkatuber": booleanType().optional(),
+  "verifiedAt": stringType().nullish(),
+  "contactWhatsapp": stringType().nullish(),
+  "contactInstagram": stringType().nullish(),
+  "contactDiscord": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48578,6 +48607,11 @@ var UploadAvatarResponse = objectType({
   "username": stringType().nullish(),
   "photoUrl": stringType().nullish(),
   "role": stringType().optional(),
+  "isZenkatuber": booleanType().optional(),
+  "verifiedAt": stringType().nullish(),
+  "contactWhatsapp": stringType().nullish(),
+  "contactInstagram": stringType().nullish(),
+  "contactDiscord": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -48600,6 +48634,7 @@ var GetUsuarioListaResponseItem = objectType({
   "showInBanner": booleanType().optional(),
   "bannerOrder": numberType().nullish(),
   "views": numberType().optional(),
+  "ownerId": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
@@ -52463,7 +52498,8 @@ __export(schema_exports, {
   profileImagesTable: () => profileImagesTable,
   pushSubscriptionsTable: () => pushSubscriptionsTable,
   siteConfigTable: () => siteConfigTable,
-  usersTable: () => usersTable
+  usersTable: () => usersTable,
+  zenkatuberRequestsTable: () => zenkatuberRequestsTable
 });
 
 // ../../node_modules/.pnpm/zod@3.25.76/node_modules/zod/v4/classic/external.js
@@ -63861,6 +63897,11 @@ var usersTable = pgTable("users", {
   username: varchar("username", { length: 20 }).unique(),
   photoUrl: text("photo_url"),
   role: varchar("role", { length: 20 }).default("user").notNull(),
+  isZenkatuber: boolean("is_zenkatuber").default(false).notNull(),
+  verifiedAt: timestamp("verified_at"),
+  contactWhatsapp: text("contact_whatsapp"),
+  contactInstagram: text("contact_instagram"),
+  contactDiscord: text("contact_discord"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -63884,6 +63925,7 @@ var obrasTable = pgTable("obras", {
   bannerOrder: integer("banner_order"),
   cast: jsonb("cast").$type().default([]),
   views: integer("views").default(0).notNull(),
+  ownerId: varchar("owner_id", { length: 128 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -63991,6 +64033,23 @@ var notificacoesHistoricoTable = pgTable("notificacoes_historico", {
   url: text("url"),
   type: varchar("type", { length: 32 }).notNull().default("custom"),
   sentAt: timestamp("sent_at").defaultNow().notNull()
+});
+
+// ../../lib/db/src/schema/zenkatuberRequests.ts
+var zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
+  id: serial("id").primaryKey(),
+  uid: varchar("uid", { length: 128 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  username: varchar("username", { length: 100 }).notNull(),
+  whatsapp: text("whatsapp"),
+  instagram: text("instagram"),
+  discord: text("discord"),
+  fandubLink: text("fandub_link").notNull(),
+  categoria: varchar("categoria", { length: 50 }).notNull(),
+  equipe: text("equipe"),
+  aceitouTermos: boolean("aceitou_termos").default(false).notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // ../../lib/db/src/index.ts
@@ -64130,6 +64189,12 @@ async function sendPushToAll(payload, type) {
 }
 
 // src/routes/obras.ts
+async function canEditObra(uid, obra) {
+  const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, uid));
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return obra.ownerId === uid;
+}
 var router2 = (0, import_express2.Router)();
 router2.get("/obras", async (req, res) => {
   try {
@@ -64224,7 +64289,8 @@ router2.post("/obras", async (req, res) => {
       tipografiaUrl,
       showInBanner,
       bannerOrder,
-      cast
+      cast,
+      ownerId
     } = req.body;
     const [obra] = await db.insert(obrasTable).values({
       titulo,
@@ -64240,7 +64306,8 @@ router2.post("/obras", async (req, res) => {
       tipografiaUrl,
       showInBanner: showInBanner ?? false,
       bannerOrder,
-      cast: cast ?? []
+      cast: cast ?? [],
+      ownerId: ownerId ?? null
     }).returning();
     res.status(201).json(serializeObra(obra));
     setImmediate(async () => {
@@ -64270,11 +64337,21 @@ router2.patch("/obras/:id", async (req, res) => {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-    const [obra] = await db.update(obrasTable).set({ ...req.body, updatedAt: /* @__PURE__ */ new Date() }).where(eq(obrasTable.id, id)).returning();
-    if (!obra) {
+    const [existing] = await db.select().from(obrasTable).where(eq(obrasTable.id, id));
+    if (!existing) {
       res.status(404).json({ error: "Not found" });
       return;
     }
+    const callerUid = req.body.callerUid;
+    if (callerUid) {
+      const allowed = await canEditObra(callerUid, existing);
+      if (!allowed) {
+        res.status(403).json({ error: "Sem permiss\xE3o para editar esta obra" });
+        return;
+      }
+    }
+    const { callerUid: _ignored, ...updateData } = req.body;
+    const [obra] = await db.update(obrasTable).set({ ...updateData, updatedAt: /* @__PURE__ */ new Date() }).where(eq(obrasTable.id, id)).returning();
     res.json(serializeObra(obra));
   } catch (e) {
     req.log.error(e);
@@ -64287,6 +64364,19 @@ router2.delete("/obras/:id", async (req, res) => {
     if (isNaN(id)) {
       res.status(400).json({ error: "Invalid ID" });
       return;
+    }
+    const [existing] = await db.select().from(obrasTable).where(eq(obrasTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const callerUid = req.body?.callerUid;
+    if (callerUid) {
+      const allowed = await canEditObra(callerUid, existing);
+      if (!allowed) {
+        res.status(403).json({ error: "Sem permiss\xE3o para excluir esta obra" });
+        return;
+      }
     }
     await db.delete(obrasTable).where(eq(obrasTable.id, id));
     res.status(204).send();
@@ -64331,6 +64421,7 @@ function serializeObra(obra) {
     bannerOrder: obra.bannerOrder,
     cast: obra.cast ?? [],
     views: obra.views,
+    ownerId: obra.ownerId ?? null,
     createdAt: obra.createdAt.toISOString(),
     updatedAt: obra.updatedAt.toISOString()
   };
@@ -64522,8 +64613,34 @@ router4.get("/obras/:obraId/comentarios", async (req, res) => {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-    const rows = await db.select().from(comentariosTable).where(eq(comentariosTable.obraId, obraId)).orderBy(desc(comentariosTable.createdAt));
-    res.json(rows.map(serializeComentario));
+    const rows = await db.select({
+      id: comentariosTable.id,
+      obraId: comentariosTable.obraId,
+      userId: comentariosTable.userId,
+      username: comentariosTable.username,
+      userPhoto: comentariosTable.userPhoto,
+      texto: comentariosTable.texto,
+      parentId: comentariosTable.parentId,
+      editado: comentariosTable.editado,
+      createdAt: comentariosTable.createdAt,
+      updatedAt: comentariosTable.updatedAt,
+      isZenkatuber: usersTable.isZenkatuber,
+      verifiedAt: usersTable.verifiedAt
+    }).from(comentariosTable).leftJoin(usersTable, eq(comentariosTable.userId, usersTable.uid)).where(eq(comentariosTable.obraId, obraId)).orderBy(desc(comentariosTable.createdAt));
+    res.json(rows.map((r) => ({
+      id: r.id,
+      obraId: r.obraId,
+      userId: r.userId,
+      username: r.username,
+      userPhoto: r.userPhoto,
+      texto: r.texto,
+      parentId: r.parentId,
+      editado: r.editado,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      isZenkatuber: r.isZenkatuber ?? false,
+      verifiedAt: r.verifiedAt ? r.verifiedAt.toISOString() : null
+    })));
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -64549,7 +64666,21 @@ router4.post("/obras/:obraId/comentarios", async (req, res) => {
       texto,
       parentId: parentId ?? null
     }).returning();
-    res.status(201).json(serializeComentario(comentario));
+    const [user] = await db.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, userId));
+    res.status(201).json({
+      id: comentario.id,
+      obraId: comentario.obraId,
+      userId: comentario.userId,
+      username: comentario.username,
+      userPhoto: comentario.userPhoto,
+      texto: comentario.texto,
+      parentId: comentario.parentId,
+      editado: comentario.editado,
+      createdAt: comentario.createdAt.toISOString(),
+      updatedAt: comentario.updatedAt.toISOString(),
+      isZenkatuber: user?.isZenkatuber ?? false,
+      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -64572,7 +64703,21 @@ router4.patch("/comentarios/:id", async (req, res) => {
       res.status(404).json({ error: "Not found" });
       return;
     }
-    res.json(serializeComentario(comentario));
+    const [user] = await db.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, comentario.userId));
+    res.json({
+      id: comentario.id,
+      obraId: comentario.obraId,
+      userId: comentario.userId,
+      username: comentario.username,
+      userPhoto: comentario.userPhoto,
+      texto: comentario.texto,
+      parentId: comentario.parentId,
+      editado: comentario.editado,
+      createdAt: comentario.createdAt.toISOString(),
+      updatedAt: comentario.updatedAt.toISOString(),
+      isZenkatuber: user?.isZenkatuber ?? false,
+      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -64592,20 +64737,6 @@ router4.delete("/comentarios/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-function serializeComentario(c) {
-  return {
-    id: c.id,
-    obraId: c.obraId,
-    userId: c.userId,
-    username: c.username,
-    userPhoto: c.userPhoto,
-    texto: c.texto,
-    parentId: c.parentId,
-    editado: c.editado,
-    createdAt: c.createdAt.toISOString(),
-    updatedAt: c.updatedAt.toISOString()
-  };
-}
 var comentarios_default = router4;
 
 // src/routes/usuarios.ts
@@ -64723,6 +64854,11 @@ function serializeUser(u) {
     username: u.username,
     photoUrl: u.photoUrl,
     role: u.role,
+    isZenkatuber: u.isZenkatuber ?? false,
+    verifiedAt: u.verifiedAt ? u.verifiedAt.toISOString() : null,
+    contactWhatsapp: u.contactWhatsapp ?? null,
+    contactInstagram: u.contactInstagram ?? null,
+    contactDiscord: u.contactDiscord ?? null,
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString()
   };
@@ -65220,20 +65356,171 @@ router11.get("/push/historico", async (req, res) => {
 });
 var push_default = router11;
 
-// src/routes/index.ts
+// src/routes/zenkatuber.ts
+var import_express12 = __toESM(require_express2(), 1);
+init_drizzle_orm();
 var router12 = (0, import_express12.Router)();
-router12.use(health_default);
-router12.use(obras_default);
-router12.use(episodios_default);
-router12.use(comentarios_default);
-router12.use(usuarios_default);
-router12.use(stats_default);
-router12.use(lista_default);
-router12.use(historico_default);
-router12.use(generos_default);
-router12.use(config_default);
-router12.use(push_default);
-var routes_default = router12;
+async function isAdmin(uid) {
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+  return user?.role === "admin";
+}
+router12.post("/zenkatuber/solicitar", async (req, res) => {
+  try {
+    const { uid, email: email3, username, whatsapp, instagram, discord, fandubLink, categoria, equipe, aceitouTermos } = req.body;
+    if (!uid || !email3 || !fandubLink || !categoria) {
+      res.status(400).json({ error: "uid, email, fandubLink e categoria s\xE3o obrigat\xF3rios" });
+      return;
+    }
+    if (!aceitouTermos) {
+      res.status(400).json({ error: "\xC9 necess\xE1rio aceitar os termos" });
+      return;
+    }
+    const [existing] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
+    if (existing) {
+      res.status(409).json({ error: "Voc\xEA j\xE1 tem uma solicita\xE7\xE3o em andamento" });
+      return;
+    }
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+    if (user?.isZenkatuber) {
+      res.status(409).json({ error: "Voc\xEA j\xE1 \xE9 um Zenkatuber" });
+      return;
+    }
+    const [request] = await db.insert(zenkatuberRequestsTable).values({
+      uid,
+      email: email3,
+      username: username || email3,
+      whatsapp: whatsapp || null,
+      instagram: instagram || null,
+      discord: discord || null,
+      fandubLink,
+      categoria,
+      equipe: equipe || null,
+      aceitouTermos: true,
+      status: "pending"
+    }).returning();
+    res.status(201).json(request);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.get("/zenkatuber/requests/:adminUid", async (req, res) => {
+  try {
+    const admin = await isAdmin(req.params.adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const requests = await db.select().from(zenkatuberRequestsTable).orderBy(zenkatuberRequestsTable.createdAt);
+    res.json(requests.map((r) => ({
+      ...r,
+      createdAt: r.createdAt.toISOString()
+    })));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.get("/zenkatuber/status/:uid", async (req, res) => {
+  try {
+    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, req.params.uid));
+    const [user] = await db.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, req.params.uid));
+    res.json({
+      hasPendingRequest: !!request,
+      isZenkatuber: user?.isZenkatuber ?? false,
+      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null
+    });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/approve/:id", async (req, res) => {
+  try {
+    const { adminUid } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const id = parseInt(req.params.id);
+    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    if (!request) {
+      res.status(404).json({ error: "Solicita\xE7\xE3o n\xE3o encontrada" });
+      return;
+    }
+    await db.update(usersTable).set({
+      isZenkatuber: true,
+      verifiedAt: /* @__PURE__ */ new Date(),
+      contactWhatsapp: request.whatsapp,
+      contactInstagram: request.instagram,
+      contactDiscord: request.discord,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(usersTable.uid, request.uid));
+    await db.delete(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    res.json({ ok: true, message: `${request.username} agora \xE9 Zenkatuber!` });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/reject/:id", async (req, res) => {
+  try {
+    const { adminUid } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const id = parseInt(req.params.id);
+    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    if (!request) {
+      res.status(404).json({ error: "Solicita\xE7\xE3o n\xE3o encontrada" });
+      return;
+    }
+    await db.delete(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    res.json({ ok: true, message: `Solicita\xE7\xE3o de ${request.username} rejeitada.` });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/revoke/:uid", async (req, res) => {
+  try {
+    const { adminUid } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    await db.update(usersTable).set({
+      isZenkatuber: false,
+      verifiedAt: null,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(usersTable.uid, req.params.uid));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+var zenkatuber_default = router12;
+
+// src/routes/index.ts
+var router13 = (0, import_express13.Router)();
+router13.use(health_default);
+router13.use(obras_default);
+router13.use(episodios_default);
+router13.use(comentarios_default);
+router13.use(usuarios_default);
+router13.use(stats_default);
+router13.use(lista_default);
+router13.use(historico_default);
+router13.use(generos_default);
+router13.use(config_default);
+router13.use(push_default);
+router13.use(zenkatuber_default);
+var routes_default = router13;
 
 // src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
@@ -65255,7 +65542,7 @@ var logger = (0, import_pino.default)({
 
 // src/app.ts
 var __dirname2 = path.dirname(fileURLToPath(import.meta.url));
-var app = (0, import_express13.default)();
+var app = (0, import_express14.default)();
 app.use(
   (0, import_pino_http.pinoHttp)({
     logger,
@@ -65276,12 +65563,12 @@ app.use(
   })
 );
 app.use((0, import_cors.default)());
-app.use(import_express13.default.json({ limit: "5mb" }));
-app.use(import_express13.default.urlencoded({ extended: true, limit: "5mb" }));
+app.use(import_express14.default.json({ limit: "5mb" }));
+app.use(import_express14.default.urlencoded({ extended: true, limit: "5mb" }));
 app.use("/api", routes_default);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(process.cwd(), "artifacts/zenkatu/dist/public");
-  app.use(import_express13.default.static(frontendDist));
+  app.use(import_express14.default.static(frontendDist));
   app.use((_req, res, next) => {
     res.sendFile(path.join(frontendDist, "index.html"), (err) => {
       if (err) next(err);

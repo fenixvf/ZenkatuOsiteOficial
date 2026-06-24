@@ -1,0 +1,61 @@
+De uma olhada nesse fluxo e implemente oq falta além de corrigir todos os erros que surgirem:
+
+1. Estrutura do fluxo Zenkatuber
+Solicitação → Aprovação → Liberação de cargo
+
+Usuário comum vê um botão "Tornar-se Zenkatuber"
+Preenche formulário de solicitação (requisitos abaixo)
+Solicitação cai numa collection separada, ex: zenkatuber_requests, com status pending
+Aparece numa aba exclusiva no painel admin (separada da área de obras/episódios)
+Você aprova ou rejeita
+Se aprovado: o registro da solicitação é deletado do banco (como você pediu), e no documento do usuário você grava só o essencial:
+isZenkatuber: true
+verifiedAt: timestamp
+contact: { whatsapp, instagram, discord } (vale manter isso no perfil do usuário, não só na solicitação — você vai precisar desse contato depois caso o cara desapareça e suma com o conteúdo)
+Se rejeitado: só deleta e (opcional) manda motivo por e-mail/WhatsApp.
+Isso evita acúmulo no banco e ainda mantém o que importa (o contato e o selo) anexado à conta.
+
+2. Permissão de edição (ponto crítico)
+Cada obra precisa ter um campo ownerId (o UID da conta que criou). Toda edição de capa/sinopse/cast/episódio passa por uma checagem: obra.ownerId === currentUser.uid. Sem isso, qualquer Zenkatuber poderia editar obra de outro. Isso vale tanto no front (esconder os botões de edição) quanto no back/regras de segurança (Firestore rules, por exemplo) — a checagem tem que existir no servidor, não só escondendo botão na tela.
+
+3. Selo de verificado
+Ícone de "verificado" (✓ azul, estilo Twitter/Instagram) ao lado do nome:
+No perfil
+Nos comentários
+Talvez no card da obra ("dublado por [Nome] ✓")
+Sugestão: ao clicar no selo, abrir um mini popover "Zenkatuber oficial desde [data]" — reforça a sensação de exclusividade.
+4. Mais sugestões de exigências para virar Zenkatuber
+Além de seguidores mínimos e contato, dá pra acrescentar:
+
+Prova de trabalho anterior: link de pelo menos 1 fandub/edição já publicada, pra você avaliar qualidade antes de aprovar.
+Termo de responsabilidade de direitos: a pessoa declara ter autorização/responsabilidade sobre o conteúdo que vai postar (te protege juridicamente, ainda que informalmente).
+Idade mínima (16 ou 18) — pensando em responsabilidade sobre conteúdo e contato direto.
+Tempo mínimo de conta ativa nas redes sociais informadas (evita perfil fake criado na hora pra burlar os 500 seguidores).
+Compromisso de atividade: aceitar que contas inativas por X meses sem postar podem perder o selo (evita "Zenkatuber fantasma").
+Categoria de atuação: a pessoa marca se é dublador solo, diretor de equipe, ou só editor de obra — ajuda a organizar o cast depois.
+Aceite de política de remoção: se receber reclamação de direitos autorais, o conteúdo pode ser removido sem aviso prévio.
+Campo opcional de "equipe": nome de outros membros do cast, pra já vincular colaboradores à obra desde o início.
+5. Guia: como pegar o link do vídeo no archive.org
+Passo a passo pra colocar no manual do Zenkatuber:
+
+Acesse archive.org e suba o vídeo pra lá (upload normal de item).
+Espere o processamento (pode levar de minutos a algumas horas).
+Abra a página de detalhes do item (archive.org/details/seu-identificador).
+Clique em "Download Options" (ou no ícone de download na barra lateral).
+Vai aparecer uma lista de arquivos — procure o .mp4 (de preferência H.264, é o mais compatível com navegadores).
+Clique com o botão direito no nome do arquivo → Copiar link (não no botão de download, no link do arquivo mesmo). O formato costuma ser parecido com:
+https://archive.org/download/SEU-IDENTIFICADOR/nome-do-arquivo.mp4
+Cole esse link no campo "Link do vídeo" na edição do episódio no Zenkatu.
+⚠️ Importante avisar no guia: às vezes o archive.org demora a gerar o .mp4 derivado (ele processa o original e cria uma versão otimizada) — então o link pode não funcionar nos primeiros minutos após o upload.
+
+6. Player customizado
+Montei um protótipo funcional do player com a identidade azul que você descreveu — pode abrir o arquivo acima e testar. Ele já tem:
+
+Visual azul escuro combinando com a marca
+Botão de play central + barra de controles que aparece no hover
+Voltar 10s / Avançar 10s (os botões que você pediu)
+Barra de progresso com buffer visível e "thumb" arrastável
+Volume, velocidade (1x/1.25x/1.5x/2x/0.75x), tela cheia
+Atalhos de teclado: espaço (play/pause), ← → (10s), M (mudo), F (tela cheia)
+Campo pra colar qualquer link direto (incluindo os do archive.org) e testar na hora
+Pra integrar no site de verdade, troque o <input> de teste pelo campo videoUrl salvo no episódio, e carregue automaticamente no useEffect/onMount. Se algum link do archive.org der erro de CORS no console (acontece com alguns hosts deles)

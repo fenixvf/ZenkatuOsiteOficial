@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock, Bell, BellOff, BadgeCheck } from "lucide-react";
+import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -244,10 +245,13 @@ export default function Perfil() {
       animate={{ opacity: 1, y: 0 }}
       className="container max-w-screen-md mx-auto px-4 py-8"
     >
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex items-center gap-3 mb-8">
         <h1 className="font-display text-3xl font-bold text-foreground">
           Meu Perfil
         </h1>
+        {userProfile.isZenkatuber && (
+          <VerifiedBadge verifiedAt={userProfile.verifiedAt ?? null} size="lg" />
+        )}
       </div>
 
       <div className="grid gap-6">

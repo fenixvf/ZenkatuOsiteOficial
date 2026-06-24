@@ -3,7 +3,7 @@ import { useParams, useSearch } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import Hls from "hls.js";
+import { CustomPlayer } from "@/components/custom-player";
 import {
   useGetObraBySlug,
   getGetObraBySlugQueryKey,
@@ -32,35 +32,20 @@ import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookm
 import { useToast } from "@/hooks/use-toast";
 
 const Player = memo(function Player({ content }: { content: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const embedRef = useRef<HTMLDivElement>(null);
   const trimmed = content.trim();
   const isHtml = trimmed.startsWith("<");
+  const isDirectVideo =
+    trimmed.endsWith(".mp4") ||
+    trimmed.endsWith(".m3u8") ||
+    trimmed.includes(".m3u8?");
 
-  // Para embeds HTML: setar innerHTML apenas uma vez (ou quando o conteúdo mudar)
-  // Usar useRef em vez de dangerouslySetInnerHTML evita que o React destrua/recrie o iframe a cada re-render
   useEffect(() => {
     if (isHtml && embedRef.current) {
       embedRef.current.innerHTML = trimmed;
     }
   }, [isHtml, trimmed]);
 
-  useEffect(() => {
-    const isM3u8 = trimmed.endsWith(".m3u8") || trimmed.includes(".m3u8?");
-    if (isM3u8 && videoRef.current) {
-      if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(trimmed);
-        hls.attachMedia(videoRef.current);
-        return () => hls.destroy();
-      } else if (videoRef.current.canPlayType("application/vnd.apple.mpegurl")) {
-        videoRef.current.src = trimmed;
-      }
-    }
-    return undefined;
-  }, [trimmed]);
-
-  // HTML embed (iframe code, etc.)
   if (isHtml) {
     return (
       <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
@@ -72,23 +57,10 @@ const Player = memo(function Player({ content }: { content: string }) {
     );
   }
 
-  // Direct video file
-  if (
-    trimmed.endsWith(".mp4") ||
-    trimmed.endsWith(".m3u8") ||
-    trimmed.includes(".m3u8?")
-  ) {
-    return (
-      <video
-        ref={videoRef}
-        controls
-        className="w-full aspect-video bg-black rounded-lg object-contain"
-        src={trimmed.endsWith(".mp4") ? trimmed : undefined}
-      />
-    );
+  if (isDirectVideo) {
+    return <CustomPlayer src={trimmed} />;
   }
 
-  // Plain URL — render as iframe
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
       <iframe
