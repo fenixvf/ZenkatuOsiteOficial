@@ -15,6 +15,8 @@ export const zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
   seguidores: integer("seguidores"),
   aceitouTermos: boolean("aceitou_termos").default(false).notNull(),
   status: varchar("status", { length: 20 }).default("pending").notNull(),
+  stage: integer("stage").default(1).notNull(),
+  postUrl: text("post_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

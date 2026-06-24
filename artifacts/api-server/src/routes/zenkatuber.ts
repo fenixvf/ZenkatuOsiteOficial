@@ -221,6 +221,8 @@ router.get("/zenkatuber/status/:uid", async (req, res) => {
       hasPendingRequest: !!request,
       isZenkatuber: user?.isZenkatuber ?? false,
       verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null,
+      requestStatus: request?.status ?? null,
+      requestStage: request?.stage ?? null,
     });
   } catch (e) {
     req.log.error(e);
@@ -228,8 +230,73 @@ router.get("/zenkatuber/status/:uid", async (req, res) => {
   }
 });
 
-// Aprovar solicitação (admin)
+// Aprovar etapa 1 — move candidatura para etapa 2 (divulgação)
 router.post("/zenkatuber/approve/:id", async (req, res) => {
+  try {
+    const { adminUid } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+
+    const id = parseInt(req.params.id);
+    const [request] = await db
+      .select()
+      .from(zenkatuberRequestsTable)
+      .where(eq(zenkatuberRequestsTable.id, id));
+
+    if (!request) {
+      res.status(404).json({ error: "Solicitação não encontrada" });
+      return;
+    }
+
+    // Move para etapa 2 (aguardando divulgação do candidato)
+    await db
+      .update(zenkatuberRequestsTable)
+      .set({ status: "stage1_approved", stage: 2 })
+      .where(eq(zenkatuberRequestsTable.id, id));
+
+    res.json({ ok: true, message: `${request.username} passou para a Etapa 2!` });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Usuário envia link de divulgação (etapa 2)
+router.post("/zenkatuber/stage2-submit", async (req, res) => {
+  try {
+    const { uid, postUrl } = req.body;
+    if (!uid || !postUrl) {
+      res.status(400).json({ error: "uid e postUrl são obrigatórios" });
+      return;
+    }
+
+    const [request] = await db
+      .select()
+      .from(zenkatuberRequestsTable)
+      .where(eq(zenkatuberRequestsTable.uid, uid));
+
+    if (!request || request.status !== "stage1_approved") {
+      res.status(400).json({ error: "Nenhuma candidatura aprovada na etapa 1 encontrada" });
+      return;
+    }
+
+    await db
+      .update(zenkatuberRequestsTable)
+      .set({ postUrl, status: "stage2_pending" })
+      .where(eq(zenkatuberRequestsTable.id, request.id));
+
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Aprovar etapa 2 — candidato vira Zenkatuber (admin)
+router.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
   try {
     const { adminUid } = req.body;
     const admin = await isAdmin(adminUid);
@@ -272,7 +339,7 @@ router.post("/zenkatuber/approve/:id", async (req, res) => {
   }
 });
 
-// Rejeitar solicitação (admin)
+// Rejeitar solicitação (admin) — funciona em qualquer etapa
 router.post("/zenkatuber/reject/:id", async (req, res) => {
   try {
     const { adminUid } = req.body;

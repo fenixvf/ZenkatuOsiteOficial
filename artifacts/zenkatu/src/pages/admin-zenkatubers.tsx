@@ -35,6 +35,7 @@ import {
   Save,
   Trash2,
   List,
+  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -67,6 +68,8 @@ type ZenkatuberRequest = {
   seguidores?: number | null;
   aceitouTermos: boolean;
   status: string;
+  stage: number;
+  postUrl?: string | null;
   createdAt: string;
 };
 
@@ -90,6 +93,183 @@ const REDE_LABELS: Record<string, string> = {
   twitter: "Twitter/X",
   facebook: "Facebook",
 };
+
+function RequestCard({
+  req,
+  processingId,
+  onApprove,
+  onReject,
+  approveLabel,
+  approveColor = "bg-green-600 hover:bg-green-700",
+  showPostUrl = false,
+}: {
+  req: ZenkatuberRequest;
+  processingId: number | null;
+  onApprove: () => void;
+  onReject: () => void;
+  approveLabel: string;
+  approveColor?: string;
+  showPostUrl?: boolean;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
+      className="bg-card border border-border rounded-2xl p-5 shadow-sm"
+    >
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="font-bold text-foreground text-lg">{req.username}</span>
+            <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-300">
+              {CATEGORIA_LABELS[req.categoria] ?? req.categoria}
+            </Badge>
+          </div>
+
+          <div className="text-xs text-muted-foreground">
+            {req.email} · Enviado em{" "}
+            {format(new Date(req.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+          </div>
+
+          {req.seguidores != null && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Users2 className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                <span className="text-foreground font-semibold">
+                  {req.seguidores.toLocaleString("pt-BR")}
+                </span>{" "}
+                seguidores
+                {req.redesocial && (
+                  <span className="text-muted-foreground">
+                    {" "}no {REDE_LABELS[req.redesocial] ?? req.redesocial}
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            {req.whatsapp && (
+              <a
+                href={`https://wa.me/${req.whatsapp.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-500/30 text-green-400 bg-green-500/10 hover:bg-green-500/20 transition-colors"
+              >
+                <MessageCircle className="w-3 h-3" /> {req.whatsapp}
+              </a>
+            )}
+            {req.instagram && (
+              <a
+                href={`https://instagram.com/${req.instagram.replace("@", "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-pink-500/30 text-pink-400 bg-pink-500/10 hover:bg-pink-500/20 transition-colors"
+              >
+                <Instagram className="w-3 h-3" /> {req.instagram}
+              </a>
+            )}
+            {req.discord && (
+              <span className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-indigo-500/30 text-indigo-400 bg-indigo-500/10">
+                <MessageCircle className="w-3 h-3" /> {req.discord}
+              </span>
+            )}
+          </div>
+
+          {req.fandubLink && (
+            <div className="flex items-start gap-2">
+              <LinkIcon className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+              <a
+                href={req.fandubLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-400 hover:text-blue-300 underline break-all"
+              >
+                {req.fandubLink}
+              </a>
+            </div>
+          )}
+
+          {req.equipe && (
+            <div className="flex items-start gap-2">
+              <Users className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+              <span className="text-xs text-muted-foreground">Equipe: {req.equipe}</span>
+            </div>
+          )}
+
+          {showPostUrl && req.postUrl && (
+            <div className="flex items-start gap-2 mt-1 p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/20">
+              <ExternalLink className="w-3.5 h-3.5 text-blue-400 mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] text-blue-300 font-semibold mb-0.5">Link de divulgação</p>
+                <a
+                  href={req.postUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-400 hover:text-blue-300 underline break-all"
+                >
+                  {req.postUrl}
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2 sm:flex-col shrink-0">
+          <Button
+            size="sm"
+            className={["flex-1 sm:flex-none gap-1.5 text-white border-0", approveColor].join(" ")}
+            disabled={processingId === req.id}
+            onClick={onApprove}
+          >
+            {processingId === req.id ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Check className="w-3.5 h-3.5" />
+            )}
+            {approveLabel}
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 sm:flex-none gap-1.5 border-red-500/40 text-red-400 hover:bg-red-500/10"
+                disabled={processingId === req.id}
+              >
+                <X className="w-3.5 h-3.5" />
+                Rejeitar
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-card border-border">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-destructive" />
+                  Rejeitar solicitação?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  A solicitação de <strong>{req.username}</strong> será removida permanentemente.
+                  O usuário pode enviar uma nova solicitação no futuro.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-transparent border-border">Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={onReject}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Rejeitar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function AdminZenkatubers() {
   const { currentUser } = useAuth();
@@ -337,6 +517,30 @@ export default function AdminZenkatubers() {
       }
     } catch {
       toast({ title: "Erro ao rejeitar", variant: "destructive" });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleStage2Approve = async (id: number) => {
+    if (!currentUser?.uid) return;
+    setProcessingId(id);
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/stage2-approve/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUid: currentUser.uid }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast({ title: data.message || "Zenkatuber confirmado!" });
+        setRequests((prev) => prev.filter((r) => r.id !== id));
+        fetchActiveZenkatubers();
+      } else {
+        toast({ title: data.error || "Erro ao aprovar etapa 2", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao aprovar etapa 2", variant: "destructive" });
     } finally {
       setProcessingId(null);
     }
@@ -707,16 +911,7 @@ export default function AdminZenkatubers() {
       </div>
 
       {/* Solicitações */}
-      <div>
-        <h2 className="font-semibold text-foreground mb-4">
-          Solicitações pendentes{" "}
-          {requests.length > 0 && (
-            <Badge variant="outline" className="ml-2 text-xs border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
-              {requests.length}
-            </Badge>
-          )}
-        </h2>
-
+      <div className="space-y-6">
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -728,156 +923,75 @@ export default function AdminZenkatubers() {
             <p className="text-sm text-muted-foreground/60 mt-1">As novas solicitações vão aparecer aqui.</p>
           </div>
         ) : (
-          <div className="grid gap-4">
-            <AnimatePresence>
-              {requests.map((req) => (
-                <motion.div
-                  key={req.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
-                  className="bg-card border border-border rounded-2xl p-5 shadow-sm"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0 space-y-3">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="font-bold text-foreground text-lg">{req.username}</span>
-                        <Badge variant="outline" className="text-xs bg-blue-500/10 border-blue-500/30 text-blue-300">
-                          {CATEGORIA_LABELS[req.categoria] ?? req.categoria}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
-                          Pendente
-                        </Badge>
-                      </div>
-
-                      <div className="text-xs text-muted-foreground">
-                        {req.email} · Enviado em{" "}
-                        {format(new Date(req.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </div>
-
-                      {/* Seguidores */}
-                      {req.seguidores != null && (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Users2 className="w-3.5 h-3.5 shrink-0" />
-                          <span>
-                            <span className="text-foreground font-semibold">
-                              {req.seguidores.toLocaleString("pt-BR")}
-                            </span>{" "}
-                            seguidores
-                            {req.redesocial && (
-                              <span className="text-muted-foreground">
-                                {" "}no {REDE_LABELS[req.redesocial] ?? req.redesocial}
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex flex-wrap gap-2 text-xs">
-                        {req.whatsapp && (
-                          <a
-                            href={`https://wa.me/${req.whatsapp.replace(/\D/g, "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-green-500/30 text-green-400 bg-green-500/10 hover:bg-green-500/20 transition-colors"
-                          >
-                            <MessageCircle className="w-3 h-3" /> {req.whatsapp}
-                          </a>
-                        )}
-                        {req.instagram && (
-                          <a
-                            href={`https://instagram.com/${req.instagram.replace("@", "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-pink-500/30 text-pink-400 bg-pink-500/10 hover:bg-pink-500/20 transition-colors"
-                          >
-                            <Instagram className="w-3 h-3" /> {req.instagram}
-                          </a>
-                        )}
-                        {req.discord && (
-                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full border border-indigo-500/30 text-indigo-400 bg-indigo-500/10">
-                            <MessageCircle className="w-3 h-3" /> {req.discord}
-                          </span>
-                        )}
-                      </div>
-
-                      {req.fandubLink && (
-                        <div className="flex items-start gap-2">
-                          <LinkIcon className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                          <a
-                            href={req.fandubLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-blue-400 hover:text-blue-300 underline break-all"
-                          >
-                            {req.fandubLink}
-                          </a>
-                        </div>
-                      )}
-
-                      {req.equipe && (
-                        <div className="flex items-start gap-2">
-                          <Users className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
-                          <span className="text-xs text-muted-foreground">Equipe: {req.equipe}</span>
-                        </div>
-                      )}
+          <>
+            {/* Etapa 1 — Análise de perfil */}
+            {(() => {
+              const stage1 = requests.filter((r) => r.status === "pending");
+              return stage1.length > 0 ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/40 flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-bold text-yellow-400">1</span>
                     </div>
-
-                    <div className="flex gap-2 sm:flex-col shrink-0">
-                      <Button
-                        size="sm"
-                        className="flex-1 sm:flex-none gap-1.5 bg-green-600 hover:bg-green-700 text-white border-0"
-                        disabled={processingId === req.id}
-                        onClick={() => handleApprove(req.id)}
-                      >
-                        {processingId === req.id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Check className="w-3.5 h-3.5" />
-                        )}
-                        Aprovar
-                      </Button>
-
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 sm:flex-none gap-1.5 border-red-500/40 text-red-400 hover:bg-red-500/10"
-                            disabled={processingId === req.id}
-                          >
-                            <X className="w-3.5 h-3.5" />
-                            Rejeitar
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-card border-border">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="flex items-center gap-2">
-                              <ShieldAlert className="w-5 h-5 text-destructive" />
-                              Rejeitar solicitação?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              A solicitação de <strong>{req.username}</strong> será removida permanentemente.
-                              O usuário pode enviar uma nova solicitação no futuro.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-transparent border-border">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleReject(req.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Rejeitar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                    <h2 className="font-semibold text-foreground">Etapa 1 — Análise de perfil</h2>
+                    <Badge variant="outline" className="text-xs border-yellow-500/30 text-yellow-400 bg-yellow-500/10">
+                      {stage1.length}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground ml-1">Revisar o perfil e aprovar para a etapa de divulgação.</p>
                   </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                  <div className="grid gap-4">
+                    <AnimatePresence>
+                      {stage1.map((req) => (
+                        <RequestCard
+                          key={req.id}
+                          req={req}
+                          processingId={processingId}
+                          onApprove={() => handleApprove(req.id)}
+                          onReject={() => handleReject(req.id)}
+                          approveLabel="Aprovar — Etapa 2"
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Etapa 2 — Verificação de divulgação */}
+            {(() => {
+              const stage2 = requests.filter((r) => r.status === "stage2_pending");
+              return stage2.length > 0 ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/40 flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-bold text-blue-400">2</span>
+                    </div>
+                    <h2 className="font-semibold text-foreground">Etapa 2 — Verificação de divulgação</h2>
+                    <Badge variant="outline" className="text-xs border-blue-500/30 text-blue-400 bg-blue-500/10">
+                      {stage2.length}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground ml-1">Candidato postou divulgação. Aprovar concede o selo Zenkatuber.</p>
+                  </div>
+                  <div className="grid gap-4">
+                    <AnimatePresence>
+                      {stage2.map((req) => (
+                        <RequestCard
+                          key={req.id}
+                          req={req}
+                          processingId={processingId}
+                          onApprove={() => handleStage2Approve(req.id)}
+                          onReject={() => handleReject(req.id)}
+                          approveLabel="Confirmar Zenkatuber"
+                          approveColor="bg-blue-600 hover:bg-blue-700"
+                          showPostUrl
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+          </>
         )}
       </div>
     </div>

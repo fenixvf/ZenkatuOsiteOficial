@@ -354,7 +354,7 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
             </button>
 
             {currentUser && (
-              <NotificationBell isSubscribed={push.isSubscribed} />
+              <NotificationBell />
             )}
 
             {currentUser ? (

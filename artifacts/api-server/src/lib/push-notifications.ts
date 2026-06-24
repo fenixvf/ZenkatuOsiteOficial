@@ -47,9 +47,15 @@ export async function getNotificacoesHistorico(limit = 10) {
   }
 }
 
+const SITE_URL = process.env.SITE_URL || "";
+const DEFAULT_ICON = `${SITE_URL}/logo.png`;
+
 export async function sendPushToAll(payload: PushPayload, type: NotificationType) {
   if (type === "episodio" && !(await isAutoEnabled("push_auto_episodios"))) return { sent: 0, failed: 0, skipped: true };
   if (type === "obra" && !(await isAutoEnabled("push_auto_obras"))) return { sent: 0, failed: 0, skipped: true };
+
+  // Sempre incluir ícone do site
+  if (!payload.icon) payload = { ...payload, icon: DEFAULT_ICON };
 
   let vapidSubs = await db.select().from(pushSubscriptionsTable);
 
