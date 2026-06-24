@@ -41,7 +41,7 @@ import { ptBR } from "date-fns/locale";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export default function Perfil() {
-  const { currentUser, userProfile, loading } = useAuth();
+  const { currentUser, userProfile, loading, isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
