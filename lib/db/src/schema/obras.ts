@@ -33,6 +33,7 @@ export const obrasTable = pgTable("obras", {
   bannerOrder: integer("banner_order"),
   cast: jsonb("cast").$type<CastMember[]>().default([]),
   views: integer("views").default(0).notNull(),
+  ownerId: varchar("owner_id", { length: 128 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

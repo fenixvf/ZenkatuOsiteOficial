@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { comentariosTable } from "@workspace/db";
+import { comentariosTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 
 const router = Router();
@@ -13,11 +13,38 @@ router.get("/obras/:obraId/comentarios", async (req, res) => {
       return;
     }
     const rows = await db
-      .select()
+      .select({
+        id: comentariosTable.id,
+        obraId: comentariosTable.obraId,
+        userId: comentariosTable.userId,
+        username: comentariosTable.username,
+        userPhoto: comentariosTable.userPhoto,
+        texto: comentariosTable.texto,
+        parentId: comentariosTable.parentId,
+        editado: comentariosTable.editado,
+        createdAt: comentariosTable.createdAt,
+        updatedAt: comentariosTable.updatedAt,
+        isZenkatuber: usersTable.isZenkatuber,
+        verifiedAt: usersTable.verifiedAt,
+      })
       .from(comentariosTable)
+      .leftJoin(usersTable, eq(comentariosTable.userId, usersTable.uid))
       .where(eq(comentariosTable.obraId, obraId))
       .orderBy(desc(comentariosTable.createdAt));
-    res.json(rows.map(serializeComentario));
+    res.json(rows.map(r => ({
+      id: r.id,
+      obraId: r.obraId,
+      userId: r.userId,
+      username: r.username,
+      userPhoto: r.userPhoto,
+      texto: r.texto,
+      parentId: r.parentId,
+      editado: r.editado,
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+      isZenkatuber: r.isZenkatuber ?? false,
+      verifiedAt: r.verifiedAt ? r.verifiedAt.toISOString() : null,
+    })));
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -40,7 +67,24 @@ router.post("/obras/:obraId/comentarios", async (req, res) => {
       obraId, userId, username, userPhoto,
       texto, parentId: parentId ?? null,
     }).returning();
-    res.status(201).json(serializeComentario(comentario));
+    const [user] = await db
+      .select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt })
+      .from(usersTable)
+      .where(eq(usersTable.uid, userId));
+    res.status(201).json({
+      id: comentario.id,
+      obraId: comentario.obraId,
+      userId: comentario.userId,
+      username: comentario.username,
+      userPhoto: comentario.userPhoto,
+      texto: comentario.texto,
+      parentId: comentario.parentId,
+      editado: comentario.editado,
+      createdAt: comentario.createdAt.toISOString(),
+      updatedAt: comentario.updatedAt.toISOString(),
+      isZenkatuber: user?.isZenkatuber ?? false,
+      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null,
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -68,7 +112,24 @@ router.patch("/comentarios/:id", async (req, res) => {
       res.status(404).json({ error: "Not found" });
       return;
     }
-    res.json(serializeComentario(comentario));
+    const [user] = await db
+      .select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt })
+      .from(usersTable)
+      .where(eq(usersTable.uid, comentario.userId));
+    res.json({
+      id: comentario.id,
+      obraId: comentario.obraId,
+      userId: comentario.userId,
+      username: comentario.username,
+      userPhoto: comentario.userPhoto,
+      texto: comentario.texto,
+      parentId: comentario.parentId,
+      editado: comentario.editado,
+      createdAt: comentario.createdAt.toISOString(),
+      updatedAt: comentario.updatedAt.toISOString(),
+      isZenkatuber: user?.isZenkatuber ?? false,
+      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null,
+    });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -89,20 +150,5 @@ router.delete("/comentarios/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-function serializeComentario(c: typeof comentariosTable.$inferSelect) {
-  return {
-    id: c.id,
-    obraId: c.obraId,
-    userId: c.userId,
-    username: c.username,
-    userPhoto: c.userPhoto,
-    texto: c.texto,
-    parentId: c.parentId,
-    editado: c.editado,
-    createdAt: c.createdAt.toISOString(),
-    updatedAt: c.updatedAt.toISOString(),
-  };
-}
 
 export default router;

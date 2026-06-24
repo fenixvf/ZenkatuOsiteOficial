@@ -24,4 +24,6 @@ export interface ObraInput {
   showInBanner?: boolean;
   /** @nullable */
   bannerOrder?: number | null;
+  /** @nullable */
+  ownerId?: string | null;
 }

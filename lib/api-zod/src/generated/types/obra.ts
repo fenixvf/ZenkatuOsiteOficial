@@ -26,6 +26,8 @@ export interface Obra {
   /** @nullable */
   bannerOrder?: number | null;
   views?: number;
+  /** @nullable */
+  ownerId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

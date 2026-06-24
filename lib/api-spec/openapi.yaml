@@ -749,6 +749,8 @@ components:
           type: ["integer", "null"]
         views:
           type: integer
+        ownerId:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -793,6 +795,8 @@ components:
           type: boolean
         bannerOrder:
           type: ["integer", "null"]
+        ownerId:
+          type: ["string", "null"]
 
     ObraUpdate:
       type: object
@@ -922,6 +926,10 @@ components:
           type: ["integer", "null"]
         editado:
           type: boolean
+        isZenkatuber:
+          type: boolean
+        verifiedAt:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -972,6 +980,16 @@ components:
           type: ["string", "null"]
         role:
           type: string
+        isZenkatuber:
+          type: boolean
+        verifiedAt:
+          type: ["string", "null"]
+        contactWhatsapp:
+          type: ["string", "null"]
+        contactInstagram:
+          type: ["string", "null"]
+        contactDiscord:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:

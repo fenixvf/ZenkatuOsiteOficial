@@ -33,7 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
-import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock, Bell, BellOff } from "lucide-react";
+import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock, Bell, BellOff, BadgeCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -463,6 +463,45 @@ export default function Perfil() {
                     Ativar notificações
                   </Button>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Zenkatuber */}
+        {!isAdmin && (
+          <Card className="border-border bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BadgeCheck className="w-5 h-5 text-blue-400" />
+                Programa Zenkatuber
+              </CardTitle>
+              <CardDescription>
+                {userProfile.isZenkatuber
+                  ? "Você é um criador verificado na plataforma."
+                  : "Criadores de fandub verificados podem publicar obras diretamente na plataforma."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {userProfile.isZenkatuber ? (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <BadgeCheck className="w-5 h-5 text-blue-400 shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold text-blue-300">Zenkatuber Oficial</p>
+                    {userProfile.verifiedAt && (
+                      <p className="text-xs text-muted-foreground">
+                        Verificado desde {new Date(userProfile.verifiedAt).toLocaleDateString("pt-BR")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <Button asChild className="gap-2">
+                  <Link href="/tornar-se-zenkatuber">
+                    <BadgeCheck className="w-4 h-4" />
+                    Solicitar verificação
+                  </Link>
+                </Button>
               )}
             </CardContent>
           </Card>

@@ -144,6 +144,11 @@ function serializeUser(u: typeof usersTable.$inferSelect) {
     username: u.username,
     photoUrl: u.photoUrl,
     role: u.role,
+    isZenkatuber: u.isZenkatuber ?? false,
+    verifiedAt: u.verifiedAt ? u.verifiedAt.toISOString() : null,
+    contactWhatsapp: u.contactWhatsapp ?? null,
+    contactInstagram: u.contactInstagram ?? null,
+    contactDiscord: u.contactDiscord ?? null,
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),
   };

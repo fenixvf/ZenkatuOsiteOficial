@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -9,6 +9,11 @@ export const usersTable = pgTable("users", {
   username: varchar("username", { length: 20 }).unique(),
   photoUrl: text("photo_url"),
   role: varchar("role", { length: 20 }).default("user").notNull(),
+  isZenkatuber: boolean("is_zenkatuber").default(false).notNull(),
+  verifiedAt: timestamp("verified_at"),
+  contactWhatsapp: text("contact_whatsapp"),
+  contactInstagram: text("contact_instagram"),
+  contactDiscord: text("contact_discord"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

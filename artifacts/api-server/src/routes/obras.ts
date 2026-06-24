@@ -1,8 +1,15 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { obrasTable } from "@workspace/db";
+import { obrasTable, usersTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { sendPushToAll } from "../lib/push-notifications";
+
+async function canEditObra(uid: string, obra: typeof obrasTable.$inferSelect): Promise<boolean> {
+  const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, uid));
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  return obra.ownerId === uid;
+}
 
 const router = Router();
 
@@ -114,7 +121,7 @@ router.post("/obras", async (req, res) => {
   try {
     const {
       titulo, slug, sinopse, generos, status, ano, nota, totalEps,
-      capaUrl, bannerUrl, tipografiaUrl, showInBanner, bannerOrder, cast,
+      capaUrl, bannerUrl, tipografiaUrl, showInBanner, bannerOrder, cast, ownerId,
     } = req.body;
     const [obra] = await db.insert(obrasTable).values({
       titulo, slug, sinopse,
@@ -124,6 +131,7 @@ router.post("/obras", async (req, res) => {
       showInBanner: showInBanner ?? false,
       bannerOrder,
       cast: cast ?? [],
+      ownerId: ownerId ?? null,
     }).returning();
     res.status(201).json(serializeObra(obra));
 
@@ -155,15 +163,25 @@ router.patch("/obras/:id", async (req, res) => {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-    const [obra] = await db
-      .update(obrasTable)
-      .set({ ...req.body, updatedAt: new Date() })
-      .where(eq(obrasTable.id, id))
-      .returning();
-    if (!obra) {
+    const [existing] = await db.select().from(obrasTable).where(eq(obrasTable.id, id));
+    if (!existing) {
       res.status(404).json({ error: "Not found" });
       return;
     }
+    const callerUid = req.body.callerUid as string | undefined;
+    if (callerUid) {
+      const allowed = await canEditObra(callerUid, existing);
+      if (!allowed) {
+        res.status(403).json({ error: "Sem permissão para editar esta obra" });
+        return;
+      }
+    }
+    const { callerUid: _ignored, ...updateData } = req.body;
+    const [obra] = await db
+      .update(obrasTable)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(obrasTable.id, id))
+      .returning();
     res.json(serializeObra(obra));
   } catch (e) {
     req.log.error(e);
@@ -177,6 +195,19 @@ router.delete("/obras/:id", async (req, res) => {
     if (isNaN(id)) {
       res.status(400).json({ error: "Invalid ID" });
       return;
+    }
+    const [existing] = await db.select().from(obrasTable).where(eq(obrasTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    const callerUid = req.body?.callerUid as string | undefined;
+    if (callerUid) {
+      const allowed = await canEditObra(callerUid, existing);
+      if (!allowed) {
+        res.status(403).json({ error: "Sem permissão para excluir esta obra" });
+        return;
+      }
     }
     await db.delete(obrasTable).where(eq(obrasTable.id, id));
     res.status(204).send();
@@ -227,6 +258,7 @@ function serializeObra(obra: typeof obrasTable.$inferSelect) {
     bannerOrder: obra.bannerOrder,
     cast: obra.cast ?? [],
     views: obra.views,
+    ownerId: obra.ownerId ?? null,
     createdAt: obra.createdAt.toISOString(),
     updatedAt: obra.updatedAt.toISOString(),
   };

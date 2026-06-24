@@ -63,6 +63,7 @@ export const ListObrasResponseItem = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -85,7 +86,8 @@ export const CreateObraBody = zod.object({
   "bannerUrl": zod.string(),
   "tipografiaUrl": zod.string().nullish(),
   "showInBanner": zod.boolean().optional(),
-  "bannerOrder": zod.number().nullish()
+  "bannerOrder": zod.number().nullish(),
+  "ownerId": zod.string().nullish()
 })
 
 
@@ -108,6 +110,7 @@ export const ListBannerObrasResponseItem = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -133,6 +136,7 @@ export const ListTop10ObrasResponseItem = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -158,6 +162,7 @@ export const ListObrasRecentesResponseItem = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -187,6 +192,7 @@ export const GetObraResponse = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -231,6 +237,7 @@ export const UpdateObraResponse = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -267,6 +274,7 @@ export const GetObraBySlugResponse = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -295,6 +303,7 @@ export const SearchObrasResponseItem = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -324,6 +333,7 @@ export const IncrementObraViewResponse = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -461,6 +471,8 @@ export const ListComentariosResponseItem = zod.object({
   "texto": zod.string(),
   "parentId": zod.number().nullish(),
   "editado": zod.boolean().optional(),
+  "isZenkatuber": zod.boolean().optional(),
+  "verifiedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -503,6 +515,8 @@ export const UpdateComentarioResponse = zod.object({
   "texto": zod.string(),
   "parentId": zod.number().nullish(),
   "editado": zod.boolean().optional(),
+  "isZenkatuber": zod.boolean().optional(),
+  "verifiedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -530,6 +544,11 @@ export const GetUsuarioResponse = zod.object({
   "username": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
   "role": zod.string().optional(),
+  "isZenkatuber": zod.boolean().optional(),
+  "verifiedAt": zod.string().nullish(),
+  "contactWhatsapp": zod.string().nullish(),
+  "contactInstagram": zod.string().nullish(),
+  "contactDiscord": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -554,6 +573,11 @@ export const UpdateUsuarioResponse = zod.object({
   "username": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
   "role": zod.string().optional(),
+  "isZenkatuber": zod.boolean().optional(),
+  "verifiedAt": zod.string().nullish(),
+  "contactWhatsapp": zod.string().nullish(),
+  "contactInstagram": zod.string().nullish(),
+  "contactDiscord": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -576,6 +600,11 @@ export const UpsertUsuarioResponse = zod.object({
   "username": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
   "role": zod.string().optional(),
+  "isZenkatuber": zod.boolean().optional(),
+  "verifiedAt": zod.string().nullish(),
+  "contactWhatsapp": zod.string().nullish(),
+  "contactInstagram": zod.string().nullish(),
+  "contactDiscord": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -599,6 +628,11 @@ export const UploadAvatarResponse = zod.object({
   "username": zod.string().nullish(),
   "photoUrl": zod.string().nullish(),
   "role": zod.string().optional(),
+  "isZenkatuber": zod.boolean().optional(),
+  "verifiedAt": zod.string().nullish(),
+  "contactWhatsapp": zod.string().nullish(),
+  "contactInstagram": zod.string().nullish(),
+  "contactDiscord": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
@@ -627,6 +661,7 @@ export const GetUsuarioListaResponseItem = zod.object({
   "showInBanner": zod.boolean().optional(),
   "bannerOrder": zod.number().nullish(),
   "views": zod.number().optional(),
+  "ownerId": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })

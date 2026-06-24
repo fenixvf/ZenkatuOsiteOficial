@@ -10,3 +10,4 @@ export * from "./siteConfig";
 export * from "./pushSubscriptions";
 export * from "./onesignalSubscriptions";
 export * from "./notificacoesHistorico";
+export * from "./zenkatuberRequests";

@@ -10,6 +10,7 @@ import historicoRouter from "./historico";
 import generosRouter from "./generos";
 import configRouter from "./config";
 import pushRouter from "./push";
+import zenkatuberRouter from "./zenkatuber";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(historicoRouter);
 router.use(generosRouter);
 router.use(configRouter);
 router.use(pushRouter);
+router.use(zenkatuberRouter);
 
 export default router;

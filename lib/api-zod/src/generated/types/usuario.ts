@@ -15,6 +15,15 @@ export interface Usuario {
   /** @nullable */
   photoUrl?: string | null;
   role?: string;
+  isZenkatuber?: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
+  /** @nullable */
+  contactWhatsapp?: string | null;
+  /** @nullable */
+  contactInstagram?: string | null;
+  /** @nullable */
+  contactDiscord?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }

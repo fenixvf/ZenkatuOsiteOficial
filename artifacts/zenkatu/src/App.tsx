@@ -22,6 +22,8 @@ import AdminEpisodios from "@/pages/admin-episodios";
 import AdminGeneros from "@/pages/admin-generos";
 import AdminConfig from "@/pages/admin-config";
 import AdminNotificacoes from "@/pages/admin-notificacoes";
+import AdminZenkatubers from "@/pages/admin-zenkatubers";
+import TornarSeZenkatuber from "@/pages/tornar-se-zenkatuber";
 import VersaoApp from "@/pages/versao-app";
 import NotFound from "@/pages/not-found";
 
@@ -90,6 +92,11 @@ function Router() {
         <Route path="/admin/notificacoes">
           <AdminRoute component={AdminNotificacoes} />
         </Route>
+        <Route path="/admin/zenkatubers">
+          <AdminRoute component={AdminZenkatubers} />
+        </Route>
+
+        <Route path="/tornar-se-zenkatuber" component={TornarSeZenkatuber} />
 
         <Route component={NotFound} />
       </Switch>

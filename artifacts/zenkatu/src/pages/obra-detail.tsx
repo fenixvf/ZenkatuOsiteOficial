@@ -21,6 +21,7 @@ import {
 } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth-context";
 import { useQueryClient } from "@tanstack/react-query";
+import { VerifiedBadge } from "@/components/verified-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -109,6 +110,8 @@ type ComentarioShape = {
   texto: string;
   parentId?: number | null;
   editado?: boolean;
+  isZenkatuber?: boolean;
+  verifiedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 };
@@ -155,6 +158,7 @@ function ComentarioItem({ comentario, replies, currentUserId, isAdmin, onDelete,
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span className="font-semibold text-foreground text-sm">{comentario.username}</span>
+          {comentario.isZenkatuber && <VerifiedBadge verifiedAt={comentario.verifiedAt} />}
           <span className="text-xs text-muted-foreground">
             {format(new Date(comentario.createdAt), "dd 'de' MMM, yyyy", { locale: ptBR })}
           </span>

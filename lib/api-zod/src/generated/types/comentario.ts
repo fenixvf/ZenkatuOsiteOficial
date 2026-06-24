@@ -17,6 +17,9 @@ export interface Comentario {
   /** @nullable */
   parentId?: number | null;
   editado?: boolean;
+  isZenkatuber?: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 }

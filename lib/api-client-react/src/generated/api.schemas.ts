@@ -29,6 +29,8 @@ export interface Obra {
   /** @nullable */
   bannerOrder?: number | null;
   views?: number;
+  /** @nullable */
+  ownerId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -51,6 +53,8 @@ export interface ObraInput {
   showInBanner?: boolean;
   /** @nullable */
   bannerOrder?: number | null;
+  /** @nullable */
+  ownerId?: string | null;
 }
 
 export interface ObraUpdate {
@@ -79,11 +83,7 @@ export interface Episodio {
   /** @nullable */
   obraTitulo?: string | null;
   /** @nullable */
-  obraSlug?: string | null;
-  /** @nullable */
   obraCapaUrl?: string | null;
-  /** @nullable */
-  obraTipografiaUrl?: string | null;
   temporada: number;
   numero: number;
   titulo: string;
@@ -124,6 +124,9 @@ export interface Comentario {
   /** @nullable */
   parentId?: number | null;
   editado?: boolean;
+  isZenkatuber?: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -151,6 +154,15 @@ export interface Usuario {
   /** @nullable */
   photoUrl?: string | null;
   role?: string;
+  isZenkatuber?: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
+  /** @nullable */
+  contactWhatsapp?: string | null;
+  /** @nullable */
+  contactInstagram?: string | null;
+  /** @nullable */
+  contactDiscord?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -210,8 +222,6 @@ export interface HistoricoItem {
   obraTitulo: string;
   obraSlug: string;
   obraCapaUrl: string;
-  /** @nullable */
-  obraTipografiaUrl?: string | null;
 }
 
 export interface HistoricoRaw {
