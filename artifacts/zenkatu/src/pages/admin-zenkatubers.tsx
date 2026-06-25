@@ -36,6 +36,11 @@ import {
   Trash2,
   List,
   ExternalLink,
+  Search,
+  Film,
+  ListVideo,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -301,6 +306,15 @@ export default function AdminZenkatubers() {
   const [grantDiscord, setGrantDiscord] = useState("");
   const [granting, setGranting] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [expandedObraUid, setExpandedObraUid] = useState<string | null>(null);
+  const [zenkatuberObras, setZenkatuberObras] = useState<Record<string, any[]>>({});
+  const [loadingObras, setLoadingObras] = useState<Record<string, boolean>>({});
+  const [linkingObra, setLinkingObra] = useState(false);
+  const [obraSearchQuery, setObraSearchQuery] = useState("");
+  const [allObras, setAllObras] = useState<any[]>([]);
+
   const fetchActiveZenkatubers = async () => {
     if (!currentUser?.uid) return;
     setActiveLoading(true);
@@ -408,6 +422,7 @@ export default function AdminZenkatubers() {
         setGrantWhatsapp("");
         setGrantInstagram("");
         setGrantDiscord("");
+        fetchActiveZenkatubers();
       } else {
         toast({ title: data.error || "Erro ao conceder Zenkatuber", variant: "destructive" });
       }
@@ -467,6 +482,79 @@ export default function AdminZenkatubers() {
       toast({ title: "Erro ao carregar solicitações", variant: "destructive" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchZenkatuberObras = async (uid: string) => {
+    setLoadingObras((prev) => ({ ...prev, [uid]: true }));
+    try {
+      const res = await fetch(`${API_BASE}/obras/por-dono/${uid}`);
+      if (res.ok) {
+        const data = await res.json();
+        setZenkatuberObras((prev) => ({ ...prev, [uid]: Array.isArray(data) ? data : [] }));
+      }
+    } catch {} finally {
+      setLoadingObras((prev) => ({ ...prev, [uid]: false }));
+    }
+  };
+
+  const fetchAllObras = async () => {
+    if (allObras.length > 0) return;
+    try {
+      const res = await fetch(`${API_BASE}/obras`);
+      if (res.ok) setAllObras(await res.json());
+    } catch {}
+  };
+
+  const handleToggleObras = (uid: string) => {
+    if (expandedObraUid === uid) { setExpandedObraUid(null); return; }
+    setExpandedObraUid(uid);
+    fetchZenkatuberObras(uid);
+    fetchAllObras();
+    setObraSearchQuery("");
+  };
+
+  const handleLinkObra = async (zenkatuberUid: string, obraId: number) => {
+    if (!currentUser?.uid) return;
+    setLinkingObra(true);
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/link-obra`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUid: currentUser.uid, zenkatuberUid, obraId }),
+      });
+      if (res.ok) {
+        toast({ title: "Obra vinculada!" });
+        fetchZenkatuberObras(zenkatuberUid);
+      } else {
+        toast({ title: "Erro ao vincular obra", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao vincular obra", variant: "destructive" });
+    } finally {
+      setLinkingObra(false);
+    }
+  };
+
+  const handleUnlinkObra = async (zenkatuberUid: string, obraId: number) => {
+    if (!currentUser?.uid) return;
+    try {
+      const res = await fetch(`${API_BASE}/zenkatuber/unlink-obra`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminUid: currentUser.uid, obraId }),
+      });
+      if (res.ok) {
+        toast({ title: "Obra desvinculada!" });
+        setZenkatuberObras((prev) => ({
+          ...prev,
+          [zenkatuberUid]: (prev[zenkatuberUid] ?? []).filter((o) => o.id !== obraId),
+        }));
+      } else {
+        toast({ title: "Erro ao desvincular obra", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Erro ao desvincular obra", variant: "destructive" });
     }
   };
 
@@ -730,6 +818,19 @@ export default function AdminZenkatubers() {
           </div>
         </div>
 
+        {/* Busca */}
+        {activeZenkatubers.length > 0 && (
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Buscar por nome ou e-mail..."
+              className="pl-9 bg-background/50 border-border h-9"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        )}
+
         {activeLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
             <Loader2 className="w-4 h-4 animate-spin" /> Carregando...
@@ -742,7 +843,13 @@ export default function AdminZenkatubers() {
         ) : (
           <div className="divide-y divide-border/40">
             <AnimatePresence>
-              {activeZenkatubers.map((z) => (
+              {activeZenkatubers
+                .filter((z) =>
+                  !searchQuery ||
+                  z.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  z.email?.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((z) => (
                 <motion.div
                   key={z.uid}
                   initial={{ opacity: 0, y: 8 }}
@@ -903,6 +1010,116 @@ export default function AdminZenkatubers() {
                       </div>
                     </div>
                   )}
+
+                  {/* Obras vinculadas */}
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleObras(z.uid)}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {expandedObraUid === z.uid ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      <Film className="w-3.5 h-3.5" />
+                      Obras vinculadas
+                      {zenkatuberObras[z.uid] !== undefined && (
+                        <span className="ml-1 text-[10px] bg-secondary px-1.5 rounded-full">
+                          {zenkatuberObras[z.uid].length}
+                        </span>
+                      )}
+                    </button>
+
+                    <AnimatePresence>
+                      {expandedObraUid === z.uid && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-3 pl-3 border-l border-border space-y-3">
+                            {loadingObras[z.uid] ? (
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground py-2">
+                                <Loader2 className="w-3 h-3 animate-spin" /> Carregando...
+                              </div>
+                            ) : (zenkatuberObras[z.uid] ?? []).length === 0 ? (
+                              <p className="text-xs text-muted-foreground/50 py-2">Nenhuma obra vinculada.</p>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {(zenkatuberObras[z.uid] ?? []).map((obra: any) => (
+                                  <div key={obra.id} className="flex items-center gap-2 group">
+                                    {obra.capaUrl ? (
+                                      <img src={obra.capaUrl} alt="" className="w-7 h-10 rounded object-cover shrink-0" />
+                                    ) : (
+                                      <div className="w-7 h-10 rounded bg-secondary flex items-center justify-center shrink-0">
+                                        <Film className="w-3 h-3 text-muted-foreground/30" />
+                                      </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium text-foreground truncate">{obra.titulo}</p>
+                                      <p className="text-[10px] text-muted-foreground">{obra.ano} · {obra.status}</p>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUnlinkObra(z.uid, obra.id)}
+                                      className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-red-400 hover:text-red-300 flex items-center gap-0.5 shrink-0"
+                                    >
+                                      <X className="w-3 h-3" /> desvincular
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Vincular nova obra */}
+                            <div className="pt-2 border-t border-border/40">
+                              <p className="text-[10px] text-muted-foreground/60 mb-2 font-medium uppercase tracking-wide">Vincular obra</p>
+                              <div className="relative mb-2">
+                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
+                                <Input
+                                  placeholder="Buscar obra..."
+                                  className="pl-7 h-7 text-xs bg-background"
+                                  value={obraSearchQuery}
+                                  onChange={(e) => setObraSearchQuery(e.target.value)}
+                                />
+                              </div>
+                              <div className="max-h-40 overflow-y-auto space-y-1">
+                                {allObras
+                                  .filter((o: any) =>
+                                    (!obraSearchQuery || o.titulo?.toLowerCase().includes(obraSearchQuery.toLowerCase())) &&
+                                    !(zenkatuberObras[z.uid] ?? []).some((zo: any) => zo.id === o.id)
+                                  )
+                                  .slice(0, 20)
+                                  .map((o: any) => (
+                                    <button
+                                      key={o.id}
+                                      type="button"
+                                      onClick={() => handleLinkObra(z.uid, o.id)}
+                                      disabled={linkingObra}
+                                      className="w-full flex items-center gap-2 px-2 py-1 rounded-md hover:bg-secondary/60 transition-colors text-left group"
+                                    >
+                                      {o.capaUrl ? (
+                                        <img src={o.capaUrl} alt="" className="w-5 h-7 rounded object-cover shrink-0" />
+                                      ) : (
+                                        <Film className="w-4 h-4 text-muted-foreground/30 shrink-0" />
+                                      )}
+                                      <span className="text-xs text-foreground truncate flex-1">{o.titulo}</span>
+                                      <span className="text-[10px] text-primary opacity-0 group-hover:opacity-100 shrink-0">+ vincular</span>
+                                    </button>
+                                  ))}
+                                {obraSearchQuery && allObras.filter((o: any) =>
+                                  o.titulo?.toLowerCase().includes(obraSearchQuery.toLowerCase()) &&
+                                  !(zenkatuberObras[z.uid] ?? []).some((zo: any) => zo.id === o.id)
+                                ).length === 0 && (
+                                  <p className="text-xs text-muted-foreground/50 px-2 py-1">Nenhuma obra encontrada.</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>

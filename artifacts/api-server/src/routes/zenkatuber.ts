@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { zenkatuberRequestsTable, usersTable, siteConfigTable } from "@workspace/db";
+import { zenkatuberRequestsTable, usersTable, siteConfigTable, obrasTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const router = Router();
@@ -493,6 +493,40 @@ router.post("/zenkatuber/revoke/:uid", async (req, res) => {
       })
       .where(eq(usersTable.uid, req.params.uid));
 
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Vincular obra a um Zenkatuber (admin)
+router.post("/zenkatuber/link-obra", async (req, res) => {
+  try {
+    const { adminUid, zenkatuberUid, obraId } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    await db.update(obrasTable).set({ ownerId: zenkatuberUid }).where(eq(obrasTable.id, obraId));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Desvincular obra de um Zenkatuber (admin)
+router.post("/zenkatuber/unlink-obra", async (req, res) => {
+  try {
+    const { adminUid, obraId } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    await db.update(obrasTable).set({ ownerId: null }).where(eq(obrasTable.id, obraId));
     res.json({ ok: true });
   } catch (e) {
     req.log.error(e);

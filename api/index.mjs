@@ -64051,6 +64051,8 @@ var zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
   seguidores: integer("seguidores"),
   aceitouTermos: boolean("aceitou_termos").default(false).notNull(),
   status: varchar("status", { length: 20 }).default("pending").notNull(),
+  stage: integer("stage").default(1).notNull(),
+  postUrl: text("post_url"),
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -64132,9 +64134,12 @@ async function isAutoEnabled(key) {
   const [row] = await db.select().from(siteConfigTable).where(eq(siteConfigTable.key, key));
   return !row || row.value !== "false";
 }
+var SITE_URL = process.env.SITE_URL || "";
+var DEFAULT_ICON = `${SITE_URL}/logo.png`;
 async function sendPushToAll(payload, type) {
   if (type === "episodio" && !await isAutoEnabled("push_auto_episodios")) return { sent: 0, failed: 0, skipped: true };
   if (type === "obra" && !await isAutoEnabled("push_auto_obras")) return { sent: 0, failed: 0, skipped: true };
+  if (!payload.icon) payload = { ...payload, icon: DEFAULT_ICON };
   let vapidSubs = await db.select().from(pushSubscriptionsTable);
   let onesignalSubs = [];
   try {
@@ -64252,6 +64257,15 @@ router2.get("/obras/slug/:slug", async (req, res) => {
       return;
     }
     res.json(serializeObra(obra));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router2.get("/obras/por-dono/:uid", async (req, res) => {
+  try {
+    const obras = await db.select().from(obrasTable).where(eq(obrasTable.ownerId, req.params.uid)).orderBy(desc(obrasTable.updatedAt));
+    res.json(obras.map(serializeObra));
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -65529,7 +65543,9 @@ router12.get("/zenkatuber/status/:uid", async (req, res) => {
     res.json({
       hasPendingRequest: !!request,
       isZenkatuber: user?.isZenkatuber ?? false,
-      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null
+      verifiedAt: user?.verifiedAt ? user.verifiedAt.toISOString() : null,
+      requestStatus: request?.status ?? null,
+      requestStage: request?.stage ?? null
     });
   } catch (e) {
     req.log.error(e);
@@ -65537,6 +65553,46 @@ router12.get("/zenkatuber/status/:uid", async (req, res) => {
   }
 });
 router12.post("/zenkatuber/approve/:id", async (req, res) => {
+  try {
+    const { adminUid } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const id = parseInt(req.params.id);
+    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    if (!request) {
+      res.status(404).json({ error: "Solicita\xE7\xE3o n\xE3o encontrada" });
+      return;
+    }
+    await db.update(zenkatuberRequestsTable).set({ status: "stage1_approved", stage: 2 }).where(eq(zenkatuberRequestsTable.id, id));
+    res.json({ ok: true, message: `${request.username} passou para a Etapa 2!` });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/stage2-submit", async (req, res) => {
+  try {
+    const { uid, postUrl } = req.body;
+    if (!uid || !postUrl) {
+      res.status(400).json({ error: "uid e postUrl s\xE3o obrigat\xF3rios" });
+      return;
+    }
+    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
+    if (!request || request.status !== "stage1_approved") {
+      res.status(400).json({ error: "Nenhuma candidatura aprovada na etapa 1 encontrada" });
+      return;
+    }
+    await db.update(zenkatuberRequestsTable).set({ postUrl, status: "stage2_pending" }).where(eq(zenkatuberRequestsTable.id, request.id));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
   try {
     const { adminUid } = req.body;
     const admin = await isAdmin(adminUid);
@@ -65617,6 +65673,50 @@ router12.post("/zenkatuber/grant", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+router12.get("/zenkatuber/list/:adminUid", async (req, res) => {
+  try {
+    const admin = await isAdmin(req.params.adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const zenkatubers = await db.select({
+      uid: usersTable.uid,
+      email: usersTable.email,
+      username: usersTable.username,
+      photoUrl: usersTable.photoUrl,
+      contactWhatsapp: usersTable.contactWhatsapp,
+      contactInstagram: usersTable.contactInstagram,
+      contactDiscord: usersTable.contactDiscord,
+      verifiedAt: usersTable.verifiedAt,
+      updatedAt: usersTable.updatedAt
+    }).from(usersTable).where(eq(usersTable.isZenkatuber, true)).orderBy(usersTable.verifiedAt);
+    res.json(zenkatubers);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.patch("/zenkatuber/edit/:uid", async (req, res) => {
+  try {
+    const { adminUid, whatsapp, instagram, discord } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    await db.update(usersTable).set({
+      contactWhatsapp: whatsapp ?? null,
+      contactInstagram: instagram ?? null,
+      contactDiscord: discord ?? null,
+      updatedAt: /* @__PURE__ */ new Date()
+    }).where(eq(usersTable.uid, req.params.uid));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 router12.post("/zenkatuber/revoke/:uid", async (req, res) => {
   try {
     const { adminUid } = req.body;
@@ -65630,6 +65730,36 @@ router12.post("/zenkatuber/revoke/:uid", async (req, res) => {
       verifiedAt: null,
       updatedAt: /* @__PURE__ */ new Date()
     }).where(eq(usersTable.uid, req.params.uid));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/link-obra", async (req, res) => {
+  try {
+    const { adminUid, zenkatuberUid, obraId } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    await db.update(obrasTable).set({ ownerId: zenkatuberUid }).where(eq(obrasTable.id, obraId));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router12.post("/zenkatuber/unlink-obra", async (req, res) => {
+  try {
+    const { adminUid, obraId } = req.body;
+    const admin = await isAdmin(adminUid);
+    if (!admin) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    await db.update(obrasTable).set({ ownerId: null }).where(eq(obrasTable.id, obraId));
     res.json({ ok: true });
   } catch (e) {
     req.log.error(e);

@@ -17,6 +17,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  isZenkatuber: boolean;
   loading: boolean;
 }
 
@@ -81,10 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAdmin =
     userProfile?.role === "admin" ||
     currentUser?.email === "souzawalisonlopes52@gmail.com";
+  const isZenkatuber = (userProfile as any)?.isZenkatuber === true || isAdmin;
 
   return (
     <AuthContext.Provider
-      value={{ currentUser, userProfile, signInWithEmail, signUpWithEmail, signOut, isAdmin, loading }}
+      value={{ currentUser, userProfile, signInWithEmail, signUpWithEmail, signOut, isAdmin, isZenkatuber, loading }}
     >
       {children}
     </AuthContext.Provider>

@@ -240,7 +240,7 @@ function AdminSection({ onClose }: { onClose: () => void }) {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isZenkatuber } = useAuth();
 
   const sidebarContent = (
     <div className="flex flex-col h-full py-4 px-3 gap-1">
@@ -256,6 +256,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <GeneroSection onClose={onClose} />
 
       <SocialLinksSection onClose={onClose} />
+
+      {isZenkatuber && !isAdmin && (
+        <>
+          <div className="my-3 border-t border-border" />
+          <div className="px-3 py-2">
+            <span className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-wider">
+              Criador
+            </span>
+          </div>
+          <NavLink href="/meus-projetos" icon={Layers} label="Meus Projetos" onClick={onClose} />
+        </>
+      )}
 
       {isAdmin && (
         <>

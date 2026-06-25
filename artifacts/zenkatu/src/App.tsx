@@ -27,6 +27,8 @@ import AdminZenkatubers from "@/pages/admin-zenkatubers";
 import TornarSeZenkatuber from "@/pages/tornar-se-zenkatuber";
 import VersaoApp from "@/pages/versao-app";
 import NotFound from "@/pages/not-found";
+import ZenkatuberPortal from "@/pages/zenkatuber-portal";
+import ZenkatuberObraForm from "@/pages/zenkatuber-obra-form";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +56,27 @@ function AdminRoute({ component: Component }: { component: React.ComponentType }
   }, [isAdmin, loading, setLocation, toast]);
 
   if (loading || !isAdmin) return null;
+
+  return <Component />;
+}
+
+function ZenkatuberRoute({ component: Component }: { component: React.ComponentType }) {
+  const { isZenkatuber, loading } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!loading && !isZenkatuber) {
+      toast({
+        title: "Acesso negado",
+        description: "Esta área é exclusiva para Zenkatubers.",
+        variant: "destructive",
+      });
+      setLocation("/");
+    }
+  }, [isZenkatuber, loading, setLocation, toast]);
+
+  if (loading || !isZenkatuber) return null;
 
   return <Component />;
 }
@@ -98,6 +121,20 @@ function Router() {
         </Route>
 
         <Route path="/tornar-se-zenkatuber" component={TornarSeZenkatuber} />
+
+        {/* Zenkatuber Portal Routes */}
+        <Route path="/meus-projetos">
+          <ZenkatuberRoute component={ZenkatuberPortal} />
+        </Route>
+        <Route path="/meus-projetos/nova">
+          <ZenkatuberRoute component={ZenkatuberObraForm} />
+        </Route>
+        <Route path="/meus-projetos/:id">
+          <ZenkatuberRoute component={ZenkatuberObraForm} />
+        </Route>
+        <Route path="/meus-projetos/:obraId/episodios">
+          <ZenkatuberRoute component={AdminEpisodios} />
+        </Route>
 
         <Route component={NotFound} />
       </Switch>

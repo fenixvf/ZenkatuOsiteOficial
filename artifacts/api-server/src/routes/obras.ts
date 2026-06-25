@@ -98,6 +98,20 @@ router.get("/obras/slug/:slug", async (req, res) => {
   }
 });
 
+router.get("/obras/por-dono/:uid", async (req, res) => {
+  try {
+    const obras = await db
+      .select()
+      .from(obrasTable)
+      .where(eq(obrasTable.ownerId, req.params.uid))
+      .orderBy(desc(obrasTable.updatedAt));
+    res.json(obras.map(serializeObra));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/obras/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
