@@ -216,6 +216,7 @@ function AdminSection({ onClose }: { onClose: () => void }) {
                 { href: "/admin/zenkatubers", label: "Zenkatubers", icon: BadgeCheck },
                 { href: "/admin/notificacoes", label: "Notificações", icon: Bell },
                 { href: "/admin/config", label: "Configurações", icon: Settings },
+                { href: "/meus-projetos", label: "Meus Projetos", icon: Layers },
               ].map(({ href, label, icon: Icon }) => (
                 <Link key={href} href={href} onClick={onClose}>
                   <div
