@@ -18,7 +18,15 @@ self.addEventListener("push", (event) => {
     vibrate: [100, 50, 100],
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options).then(() => {
+      return clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+        clientList.forEach((client) => {
+          client.postMessage({ type: "PLAY_NOTIFICATION_SOUND" });
+        });
+      });
+    })
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

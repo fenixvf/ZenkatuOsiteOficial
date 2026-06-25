@@ -140,7 +140,26 @@ function Router() {
   );
 }
 
+function useNotificationSound() {
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "PLAY_NOTIFICATION_SOUND") {
+        const audio = new Audio("/notification.mp3");
+        audio.volume = 0.7;
+        audio.play().catch(() => {});
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, []);
+}
+
 function App() {
+  useNotificationSound();
+
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
