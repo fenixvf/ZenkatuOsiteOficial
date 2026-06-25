@@ -64289,6 +64289,7 @@ router2.get("/obras/:id", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+var ZENKATUBER_PROJECT_LIMIT = 10;
 router2.post("/obras", async (req, res) => {
   try {
     const {
@@ -64308,6 +64309,18 @@ router2.post("/obras", async (req, res) => {
       cast,
       ownerId
     } = req.body;
+    if (ownerId) {
+      const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, ownerId));
+      if (!user || user.role !== "admin") {
+        const existing = await db.select({ id: obrasTable.id }).from(obrasTable).where(eq(obrasTable.ownerId, ownerId));
+        if (existing.length >= ZENKATUBER_PROJECT_LIMIT) {
+          res.status(403).json({
+            error: `Limite de ${ZENKATUBER_PROJECT_LIMIT} projetos atingido. Remova um projeto antes de criar outro.`
+          });
+          return;
+        }
+      }
+    }
     const [obra] = await db.insert(obrasTable).values({
       titulo,
       slug,
@@ -65365,6 +65378,39 @@ router11.get("/push/historico", async (req, res) => {
   try {
     const rows = await db.select().from(notificacoesHistoricoTable).orderBy(sql`${notificacoesHistoricoTable.sentAt} DESC`).limit(10);
     res.json(rows);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.get("/push/historico-admin", async (req, res) => {
+  try {
+    const { adminEmail } = req.query;
+    if (adminEmail !== ADMIN_EMAIL2) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const rows = await db.select().from(notificacoesHistoricoTable).orderBy(sql`${notificacoesHistoricoTable.sentAt} DESC`);
+    res.json(rows);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router11.delete("/push/historico/:id", async (req, res) => {
+  try {
+    const { adminEmail } = req.body;
+    if (adminEmail !== ADMIN_EMAIL2) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "ID inv\xE1lido" });
+      return;
+    }
+    await db.delete(notificacoesHistoricoTable).where(eq(notificacoesHistoricoTable.id, id));
+    res.json({ ok: true });
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });

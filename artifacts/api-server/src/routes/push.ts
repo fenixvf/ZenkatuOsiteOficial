@@ -302,4 +302,46 @@ router.get("/push/historico", async (req, res) => {
   }
 });
 
+// ── Histórico completo (admin) ────────────────────────────────────────────────
+
+router.get("/push/historico-admin", async (req, res) => {
+  try {
+    const { adminEmail } = req.query;
+    if (adminEmail !== ADMIN_EMAIL) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const rows = await db
+      .select()
+      .from(notificacoesHistoricoTable)
+      .orderBy(sql`${notificacoesHistoricoTable.sentAt} DESC`);
+    res.json(rows);
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/push/historico/:id", async (req, res) => {
+  try {
+    const { adminEmail } = req.body;
+    if (adminEmail !== ADMIN_EMAIL) {
+      res.status(403).json({ error: "Acesso negado" });
+      return;
+    }
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    await db
+      .delete(notificacoesHistoricoTable)
+      .where(eq(notificacoesHistoricoTable.id, id));
+    res.json({ ok: true });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 export default router;

@@ -16,6 +16,7 @@ import {
   ListVideo,
   Trash2,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -107,12 +108,39 @@ export default function ZenkatuberPortal() {
           <h1 className="font-display text-3xl font-bold text-foreground">Meus Projetos</h1>
           <p className="text-muted-foreground mt-0.5">Gerencie suas obras e episódios.</p>
         </div>
-        <Button asChild className="ml-auto gap-2">
-          <Link href="/meus-projetos/nova">
-            <Plus className="w-4 h-4" /> Nova obra
-          </Link>
-        </Button>
+        <div className="ml-auto flex items-center gap-3">
+          {!obrasLoading && (
+            <span className={[
+              "text-xs font-medium px-2.5 py-1 rounded-full border",
+              obras.length >= 10
+                ? "bg-red-500/10 border-red-500/30 text-red-400"
+                : obras.length >= 8
+                ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                : "bg-secondary border-border text-muted-foreground",
+            ].join(" ")}>
+              {obras.length}/10 projetos
+            </span>
+          )}
+          {obras.length >= 10 ? (
+            <Button disabled className="gap-2 opacity-50 cursor-not-allowed">
+              <Plus className="w-4 h-4" /> Nova obra
+            </Button>
+          ) : (
+            <Button asChild className="gap-2">
+              <Link href="/meus-projetos/nova">
+                <Plus className="w-4 h-4" /> Nova obra
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
+
+      {obras.length >= 10 && (
+        <div className="mb-6 flex items-center gap-3 p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-sm text-red-400">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>Você atingiu o limite de <strong>10 projetos</strong>. Remova um projeto para criar um novo.</span>
+        </div>
+      )}
 
       {/* Barra de pesquisa */}
       {obras.length > 0 && (

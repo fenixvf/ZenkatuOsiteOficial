@@ -131,12 +131,31 @@ router.get("/obras/:id", async (req, res) => {
   }
 });
 
+const ZENKATUBER_PROJECT_LIMIT = 10;
+
 router.post("/obras", async (req, res) => {
   try {
     const {
       titulo, slug, sinopse, generos, status, ano, nota, totalEps,
       capaUrl, bannerUrl, tipografiaUrl, showInBanner, bannerOrder, cast, ownerId,
     } = req.body;
+
+    if (ownerId) {
+      const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, ownerId));
+      if (!user || user.role !== "admin") {
+        const existing = await db
+          .select({ id: obrasTable.id })
+          .from(obrasTable)
+          .where(eq(obrasTable.ownerId, ownerId));
+        if (existing.length >= ZENKATUBER_PROJECT_LIMIT) {
+          res.status(403).json({
+            error: `Limite de ${ZENKATUBER_PROJECT_LIMIT} projetos atingido. Remova um projeto antes de criar outro.`,
+          });
+          return;
+        }
+      }
+    }
+
     const [obra] = await db.insert(obrasTable).values({
       titulo, slug, sinopse,
       generos: generos ?? [],
