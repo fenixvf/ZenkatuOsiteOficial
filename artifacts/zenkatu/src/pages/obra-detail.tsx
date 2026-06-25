@@ -31,14 +31,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+function getYouTubeEmbedUrl(url: string): string | null {
+  if (url.includes("youtube.com/embed/")) return url;
+  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}
+
 const Player = memo(function Player({ content }: { content: string }) {
   const embedRef = useRef<HTMLDivElement>(null);
   const trimmed = content.trim();
   const isHtml = trimmed.startsWith("<");
   const isDirectVideo =
     trimmed.endsWith(".mp4") ||
+    trimmed.endsWith(".webm") ||
     trimmed.endsWith(".m3u8") ||
-    trimmed.includes(".m3u8?");
+    trimmed.includes(".m3u8?") ||
+    trimmed.includes("archive.org/download/") ||
+    trimmed.includes("archive.org/serve/");
+
+  const youtubeEmbed = !isHtml && !isDirectVideo ? getYouTubeEmbedUrl(trimmed) : null;
+  const iframeSrc = youtubeEmbed ?? trimmed;
 
   useEffect(() => {
     if (isHtml && embedRef.current) {
@@ -64,7 +76,7 @@ const Player = memo(function Player({ content }: { content: string }) {
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
       <iframe
-        src={trimmed}
+        src={iframeSrc}
         allowFullScreen
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         className="absolute inset-0 w-full h-full border-0"

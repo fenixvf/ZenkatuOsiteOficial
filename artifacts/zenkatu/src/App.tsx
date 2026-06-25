@@ -29,6 +29,7 @@ import VersaoApp from "@/pages/versao-app";
 import NotFound from "@/pages/not-found";
 import ZenkatuberPortal from "@/pages/zenkatuber-portal";
 import ZenkatuberObraForm from "@/pages/zenkatuber-obra-form";
+import ZenkatuberEpisodios from "@/pages/zenkatuber-episodios";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -127,7 +128,7 @@ function Router() {
           <ZenkatuberRoute component={ZenkatuberPortal} />
         </Route>
         <Route path="/meus-projetos/:obraId/episodios">
-          <ZenkatuberRoute component={AdminEpisodios} />
+          <ZenkatuberRoute component={ZenkatuberEpisodios} />
         </Route>
         <Route path="/meus-projetos/:id">
           <ZenkatuberRoute component={ZenkatuberObraForm} />

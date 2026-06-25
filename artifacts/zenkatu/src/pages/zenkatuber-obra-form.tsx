@@ -44,6 +44,7 @@ const schema = z.object({
   totalEps: z.coerce.number().int().min(0).optional().nullable().or(z.literal("")),
   capaUrl: z.string().url("URL inválida"),
   bannerUrl: z.string().url("URL inválida"),
+  tipografiaUrl: z.string().url("URL inválida").optional().nullable().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -84,6 +85,7 @@ export default function ZenkatuberObraForm() {
       totalEps: "",
       capaUrl: "",
       bannerUrl: "",
+      tipografiaUrl: "",
     },
   });
 
@@ -117,6 +119,7 @@ export default function ZenkatuberObraForm() {
           totalEps: obra.totalEps ?? "",
           capaUrl: obra.capaUrl ?? "",
           bannerUrl: obra.bannerUrl ?? "",
+          tipografiaUrl: obra.tipografiaUrl ?? "",
         });
         setSelectedGeneros(obra.generos ?? []);
         setGeneros(obra.generos ?? []);
@@ -133,6 +136,7 @@ export default function ZenkatuberObraForm() {
         ...values,
         nota: values.nota === "" ? null : Number(values.nota),
         totalEps: values.totalEps === "" ? null : Number(values.totalEps),
+        tipografiaUrl: values.tipografiaUrl || null,
         generos: selectedGeneros,
         ...(isNew ? { ownerId: currentUser.uid } : { callerUid: currentUser.uid }),
       };
@@ -304,6 +308,23 @@ export default function ZenkatuberObraForm() {
                 {field.value && (
                   <img src={field.value} alt="banner" className="w-full max-w-xs h-20 rounded-lg object-cover mt-2" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 )}
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="tipografiaUrl" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Tipografia URL (Opcional)</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="https://..."
+                    {...field}
+                    value={field.value || ""}
+                    className="bg-background"
+                  />
+                </FormControl>
+                <FormDescription>
+                  URL de imagem com o logo/tipografia personalizada da obra (PNG transparente recomendado).
+                </FormDescription>
+                <FormMessage />
               </FormItem>
             )} />
           </div>
