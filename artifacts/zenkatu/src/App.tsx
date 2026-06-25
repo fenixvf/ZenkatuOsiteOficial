@@ -126,14 +126,11 @@ function Router() {
         <Route path="/meus-projetos">
           <ZenkatuberRoute component={ZenkatuberPortal} />
         </Route>
-        <Route path="/meus-projetos/nova">
-          <ZenkatuberRoute component={ZenkatuberObraForm} />
+        <Route path="/meus-projetos/:obraId/episodios">
+          <ZenkatuberRoute component={AdminEpisodios} />
         </Route>
         <Route path="/meus-projetos/:id">
           <ZenkatuberRoute component={ZenkatuberObraForm} />
-        </Route>
-        <Route path="/meus-projetos/:obraId/episodios">
-          <ZenkatuberRoute component={AdminEpisodios} />
         </Route>
 
         <Route component={NotFound} />
