@@ -75,3 +75,11 @@ SUPABASE_DATABASE_URL = "postgresql://postgres.uaggmlgoyhqmzlycfpyo:M4ur1c18m1m2
 
 [nix]
 channel = "stable-25_05"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 8099
+externalPort = 8099
