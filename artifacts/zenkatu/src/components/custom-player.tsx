@@ -228,6 +228,13 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
         playsInline
       />
 
+      {/* Watermark */}
+      <div className="absolute top-3 left-3 z-10 pointer-events-none select-none">
+        <span className="text-white text-xs sm:text-sm font-display font-semibold tracking-wide opacity-30">
+          Zenkatu Player
+        </span>
+      </div>
+
       {/* Central play button overlay */}
       {!playing && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">

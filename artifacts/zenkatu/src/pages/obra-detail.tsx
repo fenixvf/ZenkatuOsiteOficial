@@ -31,6 +31,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const CAST_PREVIEW_COUNT = 8;
+
 function getYouTubeEmbedUrl(url: string): string | null {
   if (url.includes("youtube.com/embed/")) return url;
   const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -333,6 +335,7 @@ export default function ObraDetail() {
   const [activeEpisodeId, setActiveEpisodeId] = useState<number | null>(epIdFromUrl);
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
   const [isSinopseExpanded, setIsSinopseExpanded] = useState(false);
+  const [isCastExpanded, setIsCastExpanded] = useState(false);
   const [newComment, setNewComment] = useState("");
 
   const createComentario = useCreateComentario();
@@ -594,9 +597,12 @@ export default function ObraDetail() {
               <div className="flex items-center gap-2 mb-5">
                 <Users className="w-5 h-5 text-primary" />
                 <h3 className="font-display text-xl font-bold">Equipe</h3>
+                <span className="text-sm text-muted-foreground font-normal">
+                  ({(obra as any).cast.length})
+                </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {((obra as any).cast as Array<{
+                {((isCastExpanded ? (obra as any).cast : (obra as any).cast.slice(0, CAST_PREVIEW_COUNT)) as Array<{
                   nome: string; papel: string; fotoUrl?: string;
                   links?: { youtube?: string; instagram?: string; discord?: string; twitter?: string; tiktok?: string; site?: string };
                 }>).map((member, idx) => (
@@ -651,6 +657,20 @@ export default function ObraDetail() {
                   </div>
                 ))}
               </div>
+              {(obra as any).cast.length > CAST_PREVIEW_COUNT && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsCastExpanded(!isCastExpanded)}
+                  className="mt-4 text-primary hover:text-primary/80 p-0 h-auto font-medium"
+                >
+                  {isCastExpanded ? (
+                    <><ChevronUp className="w-4 h-4 mr-1" /> Ver menos</>
+                  ) : (
+                    <><ChevronDown className="w-4 h-4 mr-1" /> Ver mais ({(obra as any).cast.length - CAST_PREVIEW_COUNT})</>
+                  )}
+                </Button>
+              )}
             </div>
           )}
 
