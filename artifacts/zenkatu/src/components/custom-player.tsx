@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState, useCallback } from "react";
 import Hls from "hls.js";
+import logoImg from "/logo.png";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
   RotateCcw, RotateCw, Settings,
@@ -229,9 +230,13 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
       />
 
       {/* Watermark */}
-      <div className="absolute top-3 left-3 z-10 pointer-events-none select-none">
-        <span className="text-white text-xs sm:text-sm font-display font-semibold tracking-wide opacity-30">
-          Zenkatu Player
+      <div className="absolute top-3 left-3 z-10 pointer-events-none select-none flex items-center gap-1.5 opacity-40 mix-blend-screen">
+        <img src={logoImg} alt="" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" />
+        <span
+          className="font-display text-xs sm:text-sm font-bold tracking-wider text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
+          style={{ textShadow: "0 0 8px rgba(59,130,246,0.5)" }}
+        >
+          ZENKATU <span className="font-medium opacity-80">PLAYER</span>
         </span>
       </div>
 
