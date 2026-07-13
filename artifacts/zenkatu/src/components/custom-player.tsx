@@ -21,6 +21,43 @@ function formatTime(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+// Watch-progress persistence (per video source, kept in the browser)
+interface SavedProgress {
+  t: number; // seconds watched
+  d: number; // duration known at save time
+}
+
+function progressKey(src: string) {
+  return `zenkatu:progress:${src}`;
+}
+
+function readProgress(src: string): SavedProgress | null {
+  try {
+    const raw = localStorage.getItem(progressKey(src));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.t === "number" && parsed.t > 0) return parsed;
+  } catch {}
+  return null;
+}
+
+function writeProgress(src: string, t: number, d: number) {
+  try {
+    localStorage.setItem(progressKey(src), JSON.stringify({ t, d }));
+  } catch {}
+}
+
+function clearProgress(src: string) {
+  try {
+    localStorage.removeItem(progressKey(src));
+  } catch {}
+}
+
+// A video is considered "finished" once less than this many seconds remain
+const NEAR_END_THRESHOLD = 15;
+// Don't bother resuming for very short watch times
+const MIN_RESUME_TIME = 10;
+
 export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -38,6 +75,70 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
   const [showControls, setShowControls] = useState(true);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [seeking, setSeeking] = useState(false);
+
+  const [resumeChoice, setResumeChoice] = useState<"pending" | "resolved">("resolved");
+  const [resumeTime, setResumeTime] = useState(0);
+  const pendingSeekRef = useRef<number | null>(null);
+  const lastSaveRef = useRef(0);
+
+  // Check for saved watch progress whenever the video source changes
+  useEffect(() => {
+    const saved = readProgress(src);
+    if (saved && saved.t > MIN_RESUME_TIME && (!saved.d || saved.d - saved.t > NEAR_END_THRESHOLD)) {
+      setResumeTime(saved.t);
+      setResumeChoice("pending");
+    } else {
+      setResumeChoice("resolved");
+    }
+  }, [src]);
+
+  const applySeek = useCallback((time: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.readyState >= 1) {
+      video.currentTime = time;
+    } else {
+      pendingSeekRef.current = time;
+    }
+    setCurrentTime(time);
+  }, []);
+
+  const handleResume = useCallback(() => {
+    applySeek(resumeTime);
+    setResumeChoice("resolved");
+    videoRef.current?.play();
+  }, [resumeTime, applySeek]);
+
+  const handleRestart = useCallback(() => {
+    applySeek(0);
+    clearProgress(src);
+    setResumeChoice("resolved");
+    videoRef.current?.play();
+  }, [src, applySeek]);
+
+  // Persist watch progress: throttled during playback, and on pause/unmount/unload
+  const saveNow = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const t = video.currentTime;
+    const d = video.duration;
+    if (d && d - t < NEAR_END_THRESHOLD) {
+      clearProgress(src);
+    } else if (t > 5) {
+      writeProgress(src, t, d || 0);
+    }
+  }, [src]);
+
+  useEffect(() => {
+    const save = () => saveNow();
+    window.addEventListener("pagehide", save);
+    window.addEventListener("beforeunload", save);
+    return () => {
+      save();
+      window.removeEventListener("pagehide", save);
+      window.removeEventListener("beforeunload", save);
+    };
+  }, [saveNow]);
 
   // HLS setup
   useEffect(() => {
@@ -64,11 +165,23 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
     if (!video) return;
 
     const onPlay = () => setPlaying(true);
-    const onPause = () => setPlaying(false);
+    const onPause = () => {
+      setPlaying(false);
+      saveNow();
+    };
+    const onEnded = () => {
+      clearProgress(src);
+    };
     const onTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
+      const t = video.currentTime;
+      setCurrentTime(t);
       if (video.buffered.length > 0) {
         setBuffered(video.buffered.end(video.buffered.length - 1));
+      }
+      const now = Date.now();
+      if (now - lastSaveRef.current > 4000) {
+        lastSaveRef.current = now;
+        saveNow();
       }
     };
     const onDuration = () => setDuration(video.duration);
@@ -79,23 +192,33 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
     const onFullscreenChange = () => {
       setFullscreen(!!document.fullscreenElement);
     };
+    const onLoadedMetadata = () => {
+      if (pendingSeekRef.current != null) {
+        video.currentTime = pendingSeekRef.current;
+        pendingSeekRef.current = null;
+      }
+    };
 
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
+    video.addEventListener("ended", onEnded);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("durationchange", onDuration);
     video.addEventListener("volumechange", onVolumeChange);
+    video.addEventListener("loadedmetadata", onLoadedMetadata);
     document.addEventListener("fullscreenchange", onFullscreenChange);
 
     return () => {
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
+      video.removeEventListener("ended", onEnded);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("durationchange", onDuration);
       video.removeEventListener("volumechange", onVolumeChange);
+      video.removeEventListener("loadedmetadata", onLoadedMetadata);
       document.removeEventListener("fullscreenchange", onFullscreenChange);
     };
-  }, []);
+  }, [src, saveNow]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -145,12 +268,13 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
   }, [seeking]);
 
   const togglePlay = useCallback(() => {
+    if (resumeChoice === "pending") return;
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) video.play();
     else video.pause();
     resetControlsTimer();
-  }, [resetControlsTimer]);
+  }, [resetControlsTimer, resumeChoice]);
 
   const skip = useCallback((seconds: number) => {
     const video = videoRef.current;
@@ -241,10 +365,45 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
       </div>
 
       {/* Central play button overlay */}
-      {!playing && (
+      {!playing && resumeChoice !== "pending" && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <div className="w-20 h-20 rounded-full bg-blue-600/80 flex items-center justify-center shadow-2xl backdrop-blur-sm border border-blue-400/40">
             <Play className="w-9 h-9 text-white ml-1" fill="white" />
+          </div>
+        </div>
+      )}
+
+      {/* Resume-watching prompt */}
+      {resumeChoice === "pending" && (
+        <div
+          className="absolute inset-0 z-30 flex items-center justify-center bg-black/85 backdrop-blur-sm px-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="bg-[#0f1c2e] border border-blue-500/30 rounded-xl shadow-2xl shadow-black/60 p-6 max-w-sm w-full text-center space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-center gap-2">
+              <img src={logoImg} alt="" className="w-6 h-6 rounded-full object-cover" />
+              <span className="font-display text-xs font-bold tracking-wider text-primary">
+                ZENKATU PLAYER
+              </span>
+            </div>
+            <div>
+              <p className="text-white font-display text-lg font-semibold">Continuar de onde parou?</p>
+              <p className="text-white/60 text-sm mt-1">Você parou em {formatTime(resumeTime)}</p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+              <button
+                onClick={handleRestart}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-white/20 text-white/80 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium"
+              >
+                Assistir do início
+              </button>
+              <button
+                onClick={handleResume}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors text-sm font-semibold shadow-lg shadow-blue-600/30"
+              >
+                Continuar assistindo
+              </button>
+            </div>
           </div>
         </div>
       )}
