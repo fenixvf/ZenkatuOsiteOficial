@@ -26,6 +26,7 @@ export function NotificationPrompt() {
       const timer = setTimeout(() => setVisible(true), 2500);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [push.isLoading, push.isSupported, push.isSubscribed, push.isNativeApp, currentUser]);
 
   const handleDismiss = () => {

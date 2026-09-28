@@ -801,6 +801,8 @@ components:
     ObraUpdate:
       type: object
       properties:
+        callerUid:
+          type: string
         titulo:
           type: string
         slug:
@@ -847,7 +849,11 @@ components:
           type: integer
         obraTitulo:
           type: ["string", "null"]
+        obraSlug:
+          type: ["string", "null"]
         obraCapaUrl:
+          type: ["string", "null"]
+        obraTipografiaUrl:
           type: ["string", "null"]
         temporada:
           type: integer
@@ -1109,6 +1115,8 @@ components:
           type: string
         obraCapaUrl:
           type: string
+        obraTipografiaUrl:
+          type: ["string", "null"]
 
     HistoricoRaw:
       type: object
