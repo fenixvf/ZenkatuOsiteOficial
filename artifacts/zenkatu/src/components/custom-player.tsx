@@ -3,7 +3,7 @@ import Hls from "hls.js";
 import logoImg from "/logo.png";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  RotateCcw, RotateCw, Settings, Download,
+  RotateCcw, RotateCw, Settings, Download, Loader2,
 } from "lucide-react";
 
 interface CustomPlayerProps {
@@ -80,6 +80,8 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [seeking, setSeeking] = useState(false);
   const [seekFeedback, setSeekFeedback] = useState<"back" | "forward" | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
 
   const [resumeChoice, setResumeChoice] = useState<"pending" | "resolved">("resolved");
   const [resumeTime, setResumeTime] = useState(0);
@@ -88,6 +90,13 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
 
   // Check for saved watch progress whenever the video source changes
   useEffect(() => {
+    setIsVideoLoading(true);
+    setVideoError(false);
+    setPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setBuffered(0);
+
     const saved = readProgress(src);
     if (saved && saved.t > MIN_RESUME_TIME && (!saved.d || saved.d - saved.t > NEAR_END_THRESHOLD)) {
       setResumeTime(saved.t);
@@ -170,13 +179,34 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
     const video = videoRef.current;
     if (!video) return;
 
-    const onPlay = () => setPlaying(true);
+    const onPlay = () => {
+      setPlaying(true);
+      setIsVideoLoading(false);
+    };
     const onPause = () => {
       setPlaying(false);
       saveNow();
     };
     const onEnded = () => {
       clearProgress(src);
+      setIsVideoLoading(false);
+    };
+    const onLoadStart = () => {
+      setVideoError(false);
+      setIsVideoLoading(true);
+    };
+    const onCanPlay = () => {
+      setVideoError(false);
+      setIsVideoLoading(false);
+    };
+    const onWaiting = () => setIsVideoLoading(true);
+    const onPlaying = () => {
+      setIsVideoLoading(false);
+      setVideoError(false);
+    };
+    const onError = () => {
+      setIsVideoLoading(false);
+      setVideoError(true);
     };
     const onTimeUpdate = () => {
       const t = video.currentTime;
@@ -208,6 +238,11 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
     video.addEventListener("play", onPlay);
     video.addEventListener("pause", onPause);
     video.addEventListener("ended", onEnded);
+    video.addEventListener("loadstart", onLoadStart);
+    video.addEventListener("canplay", onCanPlay);
+    video.addEventListener("waiting", onWaiting);
+    video.addEventListener("playing", onPlaying);
+    video.addEventListener("error", onError);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("durationchange", onDuration);
     video.addEventListener("volumechange", onVolumeChange);
@@ -218,6 +253,11 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
       video.removeEventListener("play", onPlay);
       video.removeEventListener("pause", onPause);
       video.removeEventListener("ended", onEnded);
+      video.removeEventListener("loadstart", onLoadStart);
+      video.removeEventListener("canplay", onCanPlay);
+      video.removeEventListener("waiting", onWaiting);
+      video.removeEventListener("playing", onPlaying);
+      video.removeEventListener("error", onError);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("durationchange", onDuration);
       video.removeEventListener("volumechange", onVolumeChange);
@@ -343,7 +383,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
     }
   }, []);
 
-  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleProgressPointer = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const bar = progressRef.current;
     const video = videoRef.current;
     if (!bar || !video || !duration) return;
@@ -353,6 +393,13 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
     setCurrentTime(ratio * duration);
     resetControlsTimer();
   }, [duration, resetControlsTimer]);
+
+  const stopSeeking = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    setSeeking(false);
+  }, []);
 
   const handleSpeedChange = useCallback((s: number) => {
     const video = videoRef.current;
@@ -395,6 +442,19 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
         preload="metadata"
         playsInline
       />
+
+      {isVideoLoading && !videoError && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/35 text-white backdrop-blur-[2px]">
+          <Loader2 className="h-9 w-9 animate-spin text-blue-300" />
+          <span className="text-sm font-medium text-white/85">Preparando vídeo...</span>
+        </div>
+      )}
+
+      {videoError && (
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/65 px-6 text-center text-sm text-white/85">
+          Não foi possível carregar este vídeo.
+        </div>
+      )}
 
       {/* Watermark */}
       <div className="absolute top-3 left-3 z-10 pointer-events-none select-none flex items-center gap-1.5 opacity-40 mix-blend-screen">
@@ -484,15 +544,37 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
           <div
             ref={progressRef}
               className="group/prog relative mb-3 h-2 cursor-pointer touch-none rounded-full bg-white/20 transition-all hover:h-2.5 sm:mb-4 sm:h-1.5"
-            onMouseDown={(e) => {
-              setSeeking(true);
-              handleProgressClick(e);
-            }}
-            onMouseMove={(e) => {
-              if (seeking) handleProgressClick(e);
-            }}
-            onMouseUp={() => setSeeking(false)}
-            onClick={handleProgressClick}
+              role="slider"
+              tabIndex={0}
+              aria-label="Posição do vídeo"
+              aria-valuemin={0}
+              aria-valuemax={Math.round(duration)}
+              aria-valuenow={Math.round(currentTime)}
+              onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture(e.pointerId);
+                setSeeking(true);
+                handleProgressPointer(e);
+              }}
+              onPointerMove={(e) => {
+                if (seeking) handleProgressPointer(e);
+              }}
+              onPointerUp={stopSeeking}
+              onPointerCancel={stopSeeking}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowLeft") {
+                  e.preventDefault();
+                  skip(-5);
+                } else if (e.key === "ArrowRight") {
+                  e.preventDefault();
+                  skip(5);
+                } else if (e.key === "Home") {
+                  e.preventDefault();
+                  applySeek(0);
+                } else if (e.key === "End") {
+                  e.preventDefault();
+                  applySeek(duration);
+                }
+              }}
           >
             {/* Buffer */}
             <div
@@ -506,7 +588,9 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             />
             {/* Thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-blue-400 shadow-md border-2 border-white scale-0 group-hover/prog:scale-100 transition-transform"
+              className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-white bg-blue-400 shadow-md transition-transform ${
+                seeking ? "scale-100" : "scale-0 group-hover/prog:scale-100"
+              }`}
               style={{ left: `calc(${progressPct}% - 7px)` }}
             />
           </div>
