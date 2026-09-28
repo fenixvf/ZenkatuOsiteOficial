@@ -3,11 +3,13 @@ import Hls from "hls.js";
 import logoImg from "/logo.png";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  RotateCcw, RotateCw, Settings,
+  RotateCcw, RotateCw, Settings, Download,
 } from "lucide-react";
 
 interface CustomPlayerProps {
   src: string;
+  downloadUrl?: string;
+  downloadName?: string;
 }
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
@@ -58,11 +60,13 @@ const NEAR_END_THRESHOLD = 15;
 // Don't bother resuming for very short watch times
 const MIN_RESUME_TIME = 10;
 
-export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProps) {
+export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downloadName }: CustomPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTapRef = useRef<{ time: number; x: number } | null>(null);
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -75,6 +79,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
   const [showControls, setShowControls] = useState(true);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
   const [seeking, setSeeking] = useState(false);
+  const [seekFeedback, setSeekFeedback] = useState<"back" | "forward" | null>(null);
 
   const [resumeChoice, setResumeChoice] = useState<"pending" | "resolved">("resolved");
   const [resumeTime, setResumeTime] = useState(0);
@@ -157,6 +162,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
     } else {
       video.src = src;
     }
+    return undefined;
   }, [src]);
 
   // Sync state from video events
@@ -259,6 +265,12 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
     return () => container.removeEventListener("keydown", handleKey);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    };
+  }, []);
+
   const resetControlsTimer = useCallback(() => {
     setShowControls(true);
     if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
@@ -282,6 +294,38 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
     video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
     resetControlsTimer();
   }, [resetControlsTimer]);
+
+  const showSkipFeedback = useCallback((direction: "back" | "forward") => {
+    setSeekFeedback(direction);
+    window.setTimeout(() => setSeekFeedback(null), 650);
+  }, []);
+
+  const handleSurfaceTap = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest(".player-controls, a, button, input")) return;
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const now = Date.now();
+    const x = e.clientX - rect.left;
+    const lastTap = lastTapRef.current;
+    const isDoubleTap = !!lastTap && now - lastTap.time < 320 && Math.abs(x - lastTap.x) < 90;
+
+    if (isDoubleTap) {
+      if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+      lastTapRef.current = null;
+      const direction = x < rect.width / 2 ? "back" : "forward";
+      skip(direction === "back" ? -10 : 10);
+      showSkipFeedback(direction);
+      return;
+    }
+
+    lastTapRef.current = { time: now, x };
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    tapTimerRef.current = setTimeout(() => {
+      lastTapRef.current = null;
+      togglePlay();
+    }, 240);
+  }, [showSkipFeedback, skip, togglePlay]);
 
   const toggleMute = useCallback(() => {
     const video = videoRef.current;
@@ -341,10 +385,9 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
       }}
       onMouseEnter={resetControlsTimer}
       onClick={(e) => {
-        if ((e.target as HTMLElement).closest(".player-controls")) return;
-        togglePlay();
+        handleSurfaceTap(e);
       }}
-      style={{ cursor: showControls ? "default" : "none" }}
+      style={{ cursor: showControls ? "default" : "none", touchAction: "manipulation" }}
     >
       <video
         ref={videoRef}
@@ -369,6 +412,24 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
           <div className="w-20 h-20 rounded-full bg-blue-600/80 flex items-center justify-center shadow-2xl backdrop-blur-sm border border-blue-400/40">
             <Play className="w-9 h-9 text-white ml-1" fill="white" />
+          </div>
+        </div>
+      )}
+
+      {/* Double-tap seek feedback */}
+      {seekFeedback && (
+        <div
+          className={`pointer-events-none absolute inset-y-0 z-20 flex w-1/2 items-center ${
+            seekFeedback === "back" ? "left-0 justify-start pl-[12%]" : "right-0 justify-end pr-[12%]"
+          }`}
+        >
+          <div className="flex flex-col items-center gap-1 rounded-full bg-black/55 px-4 py-3 text-white backdrop-blur-sm animate-in fade-in zoom-in-90 duration-150">
+            {seekFeedback === "back" ? (
+              <RotateCcw className="h-6 w-6" />
+            ) : (
+              <RotateCw className="h-6 w-6" />
+            )}
+            <span className="text-xs font-semibold">10s</span>
           </div>
         </div>
       )}
@@ -418,11 +479,11 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
         {/* Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-        <div className="relative px-4 pb-4 pt-10">
+          <div className="relative px-3 pb-3 pt-9 sm:px-4 sm:pb-4 sm:pt-10">
           {/* Progress bar */}
           <div
             ref={progressRef}
-            className="relative h-1.5 rounded-full bg-white/20 cursor-pointer mb-4 group/prog hover:h-2.5 transition-all"
+              className="group/prog relative mb-3 h-2 cursor-pointer touch-none rounded-full bg-white/20 transition-all hover:h-2.5 sm:mb-4 sm:h-1.5"
             onMouseDown={(e) => {
               setSeeking(true);
               handleProgressClick(e);
@@ -451,11 +512,11 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
           </div>
 
           {/* Controls row */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Play/Pause */}
             <button
               onClick={togglePlay}
-              className="text-white hover:text-blue-300 transition-colors p-1"
+               className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
               title={playing ? "Pausar (Espaço)" : "Reproduzir (Espaço)"}
             >
               {playing ? <Pause className="w-5 h-5" fill="currentColor" /> : <Play className="w-5 h-5" fill="currentColor" />}
@@ -464,26 +525,28 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
             {/* Back 10s */}
             <button
               onClick={() => skip(-10)}
-              className="text-white hover:text-blue-300 transition-colors p-1"
+               className="flex items-center gap-0.5 rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
               title="Voltar 10s (←)"
             >
               <RotateCcw className="w-4 h-4" />
+               <span className="text-[10px] font-semibold leading-none">10</span>
             </button>
 
             {/* Forward 10s */}
             <button
               onClick={() => skip(10)}
-              className="text-white hover:text-blue-300 transition-colors p-1"
+               className="flex items-center gap-0.5 rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
               title="Avançar 10s (→)"
             >
               <RotateCw className="w-4 h-4" />
+               <span className="text-[10px] font-semibold leading-none">10</span>
             </button>
 
             {/* Volume */}
             <div className="flex items-center gap-1.5 group/vol">
               <button
                 onClick={toggleMute}
-                className="text-white hover:text-blue-300 transition-colors p-1"
+                 className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
                 title="Mudo (M)"
               >
                 {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -500,7 +563,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
             </div>
 
             {/* Time */}
-            <span className="text-white/80 text-xs font-mono tabular-nums ml-1">
+             <span className="ml-1 text-[10px] font-mono tabular-nums text-white/80 sm:text-xs">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
@@ -508,10 +571,10 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
             <div className="flex-1" />
 
             {/* Speed */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <button
                 onClick={() => setShowSpeedMenu((v) => !v)}
-                className="text-white hover:text-blue-300 transition-colors flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 rounded border border-white/20 hover:border-blue-400/50"
+                 className="flex items-center gap-1 rounded border border-white/20 px-1.5 py-1 text-xs font-semibold text-white transition-colors hover:border-blue-400/50 hover:text-blue-300"
                 title="Velocidade"
               >
                 <Settings className="w-3 h-3" />
@@ -536,10 +599,22 @@ export const CustomPlayer = memo(function CustomPlayer({ src }: CustomPlayerProp
               )}
             </div>
 
+            {downloadUrl && (
+              <a
+                href={downloadUrl}
+                download={downloadName || true}
+                className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+                title="Baixar episódio"
+                aria-label="Baixar episódio"
+              >
+                <Download className="h-4 w-4" />
+              </a>
+            )}
+
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="text-white hover:text-blue-300 transition-colors p-1"
+              className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
               title="Tela cheia (F)"
             >
               {fullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}

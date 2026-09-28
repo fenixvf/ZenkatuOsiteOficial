@@ -39,17 +39,20 @@ function getYouTubeEmbedUrl(url: string): string | null {
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
 
-const Player = memo(function Player({ content }: { content: string }) {
+const Player = memo(function Player({ content, episodeNumber }: { content: string; episodeNumber?: number }) {
   const embedRef = useRef<HTMLDivElement>(null);
   const trimmed = content.trim();
   const isHtml = trimmed.startsWith("<");
   const isDirectVideo =
-    trimmed.endsWith(".mp4") ||
-    trimmed.endsWith(".webm") ||
-    trimmed.endsWith(".m3u8") ||
-    trimmed.includes(".m3u8?") ||
+    /\.(mp4|webm)(?:[?#]|$)/i.test(trimmed) ||
+    /\.m3u8(?:[?#]|$)/i.test(trimmed) ||
     trimmed.includes("archive.org/download/") ||
     trimmed.includes("archive.org/serve/");
+  const isDownloadable = !isHtml && (
+    /\.(mp4|webm)(?:[?#]|$)/i.test(trimmed) ||
+    trimmed.includes("archive.org/download/") ||
+    trimmed.includes("archive.org/serve/")
+  );
 
   const youtubeEmbed = !isHtml && !isDirectVideo ? getYouTubeEmbedUrl(trimmed) : null;
   const iframeSrc = youtubeEmbed ?? trimmed;
@@ -72,7 +75,13 @@ const Player = memo(function Player({ content }: { content: string }) {
   }
 
   if (isDirectVideo) {
-    return <CustomPlayer src={trimmed} />;
+    return (
+      <CustomPlayer
+        src={trimmed}
+        downloadUrl={isDownloadable ? trimmed : undefined}
+        downloadName={isDownloadable ? `zenkatu-episodio-${episodeNumber ?? "video"}` : undefined}
+      />
+    );
   }
 
   return (
@@ -553,8 +562,8 @@ export default function ObraDetail() {
         </div>
       </div>
 
-      <div className="container max-w-screen-2xl px-4 grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="container max-w-screen-2xl px-4 grid grid-cols-1 gap-8 mt-8">
+        <div className="w-full max-w-5xl mx-auto space-y-8">
           {/* Player */}
           <div className="bg-card border border-border p-4 rounded-xl shadow-lg">
             {activeEpisode ? (
@@ -564,7 +573,7 @@ export default function ObraDetail() {
                     T{activeEpisode.temporada} E{activeEpisode.numero} - {activeEpisode.titulo}
                   </h3>
                 </div>
-                <Player content={activeEpisode.playerContent} />
+                 <Player content={activeEpisode.playerContent} episodeNumber={activeEpisode.numero} />
               </div>
             ) : (
               <div className="aspect-video bg-black/50 rounded-lg flex items-center justify-center text-muted-foreground border border-border">
@@ -674,6 +683,74 @@ export default function ObraDetail() {
             </div>
           )}
 
+          {/* Controle de episódios */}
+          <div className="bg-card border border-border rounded-xl shadow-lg overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-border/50 flex flex-wrap gap-3 justify-between items-center bg-card/80 backdrop-blur">
+              <div>
+                <h3 className="font-display text-xl font-bold">Episódios</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Escolha um episódio para continuar assistindo
+                </p>
+              </div>
+              {seasons.length > 1 && (
+                <Select value={selectedSeason.toString()} onValueChange={v => setSelectedSeason(Number(v))}>
+                  <SelectTrigger className="w-[150px] bg-secondary border-border h-9">
+                    <SelectValue placeholder="Temporada" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {seasons.map(s => (
+                      <SelectItem key={s} value={s.toString()}>Temporada {s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="max-h-[560px] overflow-y-auto p-4 sm:p-5 custom-scrollbar">
+              {loadingEpisodios ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-md" />)}
+                </div>
+              ) : filteredEpisodes.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">Nenhum episódio encontrado.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {filteredEpisodes.map(ep => (
+                    <button
+                      key={ep.id}
+                      onClick={() => handleSelectEpisode(ep.id)}
+                      aria-current={activeEpisodeId === ep.id ? "true" : undefined}
+                      className={`w-full flex gap-3 p-2 rounded-lg transition-all border text-left group
+                        ${activeEpisodeId === ep.id
+                          ? "bg-primary/10 border-primary shadow-[0_0_10px_rgba(59,130,246,0.15)]"
+                          : "bg-secondary/30 border-transparent hover:bg-secondary hover:border-border"
+                        }`}
+                    >
+                      <div className="relative w-24 h-16 rounded overflow-hidden flex-shrink-0 bg-black">
+                        <img
+                          src={ep.thumbnailUrl || obra.capaUrl || `https://placehold.co/160x90/0F1C2E/1E3A8A`}
+                          alt={ep.titulo}
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        />
+                        {activeEpisodeId === ep.id && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <Play className="w-6 h-6 text-white fill-white drop-shadow-md" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 py-1">
+                        <div className="font-mono text-xs text-primary mb-1 font-medium">EP {ep.numero}</div>
+                        <div className={`text-sm font-medium line-clamp-2 ${activeEpisodeId === ep.id ? "text-primary-foreground" : "text-foreground group-hover:text-primary transition-colors"}`}>
+                          {ep.titulo}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Comentários */}
           <div className="space-y-6">
             <div className="flex items-center gap-2 border-b border-border/50 pb-4">
@@ -734,65 +811,6 @@ export default function ObraDetail() {
           </div>
         </div>
 
-        {/* Sidebar Episodios */}
-        <div className="space-y-6">
-          <div className="bg-card border border-border rounded-xl shadow-lg flex flex-col h-[600px] lg:h-[800px] sticky top-24">
-            <div className="p-4 border-b border-border/50 flex justify-between items-center bg-card/80 backdrop-blur rounded-t-xl z-10">
-              <h3 className="font-display text-xl font-bold">Episódios</h3>
-              {seasons.length > 1 && (
-                <Select value={selectedSeason.toString()} onValueChange={v => setSelectedSeason(Number(v))}>
-                  <SelectTrigger className="w-[140px] bg-secondary border-border h-8">
-                    <SelectValue placeholder="Temporada" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {seasons.map(s => (
-                      <SelectItem key={s} value={s.toString()}>Temporada {s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-              {loadingEpisodios ? (
-                Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-md" />)
-              ) : filteredEpisodes.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">Nenhum episódio encontrado.</p>
-              ) : (
-                filteredEpisodes.map(ep => (
-                  <button
-                    key={ep.id}
-                    onClick={() => handleSelectEpisode(ep.id)}
-                    className={`w-full flex gap-3 p-2 rounded-lg transition-all border text-left group
-                      ${activeEpisodeId === ep.id
-                        ? "bg-primary/10 border-primary shadow-[0_0_10px_rgba(59,130,246,0.15)]"
-                        : "bg-secondary/30 border-transparent hover:bg-secondary hover:border-border"
-                      }`}
-                  >
-                    <div className="relative w-24 h-16 rounded overflow-hidden flex-shrink-0 bg-black">
-                      <img
-                        src={ep.thumbnailUrl || obra.capaUrl || `https://placehold.co/160x90/0F1C2E/1E3A8A`}
-                        alt={ep.titulo}
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                      />
-                      {activeEpisodeId === ep.id && (
-                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                          <Play className="w-6 h-6 text-white fill-white drop-shadow-md" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0 py-1">
-                      <div className="font-mono text-xs text-primary mb-1 font-medium">EP {ep.numero}</div>
-                      <div className={`text-sm font-medium line-clamp-2 ${activeEpisodeId === ep.id ? "text-primary-foreground" : "text-foreground group-hover:text-primary transition-colors"}`}>
-                        {ep.titulo}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </motion.div>
   );
