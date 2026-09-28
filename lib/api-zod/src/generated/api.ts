@@ -206,6 +206,7 @@ export const UpdateObraParams = zod.object({
 })
 
 export const UpdateObraBody = zod.object({
+  "callerUid": zod.string().optional(),
   "titulo": zod.string().optional(),
   "slug": zod.string().optional(),
   "sinopse": zod.string().optional(),
@@ -346,7 +347,9 @@ export const ListEpisodiosRecentesResponseItem = zod.object({
   "id": zod.number(),
   "obraId": zod.number(),
   "obraTitulo": zod.string().nullish(),
+  "obraSlug": zod.string().nullish(),
   "obraCapaUrl": zod.string().nullish(),
+  "obraTipografiaUrl": zod.string().nullish(),
   "temporada": zod.number(),
   "numero": zod.number(),
   "titulo": zod.string(),
@@ -368,7 +371,9 @@ export const ListObraEpisodiosResponseItem = zod.object({
   "id": zod.number(),
   "obraId": zod.number(),
   "obraTitulo": zod.string().nullish(),
+  "obraSlug": zod.string().nullish(),
   "obraCapaUrl": zod.string().nullish(),
+  "obraTipografiaUrl": zod.string().nullish(),
   "temporada": zod.number(),
   "numero": zod.number(),
   "titulo": zod.string(),
@@ -707,7 +712,8 @@ export const GetUsuarioHistoricoResponseItem = zod.object({
   "episodioTemporada": zod.number(),
   "obraTitulo": zod.string(),
   "obraSlug": zod.string(),
-  "obraCapaUrl": zod.string()
+  "obraCapaUrl": zod.string(),
+  "obraTipografiaUrl": zod.string().nullish()
 })
 export const GetUsuarioHistoricoResponse = zod.array(GetUsuarioHistoricoResponseItem)
 

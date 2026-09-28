@@ -58,6 +58,7 @@ export interface ObraInput {
 }
 
 export interface ObraUpdate {
+  callerUid?: string;
   titulo?: string;
   slug?: string;
   sinopse?: string;
@@ -83,7 +84,11 @@ export interface Episodio {
   /** @nullable */
   obraTitulo?: string | null;
   /** @nullable */
+  obraSlug?: string | null;
+  /** @nullable */
   obraCapaUrl?: string | null;
+  /** @nullable */
+  obraTipografiaUrl?: string | null;
   temporada: number;
   numero: number;
   titulo: string;
@@ -222,6 +227,8 @@ export interface HistoricoItem {
   obraTitulo: string;
   obraSlug: string;
   obraCapaUrl: string;
+  /** @nullable */
+  obraTipografiaUrl?: string | null;
 }
 
 export interface HistoricoRaw {

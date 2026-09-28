@@ -12,7 +12,11 @@ export interface Episodio {
   /** @nullable */
   obraTitulo?: string | null;
   /** @nullable */
+  obraSlug?: string | null;
+  /** @nullable */
   obraCapaUrl?: string | null;
+  /** @nullable */
+  obraTipografiaUrl?: string | null;
   temporada: number;
   numero: number;
   titulo: string;

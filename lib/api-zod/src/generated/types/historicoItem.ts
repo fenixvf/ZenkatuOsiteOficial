@@ -18,4 +18,6 @@ export interface HistoricoItem {
   obraTitulo: string;
   obraSlug: string;
   obraCapaUrl: string;
+  /** @nullable */
+  obraTipografiaUrl?: string | null;
 }

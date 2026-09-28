@@ -7,6 +7,7 @@
  */
 
 export interface ObraUpdate {
+  callerUid?: string;
   titulo?: string;
   slug?: string;
   sinopse?: string;

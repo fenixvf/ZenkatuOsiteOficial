@@ -48294,6 +48294,7 @@ var UpdateObraParams = objectType({
   "obraId": coerce.number()
 });
 var UpdateObraBody = objectType({
+  "callerUid": stringType().optional(),
   "titulo": stringType().optional(),
   "slug": stringType().optional(),
   "sinopse": stringType().optional(),
@@ -48405,7 +48406,9 @@ var ListEpisodiosRecentesResponseItem = objectType({
   "id": numberType(),
   "obraId": numberType(),
   "obraTitulo": stringType().nullish(),
+  "obraSlug": stringType().nullish(),
   "obraCapaUrl": stringType().nullish(),
+  "obraTipografiaUrl": stringType().nullish(),
   "temporada": numberType(),
   "numero": numberType(),
   "titulo": stringType(),
@@ -48421,7 +48424,9 @@ var ListObraEpisodiosResponseItem = objectType({
   "id": numberType(),
   "obraId": numberType(),
   "obraTitulo": stringType().nullish(),
+  "obraSlug": stringType().nullish(),
   "obraCapaUrl": stringType().nullish(),
+  "obraTipografiaUrl": stringType().nullish(),
   "temporada": numberType(),
   "numero": numberType(),
   "titulo": stringType(),
@@ -48663,7 +48668,8 @@ var GetUsuarioHistoricoResponseItem = objectType({
   "episodioTemporada": numberType(),
   "obraTitulo": stringType(),
   "obraSlug": stringType(),
-  "obraCapaUrl": stringType()
+  "obraCapaUrl": stringType(),
+  "obraTipografiaUrl": stringType().nullish()
 });
 var GetUsuarioHistoricoResponse = arrayType(GetUsuarioHistoricoResponseItem);
 var AddToHistoricoParams = objectType({
