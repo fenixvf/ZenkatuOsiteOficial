@@ -10,6 +10,9 @@ interface CustomPlayerProps {
   src: string;
   downloadUrl?: string;
   downloadName?: string;
+  episodeTitle?: string;
+  episodeLabel?: string;
+  synopsis?: string;
 }
 
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
@@ -60,7 +63,14 @@ const NEAR_END_THRESHOLD = 15;
 // Don't bother resuming for very short watch times
 const MIN_RESUME_TIME = 10;
 
-export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downloadName }: CustomPlayerProps) {
+export const CustomPlayer = memo(function CustomPlayer({
+  src,
+  downloadUrl,
+  downloadName,
+  episodeTitle,
+  episodeLabel,
+  synopsis,
+}: CustomPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -424,7 +434,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
     <div
       ref={containerRef}
       tabIndex={0}
-      className="relative w-full aspect-video bg-black rounded-xl overflow-hidden outline-none group"
+      className="group relative aspect-video w-full overflow-hidden rounded-none bg-black outline-none sm:rounded-xl"
       onMouseMove={resetControlsTimer}
       onMouseLeave={() => {
         if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
@@ -457,22 +467,55 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
       )}
 
       {/* Watermark */}
-      <div className="absolute top-3 left-3 z-10 pointer-events-none select-none flex items-center gap-1.5 opacity-40 mix-blend-screen">
-        <img src={logoImg} alt="" className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]" />
+      <div className="pointer-events-none absolute left-3 top-3 z-10 flex select-none items-center gap-1.5 rounded-full border border-white/15 bg-black/25 px-2.5 py-1.5 opacity-75 backdrop-blur-sm sm:left-4 sm:top-4">
+        <img src={logoImg} alt="" className="h-4 w-4 rounded-full object-cover drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:h-5 sm:w-5" />
         <span
-          className="font-display text-xs sm:text-sm font-bold tracking-wider text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
-          style={{ textShadow: "0 0 8px rgba(59,130,246,0.5)" }}
+          className="font-display text-[10px] font-bold tracking-[0.18em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-xs"
+          style={{ textShadow: "0 0 8px rgba(59,130,246,0.65)" }}
         >
           ZENKATU <span className="font-medium opacity-80">PLAYER</span>
         </span>
       </div>
 
-      {/* Central play button overlay */}
-      {!playing && resumeChoice !== "pending" && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <div className="w-20 h-20 rounded-full bg-blue-600/80 flex items-center justify-center shadow-2xl backdrop-blur-sm border border-blue-400/40">
-            <Play className="w-9 h-9 text-white ml-1" fill="white" />
-          </div>
+      {(episodeTitle || episodeLabel) && (
+        <div className="pointer-events-none absolute bottom-[76px] left-4 z-10 max-w-[78%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:bottom-[88px] sm:left-6 sm:max-w-[72%]">
+          <p className="mb-1 text-[11px] text-white/65 sm:text-sm">Você está assistindo</p>
+          {episodeLabel && <p className="text-[11px] font-medium text-white/75 sm:text-xs">{episodeLabel}</p>}
+          {episodeTitle && <p className="font-display text-lg font-bold leading-tight sm:text-2xl">{episodeTitle}</p>}
+          {synopsis && <p className="mt-1 hidden line-clamp-2 max-w-2xl text-sm text-white/75 md:block">{synopsis}</p>}
+        </div>
+      )}
+
+      {/* Atalhos centrais no padrão do player móvel */}
+      {showControls && resumeChoice !== "pending" && (
+        <div className="player-controls absolute inset-0 z-10 flex items-center justify-center gap-10 sm:gap-14" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => skip(-10)}
+            aria-label="Voltar 10 segundos"
+            className="flex h-11 w-11 flex-col items-center justify-center rounded-full text-white drop-shadow-lg transition hover:scale-110 hover:text-primary sm:h-12 sm:w-12"
+          >
+            <RotateCcw className="h-6 w-6 sm:h-7 sm:w-7" />
+            <span className="-mt-1 text-[9px] font-bold">10</span>
+          </button>
+          <button
+            type="button"
+            onClick={togglePlay}
+            aria-label={playing ? "Pausar vídeo" : "Reproduzir vídeo"}
+            data-testid="button-player-toggle"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/25 bg-black/25 text-white shadow-xl backdrop-blur-[2px] transition hover:scale-105 hover:bg-primary/85 sm:h-16 sm:w-16"
+          >
+            {playing ? <Pause className="h-7 w-7" fill="currentColor" /> : <Play className="ml-1 h-7 w-7" fill="currentColor" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => skip(10)}
+            aria-label="Avançar 10 segundos"
+            className="flex h-11 w-11 flex-col items-center justify-center rounded-full text-white drop-shadow-lg transition hover:scale-110 hover:text-primary sm:h-12 sm:w-12"
+          >
+            <RotateCw className="h-6 w-6 sm:h-7 sm:w-7" />
+            <span className="-mt-1 text-[9px] font-bold">10</span>
+          </button>
         </div>
       )}
 
@@ -539,11 +582,11 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
         {/* Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
 
-          <div className="relative px-3 pb-3 pt-9 sm:px-4 sm:pb-4 sm:pt-10">
+          <div className="relative px-3 pb-3 pt-9 sm:px-5 sm:pb-4 sm:pt-10">
           {/* Progress bar */}
           <div
             ref={progressRef}
-              className="group/prog relative mb-3 h-2 cursor-pointer touch-none rounded-full bg-white/20 transition-all hover:h-2.5 sm:mb-4 sm:h-1.5"
+              className="group/prog relative mb-3 h-1.5 cursor-pointer touch-none rounded-full bg-white/30 transition-all hover:h-2 sm:mb-4 sm:h-1.5"
               role="slider"
               tabIndex={0}
               aria-label="Posição do vídeo"
@@ -583,12 +626,12 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             />
             {/* Progress */}
             <div
-              className="absolute top-0 left-0 h-full rounded-full bg-blue-500"
+              className="absolute top-0 left-0 h-full rounded-full bg-primary"
               style={{ width: `${progressPct}%` }}
             />
             {/* Thumb */}
             <div
-              className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-white bg-blue-400 shadow-md transition-transform ${
+              className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full border-2 border-white bg-primary shadow-md transition-transform ${
                 seeking ? "scale-100" : "scale-0 group-hover/prog:scale-100"
               }`}
               style={{ left: `calc(${progressPct}% - 7px)` }}
@@ -600,7 +643,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             {/* Play/Pause */}
             <button
               onClick={togglePlay}
-               className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+               className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-primary sm:p-1"
               title={playing ? "Pausar (Espaço)" : "Reproduzir (Espaço)"}
             >
               {playing ? <Pause className="w-5 h-5" fill="currentColor" /> : <Play className="w-5 h-5" fill="currentColor" />}
@@ -609,7 +652,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             {/* Back 10s */}
             <button
               onClick={() => skip(-10)}
-               className="flex items-center gap-0.5 rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+               className="flex items-center gap-0.5 rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-primary sm:p-1"
               title="Voltar 10s (←)"
             >
               <RotateCcw className="w-4 h-4" />
@@ -619,7 +662,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             {/* Forward 10s */}
             <button
               onClick={() => skip(10)}
-               className="flex items-center gap-0.5 rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+               className="flex items-center gap-0.5 rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-primary sm:p-1"
               title="Avançar 10s (→)"
             >
               <RotateCw className="w-4 h-4" />
@@ -630,7 +673,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             <div className="flex items-center gap-1.5 group/vol">
               <button
                 onClick={toggleMute}
-                 className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+                 className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-primary sm:p-1"
                 title="Mudo (M)"
               >
                 {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -642,7 +685,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
                 step={0.05}
                 value={muted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-0 group-hover/vol:w-16 overflow-hidden transition-all duration-200 accent-blue-400 h-1 cursor-pointer"
+                className="h-1 w-0 cursor-pointer overflow-hidden accent-primary transition-all duration-200 group-hover/vol:w-16"
               />
             </div>
 
@@ -658,7 +701,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             <div className="relative hidden sm:block">
               <button
                 onClick={() => setShowSpeedMenu((v) => !v)}
-                 className="flex items-center gap-1 rounded border border-white/20 px-1.5 py-1 text-xs font-semibold text-white transition-colors hover:border-blue-400/50 hover:text-blue-300"
+                  className="flex items-center gap-1 rounded border border-white/20 px-1.5 py-1 text-xs font-semibold text-white transition-colors hover:border-primary/50 hover:text-primary"
                 title="Velocidade"
               >
                 <Settings className="w-3 h-3" />
@@ -672,8 +715,8 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
                       onClick={() => handleSpeedChange(s)}
                       className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
                         speed === s
-                          ? "bg-blue-600 text-white font-semibold"
-                          : "text-white/80 hover:bg-blue-600/20 hover:text-white"
+                        ? "bg-primary text-primary-foreground font-semibold"
+                          : "text-white/80 hover:bg-primary/20 hover:text-white"
                       }`}
                     >
                       {s}x
@@ -687,7 +730,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
               <a
                 href={downloadUrl}
                 download={downloadName || true}
-                className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+                className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-primary sm:p-1"
                 title="Baixar episódio"
                 aria-label="Baixar episódio"
               >
@@ -698,7 +741,7 @@ export const CustomPlayer = memo(function CustomPlayer({ src, downloadUrl, downl
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
-              className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-blue-300 sm:p-1"
+              className="rounded-md p-1.5 text-white transition-colors hover:bg-white/10 hover:text-primary sm:p-1"
               title="Tela cheia (F)"
             >
               {fullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
