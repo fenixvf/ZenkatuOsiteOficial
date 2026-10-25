@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { obrasTable, usersTable } from "@workspace/db";
-import { eq, desc, sql } from "drizzle-orm";
+import { obrasTable, usersTable, siteConfigTable } from "@workspace/db";
+import { eq, desc, inArray, sql } from "drizzle-orm";
 import { sendPushToAll } from "../lib/push-notifications";
 
 async function canEditObra(uid: string, obra: typeof obrasTable.$inferSelect): Promise<boolean> {
@@ -25,6 +25,55 @@ router.get("/obras", async (req, res) => {
 
 router.get("/obras/banner", async (req, res) => {
   try {
+    const [modeSetting] = await db
+      .select({ value: siteConfigTable.value })
+      .from(siteConfigTable)
+      .where(eq(siteConfigTable.key, "bannerMode"));
+
+    if (modeSetting?.value === "automatic") {
+      const obras = await db
+        .select()
+        .from(obrasTable)
+        .orderBy(desc(obrasTable.views))
+        .limit(10);
+      res.json(obras.map(serializeObra));
+      return;
+    }
+
+    const [manualOrderSetting] = await db
+      .select({ value: siteConfigTable.value })
+      .from(siteConfigTable)
+      .where(eq(siteConfigTable.key, "bannerOrder"));
+
+    if (manualOrderSetting) {
+      let orderedIds: number[] = [];
+      try {
+        const parsed: unknown = JSON.parse(manualOrderSetting.value);
+        if (Array.isArray(parsed)) {
+          orderedIds = parsed.filter(
+            (id): id is number => Number.isInteger(id) && id > 0,
+          );
+        }
+      } catch {
+        orderedIds = [];
+      }
+
+      if (orderedIds.length === 0) {
+        res.json([]);
+        return;
+      }
+
+      const obras = await db
+        .select()
+        .from(obrasTable)
+        .where(inArray(obrasTable.id, orderedIds));
+      const order = new Map(orderedIds.map((id, index) => [id, index]));
+      obras.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+      res.json(obras.map(serializeObra));
+      return;
+    }
+
+    // Preserve existing hand-picked banners until an admin saves the new settings.
     const obras = await db
       .select()
       .from(obrasTable)

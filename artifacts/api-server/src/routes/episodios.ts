@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { episodiosTable, obrasTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { sendPushToAll } from "../lib/push-notifications";
 
 const router = Router();
@@ -74,15 +74,29 @@ router.post("/obras/:obraId/episodios", async (req, res) => {
     }
     const { temporada, numero, titulo, thumbnailUrl, playerContent, publishedAt } = req.body;
     const [obra] = await db.select().from(obrasTable).where(eq(obrasTable.id, obraId));
-    const [ep] = await db.insert(episodiosTable).values({
-      obraId,
-      temporada: temporada ?? 1,
-      numero,
-      titulo,
-      thumbnailUrl,
-      playerContent,
-      publishedAt: publishedAt ? new Date(publishedAt) : new Date(),
-    }).returning();
+    if (!obra) {
+      res.status(404).json({ error: "Obra não encontrada" });
+      return;
+    }
+    const ep = await db.transaction(async (tx) => {
+      const [created] = await tx.insert(episodiosTable).values({
+        obraId,
+        temporada: temporada ?? 1,
+        numero,
+        titulo,
+        thumbnailUrl,
+        playerContent,
+        publishedAt: publishedAt ? new Date(publishedAt) : new Date(),
+      }).returning();
+      await tx.execute(sql`
+        UPDATE obras
+        SET total_eps = (
+          SELECT COUNT(*)::int FROM episodios WHERE obra_id = ${obraId}
+        )
+        WHERE id = ${obraId}
+      `);
+      return created;
+    });
     res.status(201).json(serializeEpisodio({ ...ep, obraTitulo: obra?.titulo ?? null, obraSlug: obra?.slug ?? null, obraCapaUrl: obra?.capaUrl ?? null }));
 
     setImmediate(async () => {
@@ -150,17 +164,40 @@ router.patch("/episodios/:id", async (req, res) => {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-    const updateData: Record<string, unknown> = { ...req.body };
-    if (updateData.publishedAt) updateData.publishedAt = new Date(updateData.publishedAt as string);
-    const [ep] = await db
-      .update(episodiosTable)
-      .set(updateData)
-      .where(eq(episodiosTable.id, id))
-      .returning();
-    if (!ep) {
+    const [existing] = await db
+      .select({ obraId: episodiosTable.obraId })
+      .from(episodiosTable)
+      .where(eq(episodiosTable.id, id));
+    if (!existing) {
       res.status(404).json({ error: "Not found" });
       return;
     }
+    const updateData: Record<string, unknown> = { ...req.body };
+    if (updateData.publishedAt) updateData.publishedAt = new Date(updateData.publishedAt as string);
+    const ep = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(episodiosTable)
+        .set(updateData)
+        .where(eq(episodiosTable.id, id))
+        .returning();
+      await tx.execute(sql`
+        UPDATE obras
+        SET total_eps = (
+          SELECT COUNT(*)::int FROM episodios WHERE obra_id = ${existing.obraId}
+        )
+        WHERE id = ${existing.obraId}
+      `);
+      if (updated.obraId !== existing.obraId) {
+        await tx.execute(sql`
+          UPDATE obras
+          SET total_eps = (
+            SELECT COUNT(*)::int FROM episodios WHERE obra_id = ${updated.obraId}
+          )
+          WHERE id = ${updated.obraId}
+        `);
+      }
+      return updated;
+    });
     res.json(serializeEpisodio({ ...ep, obraTitulo: null, obraCapaUrl: null }));
   } catch (e) {
     req.log.error(e);
@@ -175,7 +212,24 @@ router.delete("/episodios/:id", async (req, res) => {
       res.status(400).json({ error: "Invalid ID" });
       return;
     }
-    await db.delete(episodiosTable).where(eq(episodiosTable.id, id));
+    const [existing] = await db
+      .select({ obraId: episodiosTable.obraId })
+      .from(episodiosTable)
+      .where(eq(episodiosTable.id, id));
+    if (!existing) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    await db.transaction(async (tx) => {
+      await tx.delete(episodiosTable).where(eq(episodiosTable.id, id));
+      await tx.execute(sql`
+        UPDATE obras
+        SET total_eps = (
+          SELECT COUNT(*)::int FROM episodios WHERE obra_id = ${existing.obraId}
+        )
+        WHERE id = ${existing.obraId}
+      `);
+    });
     res.status(204).send();
   } catch (e) {
     req.log.error(e);

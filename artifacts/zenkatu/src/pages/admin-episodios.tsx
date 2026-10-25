@@ -11,6 +11,7 @@ import {
   useDeleteEpisodio,
   getListObraEpisodiosQueryKey,
   getGetObraQueryKey,
+  getListObrasQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -302,6 +303,8 @@ export default function AdminEpisodios() {
       }
 
       queryClient.invalidateQueries({ queryKey: getListObraEpisodiosQueryKey(id) });
+      queryClient.invalidateQueries({ queryKey: getGetObraQueryKey(id) });
+      queryClient.invalidateQueries({ queryKey: getListObrasQueryKey() });
       setIsModalOpen(false);
     } catch (e: any) {
       const msg = e?.data?.error || e?.message || "Erro ao salvar episódio";
@@ -313,6 +316,8 @@ export default function AdminEpisodios() {
     try {
       await deleteEpisodio.mutateAsync({ episodioId: epId });
       queryClient.invalidateQueries({ queryKey: getListObraEpisodiosQueryKey(id) });
+      queryClient.invalidateQueries({ queryKey: getGetObraQueryKey(id) });
+      queryClient.invalidateQueries({ queryKey: getListObrasQueryKey() });
       toast({ title: "Episódio excluído" });
     } catch {
       toast({ title: "Erro ao excluir", variant: "destructive" });

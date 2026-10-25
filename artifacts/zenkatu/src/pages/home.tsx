@@ -44,7 +44,7 @@ function HeroCarousel() {
     );
 
   return (
-    <div className="relative w-full aspect-[4/3] md:aspect-[21/9] lg:aspect-[2.5/1] overflow-hidden group">
+    <section aria-label="Em destaque" className="relative w-full aspect-[4/3] md:aspect-[21/9] lg:aspect-[2.5/1] max-h-[760px] overflow-hidden group isolate">
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={currentIndex}
@@ -54,8 +54,9 @@ function HeroCarousel() {
           transition={{ duration: 0.5, ease: "easeInOut" }}
           className="absolute inset-0"
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-transparent z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/55 to-transparent z-10" />
+          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,10,18,.25),transparent_55%,rgba(220,91,59,.12))] z-10 pointer-events-none" />
           <img
             src={
               current.bannerUrl ||
@@ -70,16 +71,16 @@ function HeroCarousel() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="max-w-2xl"
+              className="max-w-2xl pb-2 md:pb-8"
             >
-              <div className="flex gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-5">
                 <Badge
                   variant="secondary"
-                  className="bg-primary/20 text-primary-foreground hover:bg-primary/30 border-primary/50"
+                  className="bg-[#d96445] text-[#171018] hover:bg-[#f07a57] border-0 font-semibold tracking-wider"
                 >
                   {current.ano}
                 </Badge>
-                <Badge variant="outline" className="border-border">
+                  <Badge variant="outline" className="border-white/30 bg-black/20 backdrop-blur text-white/90">
                   {current.status}
                 </Badge>
               </div>
@@ -88,23 +89,23 @@ function HeroCarousel() {
                 <img
                   src={current.tipografiaUrl}
                   alt={current.titulo}
-                  className="max-h-20 md:max-h-28 lg:max-h-36 w-auto object-contain mb-4 drop-shadow-2xl"
-                  style={{ maxWidth: "480px" }}
+                  className="max-h-20 md:max-h-28 lg:max-h-36 w-auto object-contain mb-5 drop-shadow-2xl"
+                  style={{ maxWidth: "520px" }}
                 />
               ) : (
-                <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 leading-tight drop-shadow-lg">
+                <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-5 leading-[.95] tracking-tight drop-shadow-lg">
                   {current.titulo}
                 </h2>
               )}
 
-              <p className="text-muted-foreground line-clamp-2 md:line-clamp-3 mb-8 text-sm md:text-base max-w-xl drop-shadow-md">
+              <p className="text-white/75 line-clamp-2 md:line-clamp-3 mb-8 text-sm md:text-base max-w-xl leading-relaxed drop-shadow-md">
                 {current.sinopse}
               </p>
               <div className="flex gap-4">
                 <Button
                   asChild
                   size="lg"
-                  className="font-display tracking-wide px-8"
+                  className="font-display tracking-wide px-8 h-12 bg-[#df6848] text-[#171018] hover:bg-[#f07a57] rounded-full shadow-xl shadow-black/20"
                 >
                   <Link href={`/obra/${current.slug}`}>
                     <Play className="mr-2 h-5 w-5" /> Assistir
@@ -114,7 +115,7 @@ function HeroCarousel() {
                   asChild
                   size="lg"
                   variant="secondary"
-                  className="font-display tracking-wide px-8 bg-secondary/80 backdrop-blur"
+                  className="font-display tracking-wide px-8 h-12 rounded-full bg-white/10 border border-white/20 text-white backdrop-blur hover:bg-white/20"
                 >
                   <Link href={`/obra/${current.slug}`}>
                     <Info className="mr-2 h-5 w-5" /> Detalhes
@@ -128,27 +129,31 @@ function HeroCarousel() {
 
       <button
         onClick={handlePrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-background/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
+        aria-label="Destaque anterior"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-black/70 backdrop-blur border border-white/15"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-2 rounded-full bg-background/50 text-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/80"
+        aria-label="Próximo destaque"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hover:bg-black/70 backdrop-blur border border-white/15"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      <div className="absolute bottom-6 right-6 md:right-12 lg:right-20 z-30 flex gap-2">
+      <div className="absolute bottom-6 right-6 md:right-12 lg:right-20 z-30 flex gap-2" aria-label="Selecionar destaque">
         {bannerObras.map((_, idx) => (
           <button
             key={idx}
             onClick={() => setCurrentIndex(idx)}
+            aria-label={`Ir para destaque ${idx + 1}`}
+            aria-current={idx === currentIndex}
             className={`h-2 rounded-full transition-all ${idx === currentIndex ? "w-8 bg-primary" : "w-2 bg-foreground/30 hover:bg-foreground/50"}`}
           />
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -212,11 +217,12 @@ function ContinuarAssistindo() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display text-xl md:text-2xl font-bold tracking-wide border-l-4 border-primary pl-4 text-foreground">
+        <h3 className="font-display text-xl md:text-2xl font-bold tracking-wide border-l-2 border-[#df6848] pl-4 text-foreground">
           Continuar Assistindo
         </h3>
         <button
           onClick={handleClear}
+          aria-label="Limpar histórico de reprodução"
           disabled={clearHistorico.isPending}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
         >
@@ -228,6 +234,7 @@ function ContinuarAssistindo() {
       <div className="relative">
         <button
           onClick={() => scroll("left")}
+          aria-label="Rolar histórico para a esquerda"
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -247,7 +254,7 @@ function ContinuarAssistindo() {
               className="w-[152px] md:w-[168px] shrink-0"
             >
               <Link href={`/obra/${item.obraSlug}?ep=${item.episodioId}`}>
-                <div className="group relative rounded-md overflow-hidden border border-border bg-card hover:border-primary/50 transition-all hover:shadow-[0_0_12px_rgba(59,130,246,0.15)]">
+                <div className="group relative rounded-sm overflow-hidden border border-white/10 bg-card hover:border-[#df6848]/60 transition-all hover:shadow-[0_16px_36px_rgba(0,0,0,.3)]">
                   <div className="aspect-video relative">
                     <img
                       src={
@@ -282,6 +289,7 @@ function ContinuarAssistindo() {
 
         <button
           onClick={() => scroll("right")}
+          aria-label="Rolar histórico para a direita"
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
@@ -293,9 +301,13 @@ function ContinuarAssistindo() {
 
 function SectionTitle({ title }: { title: string }) {
   return (
-    <h3 className="font-display text-2xl md:text-3xl font-bold tracking-wide mb-6 border-l-4 border-primary pl-4 text-foreground">
-      {title}
-    </h3>
+    <div className="mb-6 flex items-end justify-between gap-4">
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-[.32em] text-[#df8062] mb-2">Curadoria Zenkatu</p>
+        <h3 className="font-display text-2xl md:text-3xl font-bold tracking-wide border-l-2 border-[#df6848] pl-4 text-foreground">{title}</h3>
+      </div>
+      <span aria-hidden="true" className="hidden sm:block h-px flex-1 mb-2 ml-3 bg-gradient-to-r from-border/80 to-transparent" />
+    </div>
   );
 }
 
@@ -327,6 +339,7 @@ function ObrasRecentes() {
       <div className="relative">
         <button
           onClick={() => scroll("left")}
+          aria-label="Obras anteriores"
           className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -343,10 +356,10 @@ function ObrasRecentes() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: idx * 0.04 }}
-              className="w-[110px] md:w-[130px] shrink-0"
+              className="w-[142px] md:w-[168px] shrink-0"
             >
               <Link href={`/obra/${obra.slug}`}>
-                <div className="group relative aspect-[2/3] rounded-md overflow-hidden border border-border bg-card transition-all hover:scale-[1.03] hover:border-primary/50 hover:shadow-[0_0_12px_rgba(59,130,246,0.25)]">
+                <div className="group relative aspect-[2/3] rounded-sm overflow-hidden border border-white/10 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-[#df6848]/70 hover:shadow-[0_18px_40px_rgba(0,0,0,.35)]">
                   <img
                     src={
                       obra.capaUrl ||
@@ -356,19 +369,19 @@ function ObrasRecentes() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 pointer-events-none" />
-                  <Badge className="absolute top-1 right-1 bg-primary text-primary-foreground border-none px-1 py-0 text-[9px] font-bold shadow-md">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#090c14]/95 pointer-events-none" />
+                  <Badge className="absolute top-2 left-2 bg-[#df6848] text-[#171018] border-none px-2 py-0.5 text-[9px] font-bold tracking-widest shadow-md">
                     NOVO
                   </Badge>
-                  <div className="absolute bottom-0 left-0 right-0 px-1.5 pb-1.5">
+                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
                     {obra.tipografiaUrl ? (
                       <img
                         src={obra.tipografiaUrl}
                         alt={obra.titulo}
-                        className="max-h-7 w-auto object-contain drop-shadow-lg"
+                        className="max-h-9 w-auto object-contain drop-shadow-lg"
                       />
                     ) : (
-                      <h4 className="font-display font-semibold text-[10px] line-clamp-2 leading-tight drop-shadow">
+                        <h4 className="font-display font-semibold text-sm line-clamp-2 leading-tight drop-shadow">
                         {obra.titulo}
                       </h4>
                     )}
@@ -381,6 +394,7 @@ function ObrasRecentes() {
 
         <button
           onClick={() => scroll("right")}
+          aria-label="Próximas obras"
           className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
@@ -395,7 +409,7 @@ function Top10() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-24 w-full rounded-lg" />
         ))}
@@ -417,11 +431,11 @@ function Top10() {
             transition={{ delay: index * 0.1 }}
           >
             <Link href={`/obra/${obra.slug}`}>
-              <div className="group flex items-center gap-4 bg-card hover:bg-secondary border border-border p-3 rounded-lg transition-colors relative overflow-hidden">
-                <span className="font-display text-5xl md:text-6xl font-black text-foreground/5 italic -ml-2 select-none z-0 absolute left-2">
+              <div className="group flex items-center gap-3 bg-card/60 hover:bg-card border border-white/8 hover:border-[#df6848]/40 p-3 rounded-sm transition-colors relative overflow-hidden">
+                <span className="font-display text-6xl md:text-7xl font-black text-white/[.035] italic -ml-2 select-none z-0 absolute right-2 bottom-[-15px]">
                   {(index + 1).toString().padStart(2, "0")}
                 </span>
-                <span className="font-display text-3xl font-black text-primary/80 italic w-12 text-center z-10">
+                <span className="font-display text-3xl font-black text-[#df8062] italic w-12 text-center z-10">
                   {(index + 1).toString().padStart(2, "0")}
                 </span>
                 <img
@@ -430,14 +444,14 @@ function Top10() {
                     `https://placehold.co/100x150/0F1C2E/1E3A8A?text=Capa`
                   }
                   alt={obra.titulo}
-                  className="w-12 h-16 md:w-16 md:h-24 object-cover rounded-md shadow-sm z-10"
+                  className="w-12 h-16 md:w-16 md:h-24 object-cover rounded-sm shadow-sm z-10"
                   loading="lazy"
                 />
                 <div className="flex-1 min-w-0 z-10">
                   <h4 className="font-medium text-sm md:text-base line-clamp-1 group-hover:text-primary transition-colors">
                     {obra.titulo}
                   </h4>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">
                     {obra.views || 0} visualizações
                   </p>
                 </div>
@@ -477,7 +491,7 @@ function EpisodiosRecentes() {
             transition={{ delay: idx * 0.05 }}
           >
             <Link href={`/obra/${ep.obraSlug ?? ep.obraId}?ep=${ep.id}`}>
-              <div className="group relative rounded-lg overflow-hidden border border-border bg-card hover:border-primary/50 transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+              <div className="group relative rounded-sm overflow-hidden border border-white/10 bg-card hover:border-[#df6848]/60 transition-all hover:shadow-[0_16px_36px_rgba(0,0,0,.3)]">
                 <div className="aspect-video relative">
                   <img
                     src={
@@ -502,7 +516,7 @@ function EpisodiosRecentes() {
                       />
                     </div>
                   )}
-                  <Badge className="absolute bottom-2 right-2 bg-background/80 text-foreground backdrop-blur-sm border-none">
+                  <Badge className="absolute bottom-2 right-2 bg-black/75 text-white backdrop-blur-sm border-none">
                     T{ep.temporada} E{ep.numero}
                   </Badge>
                 </div>
@@ -528,13 +542,13 @@ export default function Home() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="pb-12"
+      className="pb-16 overflow-hidden"
     >
       <HeroCarousel />
-      <div className="container max-w-screen-2xl px-4 py-8 space-y-12">
+      <div className="container max-w-screen-2xl px-4 md:px-8 py-10 md:py-14 space-y-14 md:space-y-16">
         <ContinuarAssistindo />
         <ObrasRecentes />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.8fr)_minmax(290px,.82fr)] gap-10 lg:gap-12 items-start">
           <EpisodiosRecentes />
           <Top10 />
         </div>

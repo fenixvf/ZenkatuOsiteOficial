@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -62,12 +61,9 @@ const obraSchema = z.object({
   status: z.string().min(1, "Status é obrigatório"),
   ano: z.coerce.number().int().min(1900).max(2100),
   nota: z.coerce.number().min(0).max(10).optional().nullable(),
-  totalEps: z.coerce.number().int().min(0).optional().nullable(),
   capaUrl: z.string().url("URL inválida"),
   bannerUrl: z.string().url("URL inválida"),
   tipografiaUrl: z.string().url("URL inválida").optional().nullable().or(z.literal("")),
-  showInBanner: z.boolean().default(false),
-  bannerOrder: z.coerce.number().int().optional().nullable(),
   generos: z.array(z.string()).default([]),
 });
 
@@ -450,12 +446,9 @@ export default function AdminObrasForm() {
       status: "Em Exibição",
       ano: new Date().getFullYear(),
       nota: null,
-      totalEps: null,
       capaUrl: "",
       bannerUrl: "",
       tipografiaUrl: "",
-      showInBanner: false,
-      bannerOrder: 0,
       generos: [],
     },
   });
@@ -469,12 +462,9 @@ export default function AdminObrasForm() {
         status: obra.status,
         ano: obra.ano,
         nota: obra.nota,
-        totalEps: obra.totalEps,
         capaUrl: obra.capaUrl,
         bannerUrl: obra.bannerUrl,
         tipografiaUrl: obra.tipografiaUrl || "",
-        showInBanner: obra.showInBanner,
-        bannerOrder: obra.bannerOrder,
         generos: obra.generos ?? [],
       });
       setCast((obra as any).cast ?? []);
@@ -605,26 +595,6 @@ export default function AdminObrasForm() {
 
             <FormField
               control={form.control}
-              name="totalEps"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total de Episódios</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Deixe vazio se em exibição"
-                      {...field}
-                      value={field.value || ""}
-                      className="bg-background"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="nota"
               render={({ field }) => (
                 <FormItem>
@@ -722,46 +692,14 @@ export default function AdminObrasForm() {
             </div>
           </div>
 
-          <div className="border-t border-border pt-6 space-y-6">
-            <h3 className="font-display text-xl font-bold">Destaque</h3>
-            <FormField
-              control={form.control}
-              name="showInBanner"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border border-border bg-background p-4">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Exibir no Carrossel Principal</FormLabel>
-                    <FormDescription>
-                      A obra aparecerá no grande banner na página inicial.
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
-            {form.watch("showInBanner") && (
-              <FormField
-                control={form.control}
-                name="bannerOrder"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ordem no Carrossel (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        value={field.value || ""}
-                        className="bg-background w-32"
-                      />
-                    </FormControl>
-                    <FormDescription>Menor número aparece primeiro.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+          <div className="rounded-lg border border-border bg-background/40 p-4">
+            <p className="text-sm text-muted-foreground">
+              A seleção e a ordem do banner são configuradas em{" "}
+              <Link href="/admin/config" className="font-medium text-primary hover:underline">
+                Configurações do Site
+              </Link>
+              .
+            </p>
           </div>
 
           <div className="border-t border-border pt-6 space-y-4">

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useListObras } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Save, Settings, Smartphone, Share2, Plus, X } from "lucide-react";
+import { Loader2, Save, Settings, Smartphone, Share2, Plus, X, ArrowDown, ArrowUp, ImagePlus, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { SOCIAL_PLATFORMS, detectPlatform, parseSocialLinks, type SocialLink } from "@/lib/social-platforms";
@@ -119,6 +120,8 @@ function SidebarLinksEditor({
 export default function AdminConfig() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { data: obrasRaw, isLoading: obrasLoading } = useListObras();
+  const obras = Array.isArray(obrasRaw) ? obrasRaw : [];
 
   const { data: config, isLoading } = useQuery({
     queryKey: ["site-config"],
@@ -140,6 +143,10 @@ export default function AdminConfig() {
   const [appDownloadUrl, setAppDownloadUrl] = useState("");
   const [socialTitle, setSocialTitle] = useState("");
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+  const [bannerMode, setBannerMode] = useState<"automatic" | "manual">("manual");
+  const [manualBannerIds, setManualBannerIds] = useState<number[]>([]);
+  const [bannerSearch, setBannerSearch] = useState("");
+  const [bannerSettingsInitialized, setBannerSettingsInitialized] = useState(false);
 
   useEffect(() => {
     if (config) {
@@ -149,13 +156,68 @@ export default function AdminConfig() {
     }
   }, [config]);
 
+  useEffect(() => {
+    if (!config || !Array.isArray(obrasRaw) || bannerSettingsInitialized) return;
+
+    setBannerMode(config.bannerMode === "automatic" ? "automatic" : "manual");
+    if (config.bannerOrder !== undefined) {
+      try {
+        const savedIds: unknown = JSON.parse(config.bannerOrder);
+        setManualBannerIds(
+          Array.isArray(savedIds)
+            ? savedIds.filter(
+                (id): id is number =>
+                  Number.isInteger(id) && obras.some((obra) => obra.id === id),
+              )
+            : [],
+        );
+      } catch {
+        setManualBannerIds([]);
+      }
+    } else {
+      setManualBannerIds(
+        obras
+          .filter((obra) => obra.showInBanner)
+          .sort((a, b) => (a.bannerOrder ?? Number.MAX_SAFE_INTEGER) - (b.bannerOrder ?? Number.MAX_SAFE_INTEGER))
+          .map((obra) => obra.id),
+      );
+    }
+    setBannerSettingsInitialized(true);
+  }, [config, obrasRaw, obras, bannerSettingsInitialized]);
+
   const handleSave = () => {
     mutation.mutate({
       appDownloadUrl,
       socialLinksTitle: socialTitle,
       socialLinks: JSON.stringify(socialLinks),
+      bannerMode,
+      bannerOrder: JSON.stringify(manualBannerIds),
     });
   };
+
+  const moveBannerItem = (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= manualBannerIds.length) return;
+    setManualBannerIds((current) => {
+      const next = [...current];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
+  };
+
+  const toggleManualBanner = (obraId: number, checked: boolean) => {
+    setManualBannerIds((current) =>
+      checked
+        ? current.includes(obraId) ? current : [...current, obraId]
+        : current.filter((id) => id !== obraId),
+    );
+  };
+
+  const availableBannerObras = obras.filter(
+    (obra) =>
+      !manualBannerIds.includes(obra.id) &&
+      obra.titulo.toLowerCase().includes(bannerSearch.toLowerCase()),
+  );
 
   if (isLoading) {
     return (
@@ -183,6 +245,160 @@ export default function AdminConfig() {
       </div>
 
       <div className="bg-card border border-border rounded-xl shadow-lg divide-y divide-border">
+
+        {/* Hero banner behavior */}
+        <div className="p-6 space-y-5">
+          <div className="flex items-center gap-2">
+            <ImagePlus className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold text-lg">Banner principal</h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Escolha como as obras em destaque aparecem na página inicial.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              data-testid="button-banner-mode-automatic"
+              aria-pressed={bannerMode === "automatic"}
+              onClick={() => setBannerMode("automatic")}
+              className={`rounded-xl border p-4 text-left transition-colors ${
+                bannerMode === "automatic"
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-background/40 hover:bg-secondary/50"
+              }`}
+            >
+              <span className="flex items-center gap-2 font-semibold text-foreground">
+                <TrendingUp className="h-4 w-4 text-primary" /> Automático
+              </span>
+              <span className="mt-2 block text-sm text-muted-foreground">
+                Exibe até 10 obras mais populares, em ordem de visualizações.
+              </span>
+            </button>
+            <button
+              type="button"
+              data-testid="button-banner-mode-manual"
+              aria-pressed={bannerMode === "manual"}
+              onClick={() => setBannerMode("manual")}
+              className={`rounded-xl border p-4 text-left transition-colors ${
+                bannerMode === "manual"
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-background/40 hover:bg-secondary/50"
+              }`}
+            >
+              <span className="flex items-center gap-2 font-semibold text-foreground">
+                <ImagePlus className="h-4 w-4 text-primary" /> Manual
+              </span>
+              <span className="mt-2 block text-sm text-muted-foreground">
+                Escolha as obras e ajuste a ordem do jeito que preferir.
+              </span>
+            </button>
+          </div>
+
+          {bannerMode === "manual" && (
+            <div className="space-y-5 rounded-xl border border-border bg-background/30 p-4">
+              <div>
+                <h3 className="text-sm font-semibold">Ordem do banner</h3>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Use as setas para definir a sequência exibida na página inicial.
+                </p>
+                {manualBannerIds.length === 0 ? (
+                  <p className="mt-3 rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                    Nenhuma obra selecionada. Adicione obras abaixo.
+                  </p>
+                ) : (
+                  <ol className="mt-3 space-y-2">
+                    {manualBannerIds.map((obraId, index) => {
+                      const obra = obras.find((item) => item.id === obraId);
+                      if (!obra) return null;
+                      return (
+                        <li
+                          key={obraId}
+                          data-testid={`banner-order-item-${obraId}`}
+                          className="flex items-center gap-3 rounded-lg border border-border bg-card p-2"
+                        >
+                          <span className="w-6 text-center text-xs font-bold text-muted-foreground">{index + 1}</span>
+                          <img src={obra.capaUrl} alt="" className="h-12 w-9 rounded object-cover" />
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium">{obra.titulo}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Mover ${obra.titulo} para cima`}
+                            data-testid={`button-banner-up-${obraId}`}
+                            disabled={index === 0}
+                            onClick={() => moveBannerItem(index, -1)}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Mover ${obra.titulo} para baixo`}
+                            data-testid={`button-banner-down-${obraId}`}
+                            disabled={index === manualBannerIds.length - 1}
+                            onClick={() => moveBannerItem(index, 1)}
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Remover ${obra.titulo} do banner`}
+                            data-testid={`button-banner-remove-${obraId}`}
+                            onClick={() => toggleManualBanner(obraId, false)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+
+              <div className="space-y-3 border-t border-border pt-4">
+                <h3 className="text-sm font-semibold">Adicionar obras</h3>
+                <Input
+                  value={bannerSearch}
+                  onChange={(event) => setBannerSearch(event.target.value)}
+                  placeholder="Buscar obras para o banner..."
+                  aria-label="Buscar obras para adicionar ao banner"
+                  data-testid="input-banner-search"
+                  className="bg-background"
+                />
+                {obrasLoading ? (
+                  <p className="text-sm text-muted-foreground">Carregando catálogo...</p>
+                ) : availableBannerObras.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    {obras.length === 0 ? "Nenhuma obra cadastrada." : "Nenhuma outra obra encontrada."}
+                  </p>
+                ) : (
+                  <div className="max-h-64 space-y-1 overflow-y-auto">
+                    {availableBannerObras.map((obra) => (
+                      <label
+                        key={obra.id}
+                        data-testid={`banner-option-${obra.id}`}
+                        className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-secondary/50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={false}
+                          onChange={(event) => toggleManualBanner(obra.id, event.target.checked)}
+                          data-testid={`checkbox-banner-${obra.id}`}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        <img src={obra.capaUrl} alt="" className="h-10 w-8 rounded object-cover" />
+                        <span className="min-w-0 flex-1 truncate text-sm">{obra.titulo}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* App Download Link */}
         <div className="p-6 space-y-4">

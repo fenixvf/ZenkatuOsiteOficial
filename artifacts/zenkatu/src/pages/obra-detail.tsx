@@ -186,6 +186,7 @@ function ComentarioItem({ comentario, replies, currentUserId, isAdmin, onDelete,
             {canInteract && (
               <button
                 onClick={() => setShowReplyBox(!showReplyBox)}
+                  aria-label={`Responder ao comentário de ${comentario.username}`}
                 className="text-xs text-muted-foreground hover:text-primary flex items-center transition-colors gap-1"
               >
                 <Reply className="w-3 h-3" /> Responder
@@ -194,6 +195,7 @@ function ComentarioItem({ comentario, replies, currentUserId, isAdmin, onDelete,
             {isOwner && (
               <button
                 onClick={() => setIsEditing(true)}
+                  aria-label={`Editar comentário de ${comentario.username}`}
                 className="text-xs text-muted-foreground hover:text-primary flex items-center transition-colors gap-1"
               >
                 <Edit2 className="w-3 h-3" /> Editar
@@ -202,6 +204,7 @@ function ComentarioItem({ comentario, replies, currentUserId, isAdmin, onDelete,
             {(isAdmin || isOwner) && (
               <button
                 onClick={() => onDelete(comentario.id)}
+                  aria-label={`Excluir comentário de ${comentario.username}`}
                 className="text-xs text-muted-foreground hover:text-destructive flex items-center transition-colors gap-1"
               >
                 <Trash2 className="w-3 h-3" /> Excluir
@@ -210,6 +213,8 @@ function ComentarioItem({ comentario, replies, currentUserId, isAdmin, onDelete,
             {replies.length > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
+                  aria-expanded={showReplies}
+                  aria-label={`${showReplies ? "Ocultar" : "Mostrar"} respostas de ${comentario.username}`}
                 className="text-xs text-muted-foreground hover:text-foreground flex items-center transition-colors gap-1 ml-auto"
               >
                 {showReplies ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
@@ -512,38 +517,39 @@ export default function ObraDetail() {
   const getReplies = (parentId: number) => comentarios.filter(c => c.parentId === parentId);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-20">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pb-20 overflow-hidden">
       {/* Hero */}
-      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[3/1]">
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent z-10" />
-        <img
+      <div className="relative w-full aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9] lg:aspect-[3/1] max-h-[780px] isolate">
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/50 to-transparent z-10" />
+        <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,10,18,.2),transparent_58%,rgba(220,91,59,.12))] z-10 pointer-events-none" />
+          <img
           src={obra.bannerUrl || obra.capaUrl || `https://placehold.co/1920x1080/0F1C2E/1E3A8A`}
           alt={obra.titulo}
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0 z-20 p-6 md:p-12 lg:p-16 container max-w-screen-2xl">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Badge variant="secondary" className="bg-primary/20 text-primary-foreground">{obra.ano}</Badge>
-            <Badge variant="outline" className="border-border">{obra.status}</Badge>
-            {obra.nota && <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-500 border-none">★ {obra.nota}/10</Badge>}
-            {obra.totalEps && <Badge variant="outline">{obra.totalEps} Eps</Badge>}
+          <div className="absolute bottom-0 left-0 right-0 z-20 p-6 md:p-12 lg:p-16 container max-w-screen-2xl">
+          <div className="flex flex-wrap gap-2 mb-5">
+            <Badge variant="secondary" className="bg-[#df6848] text-[#171018] border-0 font-semibold tracking-wider">{obra.ano}</Badge>
+            <Badge variant="outline" className="border-white/30 bg-black/20 text-white/90 backdrop-blur">{obra.status}</Badge>
+            {obra.nota && <Badge variant="secondary" className="bg-[#e5b76a]/20 text-[#f0ca83] border border-[#e5b76a]/20">{obra.nota}/10</Badge>}
+            {obra.totalEps && <Badge variant="outline" className="border-white/25 bg-black/20 text-white/85">{obra.totalEps} episódios</Badge>}
           </div>
           {obra.tipografiaUrl ? (
             <img
               src={obra.tipografiaUrl}
               alt={obra.titulo}
-              className="max-h-16 md:max-h-24 lg:max-h-32 w-auto object-contain mb-4 drop-shadow-2xl"
+              className="max-h-16 md:max-h-24 lg:max-h-32 w-auto object-contain mb-5 drop-shadow-2xl"
               style={{ maxWidth: "520px" }}
             />
           ) : (
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-4 drop-shadow-xl">
+            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-5 leading-[.92] tracking-tight drop-shadow-xl">
               {obra.titulo}
             </h1>
           )}
-          <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-2.5 mb-7">
             {obra.generos?.map(g => (
-              <Badge key={g} variant="secondary" className="bg-card text-muted-foreground hover:text-foreground">
+              <Badge key={g} variant="secondary" className="bg-white/10 border border-white/10 text-white/80 hover:text-white backdrop-blur">
                 {g}
               </Badge>
             ))}
@@ -552,7 +558,8 @@ export default function ObraDetail() {
                 size="sm"
                 variant={isInLista ? "default" : "outline"}
                 onClick={handleToggleLista}
-                className={`ml-2 gap-2 font-display tracking-wide ${isInLista ? "bg-primary/80 hover:bg-primary/60" : "border-border hover:border-primary/50"}`}
+                aria-label={isInLista ? "Remover obra da minha lista" : "Adicionar obra à minha lista"}
+                className={`ml-1 gap-2 font-display tracking-wide rounded-full ${isInLista ? "bg-[#df6848] text-[#171018] hover:bg-[#f07a57]" : "border-white/25 bg-white/5 text-white hover:border-[#df6848] hover:bg-white/10"}`}
               >
                 {isInLista ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                 {isInLista ? "Na Lista" : "Minha Lista"}
@@ -562,30 +569,31 @@ export default function ObraDetail() {
         </div>
       </div>
 
-      <div className="container max-w-screen-2xl px-4 grid grid-cols-1 gap-8 mt-8">
+      <div className="container max-w-screen-2xl px-4 md:px-8 grid grid-cols-1 gap-8 mt-5 md:mt-8">
         <div className="w-full max-w-5xl mx-auto space-y-8">
           {/* Player */}
-          <div className="bg-card border border-border p-4 rounded-xl shadow-lg">
+          <div className="bg-[#111722] border border-white/10 p-3 sm:p-5 rounded-sm shadow-[0_22px_70px_rgba(0,0,0,.28)]">
             {activeEpisode ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-display text-2xl font-bold">
+                  <h3 className="font-display text-lg md:text-2xl font-bold tracking-wide">
                     T{activeEpisode.temporada} E{activeEpisode.numero} - {activeEpisode.titulo}
                   </h3>
                 </div>
                  <Player content={activeEpisode.playerContent} episodeNumber={activeEpisode.numero} />
               </div>
             ) : (
-              <div className="aspect-video bg-black/50 rounded-lg flex items-center justify-center text-muted-foreground border border-border">
+              <div className="aspect-video bg-black/50 rounded-sm flex items-center justify-center text-muted-foreground border border-white/10">
                 {loadingEpisodios ? "Carregando episódios..." : "Nenhum episódio disponível."}
               </div>
             )}
           </div>
 
           {/* Sinopse */}
-          <div className="bg-card/50 border border-border/50 p-6 rounded-xl">
-            <h3 className="font-display text-xl font-bold mb-4">Sinopse</h3>
-            <p className={`text-muted-foreground leading-relaxed ${!isSinopseExpanded && "line-clamp-3"}`}>
+          <div className="bg-[#111722]/85 border border-white/8 p-6 md:p-8 rounded-sm relative overflow-hidden">
+            <div aria-hidden="true" className="absolute top-0 left-0 w-20 h-px bg-[#df6848]" />
+            <h3 className="font-display text-xl font-bold mb-4 tracking-wide">Sinopse</h3>
+            <p className={`text-foreground/70 leading-7 ${!isSinopseExpanded && "line-clamp-3"}`}>
               {obra.sinopse}
             </p>
             {obra.sinopse.length > 200 && (
@@ -602,7 +610,7 @@ export default function ObraDetail() {
 
           {/* Equipe / Cast */}
           {Array.isArray((obra as any).cast) && (obra as any).cast.length > 0 && (
-            <div className="bg-card/50 border border-border/50 p-6 rounded-xl">
+              <div className="bg-[#111722]/85 border border-white/8 p-6 md:p-8 rounded-sm">
               <div className="flex items-center gap-2 mb-5">
                 <Users className="w-5 h-5 text-primary" />
                 <h3 className="font-display text-xl font-bold">Equipe</h3>
@@ -615,8 +623,8 @@ export default function ObraDetail() {
                   nome: string; papel: string; fotoUrl?: string;
                   links?: { youtube?: string; instagram?: string; discord?: string; twitter?: string; tiktok?: string; site?: string };
                 }>).map((member, idx) => (
-                  <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 rounded-lg border border-border/50 bg-background/40 hover:border-primary/30 transition-colors">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border bg-secondary flex-shrink-0">
+                  <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 rounded-sm border border-white/8 bg-background/40 hover:border-[#df6848]/40 transition-colors">
+                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/10 bg-secondary flex-shrink-0">
                       {member.fotoUrl ? (
                         <img src={member.fotoUrl} alt={member.nome} className="w-full h-full object-cover" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                       ) : (
@@ -632,32 +640,32 @@ export default function ObraDetail() {
                     {member.links && (
                       <div className="flex flex-wrap justify-center gap-1.5">
                         {member.links.youtube && (
-                          <a href={member.links.youtube} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-red-500 transition-colors" title="YouTube">
+                  <a href={member.links.youtube} target="_blank" rel="noopener noreferrer" aria-label={`YouTube de ${member.nome}`} className="text-muted-foreground hover:text-red-500 transition-colors" title="YouTube">
                             <Youtube className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {member.links.instagram && (
-                          <a href={member.links.instagram} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-pink-500 transition-colors" title="Instagram">
+                          <a href={member.links.instagram} target="_blank" rel="noopener noreferrer" aria-label={`Instagram de ${member.nome}`} className="text-muted-foreground hover:text-pink-500 transition-colors" title="Instagram">
                             <Instagram className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {member.links.discord && (
-                          <a href={member.links.discord} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-indigo-400 transition-colors" title="Discord">
+                          <a href={member.links.discord} target="_blank" rel="noopener noreferrer" aria-label={`Discord de ${member.nome}`} className="text-muted-foreground hover:text-indigo-400 transition-colors" title="Discord">
                             <MessageCircle className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {member.links.twitter && (
-                          <a href={member.links.twitter} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-sky-400 transition-colors" title="Twitter / X">
+                          <a href={member.links.twitter} target="_blank" rel="noopener noreferrer" aria-label={`Twitter ou X de ${member.nome}`} className="text-muted-foreground hover:text-sky-400 transition-colors" title="Twitter / X">
                             <Twitter className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {member.links.tiktok && (
-                          <a href={member.links.tiktok} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
+                          <a href={member.links.tiktok} target="_blank" rel="noopener noreferrer" aria-label={`TikTok de ${member.nome}`} className="text-muted-foreground hover:text-foreground transition-colors" title="TikTok">
                             <Music className="w-3.5 h-3.5" />
                           </a>
                         )}
                         {member.links.site && (
-                          <a href={member.links.site} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" title="Site">
+                          <a href={member.links.site} target="_blank" rel="noopener noreferrer" aria-label={`Site de ${member.nome}`} className="text-muted-foreground hover:text-primary transition-colors" title="Site">
                             <Globe className="w-3.5 h-3.5" />
                           </a>
                         )}
@@ -684,8 +692,8 @@ export default function ObraDetail() {
           )}
 
           {/* Controle de episódios */}
-          <div className="bg-card border border-border rounded-xl shadow-lg overflow-hidden">
-            <div className="p-4 sm:p-5 border-b border-border/50 flex flex-wrap gap-3 justify-between items-center bg-card/80 backdrop-blur">
+          <div className="bg-[#111722] border border-white/10 rounded-sm shadow-[0_22px_70px_rgba(0,0,0,.22)] overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-white/8 flex flex-wrap gap-3 justify-between items-center bg-[#171f2c]">
               <div>
                 <h3 className="font-display text-xl font-bold">Episódios</h3>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -716,14 +724,15 @@ export default function ObraDetail() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {filteredEpisodes.map(ep => (
-                    <button
+                      <button
                       key={ep.id}
                       onClick={() => handleSelectEpisode(ep.id)}
+                        aria-label={`Assistir episódio ${ep.numero}: ${ep.titulo}`}
                       aria-current={activeEpisodeId === ep.id ? "true" : undefined}
                       className={`w-full flex gap-3 p-2 rounded-lg transition-all border text-left group
                         ${activeEpisodeId === ep.id
-                          ? "bg-primary/10 border-primary shadow-[0_0_10px_rgba(59,130,246,0.15)]"
-                          : "bg-secondary/30 border-transparent hover:bg-secondary hover:border-border"
+                          ? "bg-[#df6848]/10 border-[#df6848]/65 shadow-[inset_3px_0_0_#df6848]"
+                          : "bg-secondary/30 border-transparent hover:bg-secondary hover:border-white/10"
                         }`}
                     >
                       <div className="relative w-24 h-16 rounded overflow-hidden flex-shrink-0 bg-black">
@@ -753,13 +762,13 @@ export default function ObraDetail() {
 
           {/* Comentários */}
           <div className="space-y-6">
-            <div className="flex items-center gap-2 border-b border-border/50 pb-4">
-              <MessageSquare className="w-6 h-6 text-primary" />
+            <div className="flex items-center gap-2 border-b border-white/10 pb-4">
+              <MessageSquare className="w-6 h-6 text-[#df8062]" />
               <h3 className="font-display text-2xl font-bold">Comentários ({topLevelComments.length})</h3>
             </div>
 
             {currentUser ? (
-              <div className="flex gap-4">
+              <div className="flex gap-4 rounded-sm border border-white/8 bg-[#111722]/80 p-4 md:p-5">
                 <Avatar className="h-10 w-10 border border-border hidden sm:block flex-shrink-0">
                   <AvatarImage src={userProfile?.photoUrl || currentUser.photoURL || ""} />
                   <AvatarFallback>{currentUser.email?.[0].toUpperCase()}</AvatarFallback>
@@ -767,20 +776,21 @@ export default function ObraDetail() {
                 <div className="flex-1 space-y-2">
                   <Textarea
                     placeholder="Adicione um comentário..."
-                    className="min-h-[100px] resize-y bg-card border-border focus-visible:ring-primary/50"
+                    aria-label="Escreva seu comentário"
+                    className="min-h-[100px] resize-y bg-[#0b1019] border-white/10 focus-visible:ring-[#df6848]/50"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value.slice(0, 500))}
                   />
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">{newComment.length}/500</span>
-                    <Button onClick={handlePostComment} disabled={!newComment.trim()} size="sm" className="font-display tracking-wide">
+                    <Button onClick={handlePostComment} disabled={!newComment.trim()} size="sm" aria-label="Publicar comentário" className="font-display tracking-wide bg-[#df6848] text-[#171018] hover:bg-[#f07a57]">
                       <Send className="w-4 h-4 mr-2" /> Publicar
                     </Button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-card/50 border border-border p-6 rounded-lg text-center">
+              <div className="bg-[#111722]/80 border border-white/8 p-6 rounded-sm text-center">
                 <p className="text-muted-foreground mb-4">Faça login para comentar nesta obra.</p>
               </div>
             )}
