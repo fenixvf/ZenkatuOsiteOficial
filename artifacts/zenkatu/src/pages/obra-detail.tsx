@@ -376,7 +376,14 @@ export default function ObraDetail() {
   const isInLista = obra ? listaObras.some(o => o.id === obra.id) : false;
 
   const handleToggleLista = async () => {
-    if (!currentUser || !obra) return;
+    if (!obra) return;
+    if (!currentUser) {
+      toast({
+        title: "Entre na sua conta para favoritar",
+        description: "Faça login para salvar esta obra na sua lista.",
+      });
+      return;
+    }
     try {
       if (isInLista) {
         await removeFromLista.mutateAsync({ uid: currentUser.uid, obraId: obra.id });
@@ -687,19 +694,21 @@ export default function ObraDetail() {
               {activeEpisode ? `Reproduzir T${activeEpisode.temporada} E${activeEpisode.numero}` : loadingEpisodios ? "Carregando episódios..." : "Episódios em breve"}
             </button>
             <div className="flex flex-none items-center gap-3">
-              {currentUser && (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  onClick={handleToggleLista}
-                  aria-label={isInLista ? "Remover obra da minha lista" : "Adicionar obra à minha lista"}
-                  data-testid="button-toggle-watchlist"
-                  className={`h-12 w-12 shrink-0 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10 ${isInLista ? "text-primary" : ""}`}
-                >
-                  {isInLista ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-                </Button>
-              )}
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                onClick={handleToggleLista}
+                aria-label={
+                  currentUser
+                    ? isInLista ? "Remover obra da minha lista" : "Adicionar obra à minha lista"
+                    : "Entrar para favoritar esta obra"
+                }
+                data-testid="button-toggle-watchlist"
+                className={`h-12 w-12 shrink-0 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10 ${isInLista ? "text-primary" : ""}`}
+              >
+                {currentUser && isInLista ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
