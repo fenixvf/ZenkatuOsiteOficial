@@ -306,7 +306,6 @@ function SectionTitle({ title }: { title: string }) {
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[.32em] text-primary mb-2">Curadoria Zenkatu</p>
         <h3 className="font-display text-2xl md:text-3xl font-bold tracking-wide border-l-2 border-primary pl-4 text-foreground">{title}</h3>
       </div>
       <span aria-hidden="true" className="hidden sm:block h-px flex-1 mb-2 ml-3 bg-gradient-to-r from-border/80 to-transparent" />
