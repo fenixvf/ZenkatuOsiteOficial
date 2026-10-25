@@ -211,6 +211,7 @@ export const CustomPlayer = memo(function CustomPlayer({
     };
     const onEnded = () => {
       clearProgress(src);
+      setPlaying(false);
       setIsVideoLoading(false);
     };
     const onLoadStart = () => {
@@ -479,15 +480,17 @@ export const CustomPlayer = memo(function CustomPlayer({
       )}
 
       {/* Watermark */}
-      <div className="pointer-events-none absolute left-3 top-3 z-10 flex select-none items-center gap-1.5 rounded-full border border-white/15 bg-black/25 px-2.5 py-1.5 opacity-75 backdrop-blur-sm sm:left-4 sm:top-4">
-        <img src={logoImg} alt="" className="h-4 w-4 rounded-full object-cover drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:h-5 sm:w-5" />
-        <span
-          className="font-display text-[10px] font-bold tracking-[0.18em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-xs"
-          style={{ textShadow: "0 0 8px rgba(59,130,246,0.65)" }}
-        >
-          ZENKATU <span className="font-medium opacity-80">PLAYER</span>
-        </span>
-      </div>
+      {!playing && (
+        <div className="pointer-events-none absolute left-3 top-3 z-10 flex select-none items-center gap-1.5 rounded-full border border-white/15 bg-black/25 px-2.5 py-1.5 opacity-75 backdrop-blur-sm sm:left-4 sm:top-4">
+          <img src={logoImg} alt="" className="h-4 w-4 rounded-full object-cover drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:h-5 sm:w-5" />
+          <span
+            className="font-display text-[10px] font-bold tracking-[0.18em] text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] sm:text-xs"
+            style={{ textShadow: "0 0 8px rgba(59,130,246,0.65)" }}
+          >
+            ZENKATU <span className="font-medium opacity-80">PLAYER</span>
+          </span>
+        </div>
+      )}
 
       {showEpisodeInfo && (episodeTitle || episodeLabel) && (
         <div className="pointer-events-none absolute bottom-[76px] left-4 z-10 max-w-[78%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:bottom-[88px] sm:left-6 sm:max-w-[72%]">
