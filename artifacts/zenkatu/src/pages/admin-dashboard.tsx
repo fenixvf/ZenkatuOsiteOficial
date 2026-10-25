@@ -10,10 +10,10 @@ export default function AdminDashboard() {
   const { data: stats, isLoading } = useGetAdminStats();
 
   const statCards = [
-    { title: "Total de Obras", value: stats?.totalObras, icon: Layers, color: "text-blue-500", link: "/admin/obras" },
-    { title: "Total de Episódios", value: stats?.totalEpisodios, icon: Film, color: "text-purple-500", link: "/admin/obras" },
-    { title: "Usuários", value: stats?.totalUsuarios, icon: Users, color: "text-green-500", link: "#" },
-    { title: "Comentários Hoje", value: stats?.comentariosHoje, icon: MessageSquare, color: "text-orange-500", link: "#" },
+    { title: "Total de Obras", value: stats?.totalObras, icon: Layers, color: "text-primary", link: "/admin/obras" },
+    { title: "Total de Episódios", value: stats?.totalEpisodios, icon: Film, color: "text-primary", link: "/admin/obras" },
+    { title: "Usuários", value: stats?.totalUsuarios, icon: Users, color: "text-primary", link: "#" },
+    { title: "Comentários Hoje", value: stats?.comentariosHoje, icon: MessageSquare, color: "text-primary", link: "#" },
   ];
 
   return (
@@ -84,9 +84,9 @@ export default function AdminDashboard() {
           </Card>
         </Link>
         <Link href="/admin/notificacoes">
-          <Card className="border-border bg-gradient-to-br from-orange-500/10 to-transparent hover:from-orange-500/20 border-orange-500/30 hover:border-orange-500 transition-all cursor-pointer group">
+          <Card className="border-border bg-gradient-to-br from-primary/10 to-transparent hover:from-primary/20 border-primary/30 hover:border-primary transition-all cursor-pointer group">
             <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-              <div className="p-4 rounded-full bg-orange-500/20 text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors">
+              <div className="p-4 rounded-full bg-primary/20 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 <Bell className="w-8 h-8" />
               </div>
               <div>

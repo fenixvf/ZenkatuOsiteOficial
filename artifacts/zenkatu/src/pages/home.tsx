@@ -44,7 +44,10 @@ function HeroCarousel() {
     );
 
   return (
-    <section aria-label="Em destaque" className="relative w-full aspect-[4/3] md:aspect-[21/9] lg:aspect-[2.5/1] max-h-[760px] overflow-hidden group isolate">
+    <section
+      aria-label="Em destaque"
+      className="relative isolate h-[72svh] min-h-[440px] max-h-[680px] w-full overflow-hidden group md:aspect-[21/9] md:h-auto md:min-h-0 md:max-h-[760px] lg:aspect-[2.5/1]"
+    >
       <AnimatePresence initial={false} mode="wait">
         <motion.div
           key={currentIndex}
@@ -56,7 +59,7 @@ function HeroCarousel() {
         >
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-transparent z-10" />
           <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/55 to-transparent z-10" />
-          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,10,18,.25),transparent_55%,rgba(220,91,59,.12))] z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,10,18,.25),transparent_55%,rgba(59,130,246,.12))] z-10 pointer-events-none" />
           <img
             src={
               current.bannerUrl ||
@@ -66,7 +69,7 @@ function HeroCarousel() {
             alt={current.titulo}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 z-20 flex flex-col justify-end p-6 md:p-12 lg:p-20 container max-w-screen-2xl">
+          <div className="absolute inset-0 z-20 flex flex-col justify-end p-5 pt-16 pb-14 container max-w-screen-2xl md:p-12 lg:p-20">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -76,7 +79,7 @@ function HeroCarousel() {
               <div className="flex items-center gap-2 mb-5">
                 <Badge
                   variant="secondary"
-                  className="bg-[#d96445] text-[#171018] hover:bg-[#f07a57] border-0 font-semibold tracking-wider"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-semibold tracking-wider"
                 >
                   {current.ano}
                 </Badge>
@@ -105,7 +108,7 @@ function HeroCarousel() {
                 <Button
                   asChild
                   size="lg"
-                  className="font-display tracking-wide px-8 h-12 bg-[#df6848] text-[#171018] hover:bg-[#f07a57] rounded-full shadow-xl shadow-black/20"
+                  className="font-display tracking-wide px-8 h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full shadow-xl shadow-black/20"
                 >
                   <Link href={`/obra/${current.slug}`}>
                     <Play className="mr-2 h-5 w-5" /> Assistir
@@ -217,7 +220,7 @@ function ContinuarAssistindo() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-display text-xl md:text-2xl font-bold tracking-wide border-l-2 border-[#df6848] pl-4 text-foreground">
+        <h3 className="font-display text-xl md:text-2xl font-bold tracking-wide border-l-2 border-primary pl-4 text-foreground">
           Continuar Assistindo
         </h3>
         <button
@@ -254,7 +257,7 @@ function ContinuarAssistindo() {
               className="w-[152px] md:w-[168px] shrink-0"
             >
               <Link href={`/obra/${item.obraSlug}?ep=${item.episodioId}`}>
-                <div className="group relative rounded-sm overflow-hidden border border-white/10 bg-card hover:border-[#df6848]/60 transition-all hover:shadow-[0_16px_36px_rgba(0,0,0,.3)]">
+                <div className="group relative rounded-sm overflow-hidden border border-white/10 bg-card hover:border-primary/60 transition-all hover:shadow-[0_16px_36px_rgba(0,0,0,.3)]">
                   <div className="aspect-video relative">
                     <img
                       src={
@@ -303,8 +306,8 @@ function SectionTitle({ title }: { title: string }) {
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[.32em] text-[#df8062] mb-2">Curadoria Zenkatu</p>
-        <h3 className="font-display text-2xl md:text-3xl font-bold tracking-wide border-l-2 border-[#df6848] pl-4 text-foreground">{title}</h3>
+        <p className="font-mono text-[10px] uppercase tracking-[.32em] text-primary mb-2">Curadoria Zenkatu</p>
+        <h3 className="font-display text-2xl md:text-3xl font-bold tracking-wide border-l-2 border-primary pl-4 text-foreground">{title}</h3>
       </div>
       <span aria-hidden="true" className="hidden sm:block h-px flex-1 mb-2 ml-3 bg-gradient-to-r from-border/80 to-transparent" />
     </div>
@@ -359,7 +362,7 @@ function ObrasRecentes() {
               className="w-[142px] md:w-[168px] shrink-0"
             >
               <Link href={`/obra/${obra.slug}`}>
-                <div className="group relative aspect-[2/3] rounded-sm overflow-hidden border border-white/10 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-[#df6848]/70 hover:shadow-[0_18px_40px_rgba(0,0,0,.35)]">
+                <div className="group relative aspect-[2/3] rounded-sm overflow-hidden border border-white/10 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/70 hover:shadow-[0_18px_40px_rgba(0,0,0,.35)]">
                   <img
                     src={
                       obra.capaUrl ||
@@ -370,7 +373,7 @@ function ObrasRecentes() {
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#090c14]/95 pointer-events-none" />
-                  <Badge className="absolute top-2 left-2 bg-[#df6848] text-[#171018] border-none px-2 py-0.5 text-[9px] font-bold tracking-widest shadow-md">
+                  <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground border-none px-2 py-0.5 text-[9px] font-bold tracking-widest shadow-md">
                     NOVO
                   </Badge>
                     <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
@@ -431,11 +434,11 @@ function Top10() {
             transition={{ delay: index * 0.1 }}
           >
             <Link href={`/obra/${obra.slug}`}>
-              <div className="group flex items-center gap-3 bg-card/60 hover:bg-card border border-white/8 hover:border-[#df6848]/40 p-3 rounded-sm transition-colors relative overflow-hidden">
+              <div className="group flex items-center gap-3 bg-card/60 hover:bg-card border border-white/8 hover:border-primary/40 p-3 rounded-sm transition-colors relative overflow-hidden">
                 <span className="font-display text-6xl md:text-7xl font-black text-white/[.035] italic -ml-2 select-none z-0 absolute right-2 bottom-[-15px]">
                   {(index + 1).toString().padStart(2, "0")}
                 </span>
-                <span className="font-display text-3xl font-black text-[#df8062] italic w-12 text-center z-10">
+                <span className="font-display text-3xl font-black text-primary italic w-12 text-center z-10">
                   {(index + 1).toString().padStart(2, "0")}
                 </span>
                 <img
@@ -491,7 +494,7 @@ function EpisodiosRecentes() {
             transition={{ delay: idx * 0.05 }}
           >
             <Link href={`/obra/${ep.obraSlug ?? ep.obraId}?ep=${ep.id}`}>
-              <div className="group relative rounded-sm overflow-hidden border border-white/10 bg-card hover:border-[#df6848]/60 transition-all hover:shadow-[0_16px_36px_rgba(0,0,0,.3)]">
+              <div className="group relative rounded-sm overflow-hidden border border-white/10 bg-card hover:border-primary/60 transition-all hover:shadow-[0_16px_36px_rgba(0,0,0,.3)]">
                 <div className="aspect-video relative">
                   <img
                     src={

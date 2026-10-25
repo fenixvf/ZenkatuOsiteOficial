@@ -317,7 +317,7 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="relative z-50 w-full border-b border-border/40 bg-background/95 supports-[backdrop-filter]:bg-background/80 md:sticky md:top-0 md:backdrop-blur">
         <div className="flex h-16 max-w-full items-center justify-between px-4 gap-4">
           <div className="flex items-center gap-3">
             <button

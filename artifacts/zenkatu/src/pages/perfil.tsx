@@ -243,7 +243,7 @@ export default function Perfil() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container max-w-screen-md mx-auto px-4 py-8"
+      className="container mx-auto w-full min-w-0 max-w-screen-md overflow-x-clip px-4 py-8"
     >
       <div className="flex items-center gap-3 mb-8">
         <h1 className="font-display text-3xl font-bold text-foreground">
@@ -254,7 +254,7 @@ export default function Perfil() {
         )}
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid min-w-0 gap-6">
         {/* Informações Pessoais */}
         <Card className="border-border bg-card/50 backdrop-blur">
           <CardHeader>
@@ -573,8 +573,8 @@ export default function Perfil() {
         </Card>
 
         {/* Histórico */}
-        <Card className="border-border bg-card/50 backdrop-blur">
-          <CardHeader className="flex flex-row items-start justify-between">
+        <Card className="min-w-0 border-border bg-card/50 backdrop-blur">
+          <CardHeader className="flex min-w-0 flex-row flex-wrap items-start justify-between gap-3">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <History className="w-5 h-5" />
@@ -624,10 +624,10 @@ export default function Perfil() {
                 <p className="text-xs mt-1">Assista algum episódio para ele aparecer aqui.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="w-full min-w-0 space-y-3">
                 {historico.map((item) => (
-                  <Link key={item.id} href={`/obra/${item.obraSlug}`}>
-                    <div className="flex w-full min-w-0 items-center gap-3 p-3 rounded-lg border border-border bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
+                  <Link key={item.id} href={`/obra/${item.obraSlug}`} className="block w-full min-w-0">
+                    <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border bg-background/50 p-3 transition-all hover:border-primary/40 hover:bg-primary/5 group cursor-pointer">
                       <div className="relative w-12 h-16 flex-shrink-0">
                         <img
                           src={item.obraCapaUrl || `https://placehold.co/56x80/0F1C2E/1E3A8A`}

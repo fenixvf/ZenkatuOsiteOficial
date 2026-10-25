@@ -522,7 +522,7 @@ export default function ObraDetail() {
       <div className="relative w-full aspect-[4/5] sm:aspect-[16/9] md:aspect-[21/9] lg:aspect-[3/1] max-h-[780px] isolate">
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-transparent z-10" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/50 to-transparent z-10" />
-        <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,10,18,.2),transparent_58%,rgba(220,91,59,.12))] z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(7,10,18,.2),transparent_58%,rgba(59,130,246,.12))] z-10 pointer-events-none" />
           <img
           src={obra.bannerUrl || obra.capaUrl || `https://placehold.co/1920x1080/0F1C2E/1E3A8A`}
           alt={obra.titulo}
@@ -530,7 +530,7 @@ export default function ObraDetail() {
         />
           <div className="absolute bottom-0 left-0 right-0 z-20 p-6 md:p-12 lg:p-16 container max-w-screen-2xl">
           <div className="flex flex-wrap gap-2 mb-5">
-            <Badge variant="secondary" className="bg-[#df6848] text-[#171018] border-0 font-semibold tracking-wider">{obra.ano}</Badge>
+            <Badge variant="secondary" className="bg-primary text-primary-foreground border-0 font-semibold tracking-wider">{obra.ano}</Badge>
             <Badge variant="outline" className="border-white/30 bg-black/20 text-white/90 backdrop-blur">{obra.status}</Badge>
             {obra.nota && <Badge variant="secondary" className="bg-[#e5b76a]/20 text-[#f0ca83] border border-[#e5b76a]/20">{obra.nota}/10</Badge>}
             {obra.totalEps && <Badge variant="outline" className="border-white/25 bg-black/20 text-white/85">{obra.totalEps} episódios</Badge>}
@@ -559,7 +559,7 @@ export default function ObraDetail() {
                 variant={isInLista ? "default" : "outline"}
                 onClick={handleToggleLista}
                 aria-label={isInLista ? "Remover obra da minha lista" : "Adicionar obra à minha lista"}
-                className={`ml-1 gap-2 font-display tracking-wide rounded-full ${isInLista ? "bg-[#df6848] text-[#171018] hover:bg-[#f07a57]" : "border-white/25 bg-white/5 text-white hover:border-[#df6848] hover:bg-white/10"}`}
+                className={`ml-1 gap-2 font-display tracking-wide rounded-full ${isInLista ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-white/25 bg-white/5 text-white hover:border-primary hover:bg-primary/10"}`}
               >
                 {isInLista ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
                 {isInLista ? "Na Lista" : "Minha Lista"}
@@ -591,7 +591,7 @@ export default function ObraDetail() {
 
           {/* Sinopse */}
           <div className="bg-[#111722]/85 border border-white/8 p-6 md:p-8 rounded-sm relative overflow-hidden">
-            <div aria-hidden="true" className="absolute top-0 left-0 w-20 h-px bg-[#df6848]" />
+            <div aria-hidden="true" className="absolute top-0 left-0 w-20 h-px bg-primary" />
             <h3 className="font-display text-xl font-bold mb-4 tracking-wide">Sinopse</h3>
             <p className={`text-foreground/70 leading-7 ${!isSinopseExpanded && "line-clamp-3"}`}>
               {obra.sinopse}
@@ -623,7 +623,7 @@ export default function ObraDetail() {
                   nome: string; papel: string; fotoUrl?: string;
                   links?: { youtube?: string; instagram?: string; discord?: string; twitter?: string; tiktok?: string; site?: string };
                 }>).map((member, idx) => (
-                  <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 rounded-sm border border-white/8 bg-background/40 hover:border-[#df6848]/40 transition-colors">
+                  <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 rounded-sm border border-white/8 bg-background/40 hover:border-primary/40 transition-colors">
                     <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/10 bg-secondary flex-shrink-0">
                       {member.fotoUrl ? (
                         <img src={member.fotoUrl} alt={member.nome} className="w-full h-full object-cover" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
@@ -731,7 +731,7 @@ export default function ObraDetail() {
                       aria-current={activeEpisodeId === ep.id ? "true" : undefined}
                       className={`w-full flex gap-3 p-2 rounded-lg transition-all border text-left group
                         ${activeEpisodeId === ep.id
-                          ? "bg-[#df6848]/10 border-[#df6848]/65 shadow-[inset_3px_0_0_#df6848]"
+                          ? "bg-primary/10 border-primary/65 shadow-[inset_3px_0_0_#3b82f6]"
                           : "bg-secondary/30 border-transparent hover:bg-secondary hover:border-white/10"
                         }`}
                     >
@@ -763,7 +763,7 @@ export default function ObraDetail() {
           {/* Comentários */}
           <div className="space-y-6">
             <div className="flex items-center gap-2 border-b border-white/10 pb-4">
-              <MessageSquare className="w-6 h-6 text-[#df8062]" />
+              <MessageSquare className="w-6 h-6 text-primary" />
               <h3 className="font-display text-2xl font-bold">Comentários ({topLevelComments.length})</h3>
             </div>
 
@@ -777,13 +777,13 @@ export default function ObraDetail() {
                   <Textarea
                     placeholder="Adicione um comentário..."
                     aria-label="Escreva seu comentário"
-                    className="min-h-[100px] resize-y bg-[#0b1019] border-white/10 focus-visible:ring-[#df6848]/50"
+                    className="min-h-[100px] resize-y bg-[#0b1019] border-white/10 focus-visible:ring-primary/50"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value.slice(0, 500))}
                   />
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">{newComment.length}/500</span>
-                    <Button onClick={handlePostComment} disabled={!newComment.trim()} size="sm" aria-label="Publicar comentário" className="font-display tracking-wide bg-[#df6848] text-[#171018] hover:bg-[#f07a57]">
+                    <Button onClick={handlePostComment} disabled={!newComment.trim()} size="sm" aria-label="Publicar comentário" className="font-display tracking-wide bg-primary text-primary-foreground hover:bg-primary/90">
                       <Send className="w-4 h-4 mr-2" /> Publicar
                     </Button>
                   </div>
