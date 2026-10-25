@@ -686,7 +686,7 @@ export default function ObraDetail() {
               <Play className="h-5 w-5 fill-current" />
               {activeEpisode ? `Reproduzir T${activeEpisode.temporada} E${activeEpisode.numero}` : loadingEpisodios ? "Carregando episódios..." : "Episódios em breve"}
             </button>
-            <div className="ml-auto flex shrink-0 items-center gap-3">
+            <div className="flex flex-none items-center gap-3">
               {currentUser && (
                 <Button
                   type="button"
