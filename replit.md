@@ -4,6 +4,8 @@ Site de streaming independente focado em animes, com painel admin, autenticaçã
 
 ## Run & Operate
 
+- `bash scripts/dev.sh` — start the Replit preview, with the API on port 8099 and Vite on port 5000
+- `pnpm install --filter @workspace/zenkatu... --filter @workspace/api-server... --frozen-lockfile` — install the frontend and API dependency closure without the codegen-only `api-spec` package
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm --filter @workspace/zenkatu run dev` — run the frontend (port 24662)
 - `pnpm run typecheck` — full typecheck across all packages

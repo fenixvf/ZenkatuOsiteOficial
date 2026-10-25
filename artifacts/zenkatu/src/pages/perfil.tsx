@@ -627,7 +627,7 @@ export default function Perfil() {
               <div className="space-y-3">
                 {historico.map((item) => (
                   <Link key={item.id} href={`/obra/${item.obraSlug}`}>
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
+                    <div className="flex w-full min-w-0 items-center gap-3 p-3 rounded-lg border border-border bg-background/50 hover:border-primary/40 hover:bg-primary/5 transition-all group cursor-pointer">
                       <div className="relative w-12 h-16 flex-shrink-0">
                         <img
                           src={item.obraCapaUrl || `https://placehold.co/56x80/0F1C2E/1E3A8A`}
@@ -648,7 +648,7 @@ export default function Perfil() {
                         <p className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
                           {item.obraTitulo}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <p className="min-w-0 break-words text-xs text-muted-foreground mt-0.5">
                           T{item.episodioTemporada} E{item.episodioNumero} — {item.episodioTitulo}
                         </p>
                         <p className="text-xs text-muted-foreground/60 mt-1 flex items-center gap-1">
