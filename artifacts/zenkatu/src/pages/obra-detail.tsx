@@ -28,7 +28,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users, Share2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CAST_PREVIEW_COUNT = 8;
@@ -385,6 +391,60 @@ export default function ObraDetail() {
     }
   };
 
+  const getShareUrl = () => {
+    const url = new URL(window.location.href);
+    if (activeEpisodeId) {
+      url.searchParams.set("ep", String(activeEpisodeId));
+    }
+    return url.toString();
+  };
+
+  const handleCopyShareLink = async () => {
+    const shareUrl = getShareUrl();
+    try {
+      let copied = false;
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          copied = true;
+        } catch {
+          // Fall through to the legacy copy method when clipboard permission is denied.
+        }
+      }
+      if (!copied) {
+        const textarea = document.createElement("textarea");
+        textarea.value = shareUrl;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        try {
+          textarea.select();
+          copied = document.execCommand("copy");
+        } finally {
+          textarea.remove();
+        }
+      }
+      if (!copied) throw new Error("Clipboard unavailable");
+      toast({ title: "Link copiado", description: "Compartilhe a obra com quem quiser." });
+    } catch {
+      toast({
+        title: "Não foi possível copiar o link",
+        description: "Verifique a permissão de área de transferência do navegador.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareOnWhatsApp = () => {
+    const shareUrl = getShareUrl();
+    const episodeDescription = activeEpisode
+      ? ` — T${activeEpisode.temporada} E${activeEpisode.numero}: ${activeEpisode.titulo}`
+      : "";
+    const message = `Estou assistindo ${obra?.titulo ?? "esta obra"}${episodeDescription}. Assista também: ${shareUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  };
+
   const [activeEpisodeId, setActiveEpisodeId] = useState<number | null>(epIdFromUrl);
   const [selectedSeason, setSelectedSeason] = useState<number>(1);
   const [isSinopseExpanded, setIsSinopseExpanded] = useState(false);
@@ -638,6 +698,30 @@ export default function ObraDetail() {
                 {isInLista ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
               </Button>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="outline"
+                  aria-label={`Compartilhar ${obra.titulo}`}
+                  data-testid="button-share-obra"
+                  className="h-12 w-12 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10"
+                >
+                  <Share2 className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onSelect={() => void handleCopyShareLink()} className="cursor-pointer gap-2">
+                  <Copy className="h-4 w-4" />
+                  Copiar link
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={handleShareOnWhatsApp} className="cursor-pointer gap-2">
+                  <MessageCircle className="h-4 w-4 text-green-500" />
+                  Compartilhar no WhatsApp
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </section>
