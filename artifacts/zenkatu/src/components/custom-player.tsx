@@ -76,6 +76,7 @@ export const CustomPlayer = memo(function CustomPlayer({
   const progressRef = useRef<HTMLDivElement>(null);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const episodeInfoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapRef = useRef<{ time: number; x: number } | null>(null);
 
   const [playing, setPlaying] = useState(false);
@@ -92,6 +93,7 @@ export const CustomPlayer = memo(function CustomPlayer({
   const [seekFeedback, setSeekFeedback] = useState<"back" | "forward" | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [showEpisodeInfo, setShowEpisodeInfo] = useState(true);
 
   const [resumeChoice, setResumeChoice] = useState<"pending" | "resolved">("resolved");
   const [resumeTime, setResumeTime] = useState(0);
@@ -106,6 +108,9 @@ export const CustomPlayer = memo(function CustomPlayer({
     setCurrentTime(0);
     setDuration(0);
     setBuffered(0);
+    setShowEpisodeInfo(true);
+    if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
+    episodeInfoTimerRef.current = setTimeout(() => setShowEpisodeInfo(false), 5000);
 
     const saved = readProgress(src);
     if (saved && saved.t > MIN_RESUME_TIME && (!saved.d || saved.d - saved.t > NEAR_END_THRESHOLD)) {
@@ -114,6 +119,9 @@ export const CustomPlayer = memo(function CustomPlayer({
     } else {
       setResumeChoice("resolved");
     }
+    return () => {
+      if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
+    };
   }, [src]);
 
   const applySeek = useCallback((time: number) => {
@@ -190,12 +198,16 @@ export const CustomPlayer = memo(function CustomPlayer({
     if (!video) return;
 
     const onPlay = () => {
+      if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
+      setShowEpisodeInfo(false);
       setPlaying(true);
       setIsVideoLoading(false);
     };
     const onPause = () => {
       setPlaying(false);
       saveNow();
+      if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
+      episodeInfoTimerRef.current = setTimeout(() => setShowEpisodeInfo(true), 5000);
     };
     const onEnded = () => {
       clearProgress(src);
@@ -477,7 +489,7 @@ export const CustomPlayer = memo(function CustomPlayer({
         </span>
       </div>
 
-      {(episodeTitle || episodeLabel) && (
+      {showEpisodeInfo && (episodeTitle || episodeLabel) && (
         <div className="pointer-events-none absolute bottom-[76px] left-4 z-10 max-w-[78%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:bottom-[88px] sm:left-6 sm:max-w-[72%]">
           <p className="mb-1 text-[11px] text-white/65 sm:text-sm">Você está assistindo</p>
           {episodeLabel && <p className="text-[11px] font-medium text-white/75 sm:text-xs">{episodeLabel}</p>}

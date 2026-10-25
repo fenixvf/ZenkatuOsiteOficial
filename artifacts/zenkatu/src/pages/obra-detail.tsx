@@ -53,6 +53,7 @@ const Player = memo(function Player({
   synopsis?: string;
 }) {
   const embedRef = useRef<HTMLDivElement>(null);
+  const [showEpisodeInfo, setShowEpisodeInfo] = useState(true);
   const trimmed = content.trim();
   const isHtml = trimmed.startsWith("<");
   const isDirectVideo =
@@ -70,17 +71,23 @@ const Player = memo(function Player({
   const iframeSrc = youtubeEmbed ?? trimmed;
   const showBrandOverlay = !isDirectVideo;
 
+  useEffect(() => {
+    setShowEpisodeInfo(true);
+    const timer = window.setTimeout(() => setShowEpisodeInfo(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [content]);
+
   const brandOverlay = showBrandOverlay ? (
     <>
       <div className="pointer-events-none absolute left-4 top-4 z-10 select-none rounded-full border border-white/15 bg-black/25 px-3 py-1.5 text-[10px] font-bold tracking-[0.2em] text-white/80 backdrop-blur-sm">
         ZENKATU <span className="font-medium tracking-[0.12em] text-white/55">PLAYER</span>
       </div>
-      <div className="pointer-events-none absolute bottom-12 left-4 z-10 max-w-[75%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:bottom-16 sm:left-6">
+      {showEpisodeInfo && <div className="pointer-events-none absolute bottom-12 left-4 z-10 max-w-[75%] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,.9)] sm:bottom-16 sm:left-6">
         <p className="mb-1 text-xs text-white/65 sm:text-sm">Você está assistindo</p>
         {episodeLabel && <p className="text-xs font-medium text-white/75">{episodeLabel}</p>}
         {episodeTitle && <p className="font-display text-lg font-bold leading-tight sm:text-2xl">{episodeTitle}</p>}
         {synopsis && <p className="mt-1 hidden line-clamp-2 max-w-2xl text-sm text-white/75 md:block">{synopsis}</p>}
-      </div>
+      </div>}
     </>
   ) : null;
 
@@ -657,6 +664,7 @@ export default function ObraDetail() {
                 </button>
               </div>
               <Player
+                key={activeEpisode.id}
                 content={activeEpisode.playerContent}
                 episodeNumber={activeEpisode.numero}
                 episodeLabel={`T${activeEpisode.temporada} E${activeEpisode.numero}`}
