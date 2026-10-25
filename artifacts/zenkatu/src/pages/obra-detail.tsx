@@ -686,42 +686,45 @@ export default function ObraDetail() {
               <Play className="h-5 w-5 fill-current" />
               {activeEpisode ? `Reproduzir T${activeEpisode.temporada} E${activeEpisode.numero}` : loadingEpisodios ? "Carregando episódios..." : "Episódios em breve"}
             </button>
-            {currentUser && (
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={handleToggleLista}
-                aria-label={isInLista ? "Remover obra da minha lista" : "Adicionar obra à minha lista"}
-                data-testid="button-toggle-watchlist"
-                className={`h-12 w-12 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10 ${isInLista ? "text-primary" : ""}`}
-              >
-                {isInLista ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
-              </Button>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
+            <div className="ml-auto flex shrink-0 items-center gap-3">
+              {currentUser && (
                 <Button
                   type="button"
                   size="icon"
                   variant="outline"
-                  aria-label={`Compartilhar ${obra.titulo}`}
-                  data-testid="button-share-obra"
-                  className="h-12 w-12 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10"
+                  onClick={handleToggleLista}
+                  aria-label={isInLista ? "Remover obra da minha lista" : "Adicionar obra à minha lista"}
+                  data-testid="button-toggle-watchlist"
+                  className={`h-12 w-12 shrink-0 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10 ${isInLista ? "text-primary" : ""}`}
                 >
-                  <Share2 className="h-5 w-5" />
+                  {isInLista ? <BookmarkCheck className="h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onSelect={() => void handleCopyShareLink()} className="cursor-pointer gap-2">
-                  <Copy className="h-4 w-4" />
-                  Copiar link
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleShareOnWhatsApp} className="cursor-pointer gap-2">
-                  <MessageCircle className="h-4 w-4 text-green-500" />
-                  Compartilhar no WhatsApp
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    aria-label={`Compartilhar ${obra.titulo}`}
+                    data-testid="button-share-obra"
+                    className="h-12 w-12 shrink-0 rounded-full border-white/20 bg-black/35 text-white backdrop-blur-md hover:bg-white/10"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onSelect={() => void handleCopyShareLink()} className="cursor-pointer gap-2">
+                    <Copy className="h-4 w-4" />
+                    Copiar link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleShareOnWhatsApp} className="cursor-pointer gap-2">
+                    <MessageCircle className="h-4 w-4 text-green-500" />
+                    Compartilhar no WhatsApp
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </section>
