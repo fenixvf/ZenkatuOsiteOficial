@@ -355,7 +355,7 @@ export const CustomPlayer = memo(function CustomPlayer({
         metadata.subtitle = episodeLabel || "Zenkatu";
         mediaInfo.metadata = metadata;
         const request = new chromeCast.media.LoadRequest(mediaInfo);
-        request.currentTime = video.currentTime;
+        request.currentTime = Number.isFinite(video.currentTime) ? video.currentTime : 0;
         request.autoplay = true;
         try {
           await session.loadMedia(request);
