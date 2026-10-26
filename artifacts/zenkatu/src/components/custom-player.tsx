@@ -325,7 +325,25 @@ export const CustomPlayer = memo(function CustomPlayer({
           return;
         }
 
-        const session = activeSession ?? await castContext.requestSession();
+        let session = activeSession;
+        if (!session) {
+          try {
+            session = await castContext.requestSession();
+          } catch (error: any) {
+            const cancelled = error?.code === chromeCast.ErrorCode?.CANCEL ||
+              error?.code === "cancel" ||
+              error?.code === "cancelled";
+            if (!cancelled) {
+              console.warn("[Zenkatu Cast] Falha ao conectar ao dispositivo.", {
+                code: error?.code,
+                description: error?.description,
+              });
+              showCastMessage("Não foi possível conectar à TV. Confira se ela está na mesma rede.");
+            }
+            return;
+          }
+        }
+
         const framework = castApi.framework;
         const isHls = /\.m3u8(?:[?#]|$)/i.test(src);
         const contentType = isHls
@@ -341,8 +359,19 @@ export const CustomPlayer = memo(function CustomPlayer({
 
         const request = new framework.messages.LoadRequest(mediaInfo);
         request.currentTime = video.currentTime;
-        request.autoplay = !video.paused;
-        await session.loadMedia(request);
+        request.autoplay = true;
+        try {
+          await session.loadMedia(request);
+        } catch (error: any) {
+          console.warn("[Zenkatu Cast] TV conectada, mas o arquivo não iniciou.", {
+            code: error?.code,
+            description: error?.description,
+            reason: error?.reason,
+          });
+          showCastMessage("TV conectada, mas não foi possível reproduzir este vídeo. Verifique o formato e o acesso ao arquivo.");
+          return;
+        }
+
         video.pause();
         setIsCasting(true);
         showCastMessage("Transmitindo para a TV.");
@@ -353,7 +382,12 @@ export const CustomPlayer = memo(function CustomPlayer({
           error?.code === "cancel" ||
           error?.code === "cancelled";
         if (!cancelled) {
-          showCastMessage("Não foi possível conectar. Confira se a TV está na mesma rede.");
+          console.warn("[Zenkatu Cast] Erro inesperado na transmissão.", {
+            code: error?.code,
+            description: error?.description,
+            reason: error?.reason,
+          });
+          showCastMessage("Ocorreu um erro ao iniciar a transmissão.");
         }
         return;
       }
