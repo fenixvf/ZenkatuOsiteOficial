@@ -399,7 +399,11 @@ export default function ObraDetail() {
   };
 
   const getShareUrl = () => {
-    const url = new URL(window.location.href);
+    if (!obra?.slug) return window.location.href;
+    const url = new URL(
+      `/api/share/${encodeURIComponent(obra.slug)}`,
+      window.location.origin,
+    );
     if (activeEpisodeId) {
       url.searchParams.set("ep", String(activeEpisodeId));
     }

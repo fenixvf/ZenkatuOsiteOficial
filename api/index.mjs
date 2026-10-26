@@ -18722,8 +18722,8 @@ var require_escape_html = __commonJS({
   "../../node_modules/.pnpm/escape-html@1.0.3/node_modules/escape-html/index.js"(exports, module) {
     "use strict";
     var matchHtmlRegExp = /["'&<>]/;
-    module.exports = escapeHtml;
-    function escapeHtml(string4) {
+    module.exports = escapeHtml2;
+    function escapeHtml2(string4) {
       var str = "" + string4;
       var match = matchHtmlRegExp.exec(str);
       if (!match) {
@@ -18854,13 +18854,13 @@ var require_finalhandler = __commonJS({
     "use strict";
     var debug = require_src()("finalhandler");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var onFinished = require_on_finished();
     var parseUrl = require_parseurl();
     var statuses = require_statuses();
     var isFinished = onFinished.isFinished;
     function createHtmlDocument(message) {
-      var body = escapeHtml(message).replaceAll("\n", "<br>").replaceAll("  ", " &nbsp;");
+      var body = escapeHtml2(message).replaceAll("\n", "<br>").replaceAll("  ", " &nbsp;");
       return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>Error</title>\n</head>\n<body>\n<pre>' + body + "</pre>\n</body>\n</html>\n";
     }
     module.exports = finalhandler;
@@ -20820,27 +20820,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router14;
+    module.exports = Router15;
     module.exports.Route = Route;
-    function Router14(options) {
-      if (!(this instanceof Router14)) {
-        return new Router14(options);
+    function Router15(options) {
+      if (!(this instanceof Router15)) {
+        return new Router15(options);
       }
       const opts = options || {};
-      function router14(req, res, next) {
-        router14.handle(req, res, next);
+      function router15(req, res, next) {
+        router15.handle(req, res, next);
       }
-      Object.setPrototypeOf(router14, this);
-      router14.caseSensitive = opts.caseSensitive;
-      router14.mergeParams = opts.mergeParams;
-      router14.params = {};
-      router14.strict = opts.strict;
-      router14.stack = [];
-      return router14;
+      Object.setPrototypeOf(router15, this);
+      router15.caseSensitive = opts.caseSensitive;
+      router15.mergeParams = opts.mergeParams;
+      router15.params = {};
+      router15.strict = opts.strict;
+      router15.stack = [];
+      return router15;
     }
-    Router14.prototype = function() {
+    Router15.prototype = function() {
     };
-    Router14.prototype.param = function param2(name2, fn) {
+    Router15.prototype.param = function param2(name2, fn) {
       if (!name2) {
         throw new TypeError("argument name is required");
       }
@@ -20860,7 +20860,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router14.prototype.handle = function handle(req, res, callback) {
+    Router15.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20987,7 +20987,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router14.prototype.use = function use(handler) {
+    Router15.prototype.use = function use(handler) {
       let offset = 0;
       let path2 = "/";
       if (typeof handler !== "function") {
@@ -21020,7 +21020,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router14.prototype.route = function route(path2) {
+    Router15.prototype.route = function route(path2) {
       const route2 = new Route(path2);
       const layer = new Layer(path2, {
         sensitive: this.caseSensitive,
@@ -21035,7 +21035,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router14.prototype[method] = function(path2) {
+      Router15.prototype[method] = function(path2) {
         const route = this.route(path2);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -21218,13 +21218,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router14 = require_router();
+    var Router15 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router14 = null;
+      var router15 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21233,13 +21233,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router14 === null) {
-            router14 = new Router14({
+          if (router15 === null) {
+            router15 = new Router15({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router14;
+          return router15;
         }
       });
     };
@@ -21310,15 +21310,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router14 = this.router;
+      var router15 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router14.use(path2, fn2);
+          return router15.use(path2, fn2);
         }
         debug(".use app under %s", path2);
         fn2.mountpath = path2;
         fn2.parent = this;
-        router14.use(path2, function mounted_app(req, res, next) {
+        router15.use(path2, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -22840,7 +22840,7 @@ var require_send = __commonJS({
     var createError = require_http_errors();
     var debug = require_src()("send");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
     var fs = __require("fs");
@@ -22893,7 +22893,7 @@ var require_send = __commonJS({
       }
       var res = this.res;
       var msg = statuses.message[status] || String(status);
-      var doc = createHtmlDocument("Error", escapeHtml(msg));
+      var doc = createHtmlDocument("Error", escapeHtml2(msg));
       clearHeaders(res);
       if (err && err.headers) {
         setHeaders(res, err.headers);
@@ -22993,7 +22993,7 @@ var require_send = __commonJS({
         return;
       }
       var loc = encodeUrl(collapseLeadingSlashes(this.path + "/"));
-      var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
+      var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml2(loc));
       res.statusCode = 301;
       res.setHeader("Content-Type", "text/html; charset=UTF-8");
       res.setHeader("Content-Length", Buffer.byteLength(doc));
@@ -23397,7 +23397,7 @@ var require_response = __commonJS({
     var createError = require_http_errors();
     var deprecate = require_depd()("express");
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var http = __require("node:http");
     var onFinished = require_on_finished();
     var mime = require_mime_types();
@@ -23736,7 +23736,7 @@ var require_response = __commonJS({
           body = statuses.message[status] + ". Redirecting to " + address;
         },
         html: function() {
-          var u = escapeHtml(address);
+          var u = escapeHtml2(address);
           body = "<!DOCTYPE html><head><title>" + statuses.message[status] + "</title></head><body><p>" + statuses.message[status] + ". Redirecting to " + u + "</p></body>";
         },
         default: function() {
@@ -23864,7 +23864,7 @@ var require_serve_static = __commonJS({
   "../../node_modules/.pnpm/serve-static@2.2.1/node_modules/serve-static/index.js"(exports, module) {
     "use strict";
     var encodeUrl = require_encodeurl();
-    var escapeHtml = require_escape_html();
+    var escapeHtml2 = require_escape_html();
     var parseUrl = require_parseurl();
     var resolve = __require("path").resolve;
     var send = require_send();
@@ -23950,7 +23950,7 @@ var require_serve_static = __commonJS({
         originalUrl.path = null;
         originalUrl.pathname = collapseLeadingSlashes(originalUrl.pathname + "/");
         var loc = encodeUrl(url2.format(originalUrl));
-        var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml(loc));
+        var doc = createHtmlDocument("Redirecting", "Redirecting to " + escapeHtml2(loc));
         res.statusCode = 301;
         res.setHeader("Content-Type", "text/html; charset=UTF-8");
         res.setHeader("Content-Length", Buffer.byteLength(doc));
@@ -23971,7 +23971,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router14 = require_router();
+    var Router15 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23993,8 +23993,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router14.Route;
-    exports.Router = Router14;
+    exports.Route = Router15.Route;
+    exports.Router = Router15;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -44651,14 +44651,14 @@ var require_src2 = __commonJS({
 });
 
 // src/app.ts
-var import_express14 = __toESM(require_express2(), 1);
+var import_express15 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 import path from "path";
 import { fileURLToPath } from "url";
 
 // src/routes/index.ts
-var import_express13 = __toESM(require_express2(), 1);
+var import_express14 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -66296,21 +66296,151 @@ router12.post("/zenkatuber/unlink-obra", async (req, res) => {
 });
 var zenkatuber_default = router12;
 
-// src/routes/index.ts
+// src/routes/share.ts
+var import_express13 = __toESM(require_express2(), 1);
+init_drizzle_orm();
 var router13 = (0, import_express13.Router)();
-router13.use(health_default);
-router13.use(obras_default);
-router13.use(episodios_default);
-router13.use(comentarios_default);
-router13.use(usuarios_default);
-router13.use(stats_default);
-router13.use(lista_default);
-router13.use(historico_default);
-router13.use(generos_default);
-router13.use(config_default);
-router13.use(push_default);
-router13.use(zenkatuber_default);
-var routes_default = router13;
+var socialPreviewUserAgent = /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|googlebot|bingbot|vkshare|redditbot|skypeuripreview/i;
+router13.get("/share/:slug", async (req, res) => {
+  try {
+    const [obra] = await db.select({
+      titulo: obrasTable.titulo,
+      slug: obrasTable.slug,
+      sinopse: obrasTable.sinopse,
+      capaUrl: obrasTable.capaUrl,
+      tipografiaUrl: obrasTable.tipografiaUrl
+    }).from(obrasTable).where(eq(obrasTable.slug, req.params.slug));
+    if (!obra) {
+      res.status(404).type("text/plain").send("Projeto n\xE3o encontrado.");
+      return;
+    }
+    const forwardedProtocol = req.get("x-forwarded-proto")?.split(",")[0].trim();
+    const protocol = forwardedProtocol === "https" || forwardedProtocol === "http" ? forwardedProtocol : req.protocol;
+    const host = req.get("x-forwarded-host")?.split(",")[0].trim() ?? req.get("host") ?? "localhost";
+    const origin = new URL(`${protocol}://${host}`).origin;
+    const canonicalUrl = new URL(
+      `/obra/${encodeURIComponent(obra.slug)}`,
+      origin
+    );
+    const episodeId = req.query.ep;
+    if (typeof episodeId === "string" && /^\d+$/.test(episodeId)) {
+      canonicalUrl.searchParams.set("ep", episodeId);
+    }
+    if (!socialPreviewUserAgent.test(req.get("user-agent") ?? "")) {
+      res.redirect(302, `${canonicalUrl.pathname}${canonicalUrl.search}`);
+      return;
+    }
+    const html = buildSharePage({
+      title: obra.titulo,
+      synopsis: obra.sinopse,
+      coverUrl: toAbsoluteHttpUrl(obra.capaUrl, origin),
+      typographyUrl: obra.tipografiaUrl ? toAbsoluteHttpUrl(obra.tipografiaUrl, origin) : null,
+      canonicalUrl: canonicalUrl.toString()
+    });
+    res.set("Cache-Control", "public, max-age=300, s-maxage=300");
+    res.type("html").send(html);
+  } catch (error40) {
+    req.log.error(error40, "Erro ao gerar preview de compartilhamento");
+    res.status(500).type("text/plain").send("N\xE3o foi poss\xEDvel gerar o preview.");
+  }
+});
+function buildSharePage({
+  title,
+  synopsis,
+  coverUrl,
+  typographyUrl,
+  canonicalUrl
+}) {
+  const escapedTitle = escapeHtml(title);
+  const escapedSynopsis = escapeHtml(synopsis);
+  const pageTitle = `${title} | Zenkatu`;
+  const shortDescription = synopsis.length > 157 ? `${synopsis.slice(0, 157).trimEnd()}\u2026` : synopsis;
+  const escapedPageTitle = escapeHtml(pageTitle);
+  const escapedDescription = escapeHtml(shortDescription);
+  const escapedCanonicalUrl = escapeHtml(canonicalUrl);
+  const escapedCoverUrl = coverUrl ? escapeHtml(coverUrl) : null;
+  const escapedTypographyUrl = typographyUrl ? escapeHtml(typographyUrl) : null;
+  const imageTags = escapedCoverUrl ? `
+    <meta property="og:image" content="${escapedCoverUrl}" />
+    <meta property="og:image:alt" content="Capa de ${escapedTitle}" />
+    <meta name="twitter:image" content="${escapedCoverUrl}" />
+    <meta name="twitter:image:alt" content="Capa de ${escapedTitle}" />` : "";
+  const typographyTags = escapedTypographyUrl ? `
+    <meta property="og:image" content="${escapedTypographyUrl}" />
+    <meta property="og:image:alt" content="Tipografia de ${escapedTitle}" />
+    <meta name="zenkatu:tipografia" content="${escapedTypographyUrl}" />` : "";
+  return `<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapedPageTitle}</title>
+    <meta name="description" content="${escapedDescription}" />
+    <meta property="og:title" content="${escapedPageTitle}" />
+    <meta property="og:description" content="${escapedSynopsis}" />
+    <meta property="og:url" content="${escapedCanonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Zenkatu Streaming" />
+    ${imageTags}
+    ${typographyTags}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapedPageTitle}" />
+    <meta name="twitter:description" content="${escapedSynopsis}" />
+    <link rel="canonical" href="${escapedCanonicalUrl}" />
+  </head>
+  <body>
+    <main>
+      <h1>${escapedTitle}</h1>
+      <p>${escapedSynopsis}</p>
+      ${escapedCoverUrl ? `<img src="${escapedCoverUrl}" alt="Capa de ${escapedTitle}" />` : ""}
+      ${escapedTypographyUrl ? `<img src="${escapedTypographyUrl}" alt="Tipografia de ${escapedTitle}" />` : ""}
+      <p><a href="${escapedCanonicalUrl}">Assistir no Zenkatu</a></p>
+    </main>
+  </body>
+</html>`;
+}
+function toAbsoluteHttpUrl(value, origin) {
+  try {
+    const url2 = new URL(value, origin);
+    return url2.protocol === "http:" || url2.protocol === "https:" ? url2.toString() : null;
+  } catch {
+    return null;
+  }
+}
+function escapeHtml(value) {
+  return value.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
+}
+var share_default = router13;
+
+// src/routes/index.ts
+var router14 = (0, import_express14.Router)();
+router14.use(health_default);
+router14.use(share_default);
+router14.use(obras_default);
+router14.use(episodios_default);
+router14.use(comentarios_default);
+router14.use(usuarios_default);
+router14.use(stats_default);
+router14.use(lista_default);
+router14.use(historico_default);
+router14.use(generos_default);
+router14.use(config_default);
+router14.use(push_default);
+router14.use(zenkatuber_default);
+var routes_default = router14;
 
 // src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
@@ -66332,7 +66462,7 @@ var logger = (0, import_pino.default)({
 
 // src/app.ts
 var __dirname2 = path.dirname(fileURLToPath(import.meta.url));
-var app = (0, import_express14.default)();
+var app = (0, import_express15.default)();
 app.use(
   (0, import_pino_http.pinoHttp)({
     logger,
@@ -66353,12 +66483,12 @@ app.use(
   })
 );
 app.use((0, import_cors.default)());
-app.use(import_express14.default.json({ limit: "5mb" }));
-app.use(import_express14.default.urlencoded({ extended: true, limit: "5mb" }));
+app.use(import_express15.default.json({ limit: "5mb" }));
+app.use(import_express15.default.urlencoded({ extended: true, limit: "5mb" }));
 app.use("/api", routes_default);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(process.cwd(), "artifacts/zenkatu/dist/public");
-  app.use(import_express14.default.static(frontendDist));
+  app.use(import_express15.default.static(frontendDist));
   app.use((_req, res, next) => {
     res.sendFile(path.join(frontendDist, "index.html"), (err) => {
       if (err) next(err);

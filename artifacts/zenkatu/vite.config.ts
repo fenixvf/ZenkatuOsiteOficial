@@ -52,6 +52,18 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8099",
         changeOrigin: true,
+        configure(proxy) {
+          proxy.on("proxyReq", (proxyRequest, request) => {
+            const forwardedHost =
+              request.headers["x-forwarded-host"] ?? request.headers.host;
+            const forwardedProtocol =
+              request.headers["x-forwarded-proto"] ?? "http";
+            if (forwardedHost) {
+              proxyRequest.setHeader("x-forwarded-host", forwardedHost);
+            }
+            proxyRequest.setHeader("x-forwarded-proto", forwardedProtocol);
+          });
+        },
       },
     },
   },

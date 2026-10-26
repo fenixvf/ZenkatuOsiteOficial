@@ -11,10 +11,12 @@ import generosRouter from "./generos";
 import configRouter from "./config";
 import pushRouter from "./push";
 import zenkatuberRouter from "./zenkatuber";
+import shareRouter from "./share";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(shareRouter);
 router.use(obrasRouter);
 router.use(episodiosRouter);
 router.use(comentariosRouter);
