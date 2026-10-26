@@ -177,7 +177,13 @@ export async function downloadPublicImage(
         accept: "image/avif,image/webp,image/png,image/jpeg,image/gif,application/octet-stream",
         "user-agent": "ZenkatuShareCard/1.0",
       },
-      lookup: (_hostname, _lookupOptions, callback) => {
+      lookup: (_hostname, lookupOptions, callback) => {
+        // O autoSelectFamily (padrão desde o Node 20) pede a lista de
+        // endereços; as versões antigas pedem (ip, família).
+        if (lookupOptions.all) {
+          callback(null, [{ address: pinnedAddress, family: 4 }]);
+          return;
+        }
         callback(null, pinnedAddress, 4);
       },
     };
@@ -254,6 +260,8 @@ export async function downloadPublicImage(
       request.destroy(new Error("O servidor da imagem demorou demais para responder."));
     });
     request.on("error", reject);
+    // Sem end() a requisição fica montada e nunca é enviada ao servidor.
+    request.end();
   });
 }
 

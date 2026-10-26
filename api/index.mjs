@@ -66427,7 +66427,11 @@ async function downloadPublicImage(value, redirectCount = 0) {
         accept: "image/avif,image/webp,image/png,image/jpeg,image/gif,application/octet-stream",
         "user-agent": "ZenkatuShareCard/1.0"
       },
-      lookup: (_hostname, _lookupOptions, callback) => {
+      lookup: (_hostname, lookupOptions, callback) => {
+        if (lookupOptions.all) {
+          callback(null, [{ address: pinnedAddress, family: 4 }]);
+          return;
+        }
         callback(null, pinnedAddress, 4);
       }
     };
@@ -66487,6 +66491,7 @@ async function downloadPublicImage(value, redirectCount = 0) {
       request.destroy(new Error("O servidor da imagem demorou demais para responder."));
     });
     request.on("error", reject);
+    request.end();
   });
 }
 async function getPublicIpv4Address(hostname2) {
