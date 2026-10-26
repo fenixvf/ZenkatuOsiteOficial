@@ -1,11 +1,56 @@
 import { Router } from "express";
 import { db, obrasTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import type { Request } from "express";
+import { generateShareCard } from "../lib/share-card";
 
 const router = Router();
 
 const socialPreviewUserAgent =
   /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|googlebot|bingbot|vkshare|redditbot|skypeuripreview/i;
+
+router.get("/share/:slug/image", async (req, res) => {
+  try {
+    const [obra] = await db
+      .select({
+        titulo: obrasTable.titulo,
+        sinopse: obrasTable.sinopse,
+        capaUrl: obrasTable.capaUrl,
+        tipografiaUrl: obrasTable.tipografiaUrl,
+        updatedAt: obrasTable.updatedAt,
+      })
+      .from(obrasTable)
+      .where(eq(obrasTable.slug, req.params.slug));
+
+    if (!obra) {
+      res.status(404).type("text/plain").send("Projeto não encontrado.");
+      return;
+    }
+
+    const origin = getRequestOrigin(req);
+    const coverUrl = toAbsoluteHttpUrl(obra.capaUrl, origin);
+    const typographyUrl = obra.tipografiaUrl
+      ? toAbsoluteHttpUrl(obra.tipografiaUrl, origin)
+      : null;
+    if (!coverUrl || (obra.tipografiaUrl && !typographyUrl)) {
+      throw new Error("A capa ou a tipografia do projeto não tem uma URL válida.");
+    }
+
+    const image = await generateShareCard({
+      title: obra.titulo,
+      synopsis: obra.sinopse,
+      coverUrl,
+      typographyUrl,
+      updatedAt: obra.updatedAt,
+    });
+
+    res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
+    res.type("image/jpeg").send(image);
+  } catch (error) {
+    req.log.error(error, "Erro ao gerar a imagem de compartilhamento");
+    res.status(502).type("text/plain").send("Não foi possível gerar a imagem do preview.");
+  }
+});
 
 router.get("/share/:slug", async (req, res) => {
   try {
@@ -16,6 +61,7 @@ router.get("/share/:slug", async (req, res) => {
         sinopse: obrasTable.sinopse,
         capaUrl: obrasTable.capaUrl,
         tipografiaUrl: obrasTable.tipografiaUrl,
+        updatedAt: obrasTable.updatedAt,
       })
       .from(obrasTable)
       .where(eq(obrasTable.slug, req.params.slug));
@@ -25,19 +71,7 @@ router.get("/share/:slug", async (req, res) => {
       return;
     }
 
-    const forwardedProtocol = req
-      .get("x-forwarded-proto")
-      ?.split(",")[0]
-      .trim();
-    const protocol =
-      forwardedProtocol === "https" || forwardedProtocol === "http"
-        ? forwardedProtocol
-        : req.protocol;
-    const host =
-      req.get("x-forwarded-host")?.split(",")[0].trim() ??
-      req.get("host") ??
-      "localhost";
-    const origin = new URL(`${protocol}://${host}`).origin;
+    const origin = getRequestOrigin(req);
     const canonicalUrl = new URL(
       `/obra/${encodeURIComponent(obra.slug)}`,
       origin,
@@ -59,6 +93,7 @@ router.get("/share/:slug", async (req, res) => {
       typographyUrl: obra.tipografiaUrl
         ? toAbsoluteHttpUrl(obra.tipografiaUrl, origin)
         : null,
+      shareCardUrl: createShareCardUrl(obra.slug, obra.updatedAt, origin),
       canonicalUrl: canonicalUrl.toString(),
     });
 
@@ -75,12 +110,14 @@ function buildSharePage({
   synopsis,
   coverUrl,
   typographyUrl,
+  shareCardUrl,
   canonicalUrl,
 }: {
   title: string;
   synopsis: string;
   coverUrl: string | null;
   typographyUrl: string | null;
+  shareCardUrl: string;
   canonicalUrl: string;
 }) {
   const escapedTitle = escapeHtml(title);
@@ -95,19 +132,17 @@ function buildSharePage({
   const escapedTypographyUrl = typographyUrl
     ? escapeHtml(typographyUrl)
     : null;
-
-  const imageTags = escapedCoverUrl
-    ? `
-    <meta property="og:image" content="${escapedCoverUrl}" />
-    <meta property="og:image:alt" content="Capa de ${escapedTitle}" />
-    <meta name="twitter:image" content="${escapedCoverUrl}" />
-    <meta name="twitter:image:alt" content="Capa de ${escapedTitle}" />`
-    : "";
+  const escapedShareCardUrl = escapeHtml(shareCardUrl);
+  const imageTags = `
+    <meta property="og:image" content="${escapedShareCardUrl}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Capa de ${escapedTitle} com a tipografia do projeto" />
+    <meta name="twitter:image" content="${escapedShareCardUrl}" />
+    <meta name="twitter:image:alt" content="Capa de ${escapedTitle} com a tipografia do projeto" />`;
   const typographyTags = escapedTypographyUrl
-    ? `
-    <meta property="og:image" content="${escapedTypographyUrl}" />
-    <meta property="og:image:alt" content="Tipografia de ${escapedTitle}" />
-    <meta name="zenkatu:tipografia" content="${escapedTypographyUrl}" />`
+    ? `<meta name="zenkatu:tipografia" content="${escapedTypographyUrl}" />`
     : "";
 
   return `<!doctype html>
@@ -139,6 +174,31 @@ function buildSharePage({
     </main>
   </body>
 </html>`;
+}
+
+function createShareCardUrl(slug: string, updatedAt: Date, origin: string) {
+  const url = new URL(
+    `/api/share/${encodeURIComponent(slug)}/image`,
+    origin,
+  );
+  url.searchParams.set("v", String(updatedAt.getTime()));
+  return url.toString();
+}
+
+function getRequestOrigin(req: Request): string {
+  const forwardedProtocol = req
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    .trim();
+  const protocol =
+    forwardedProtocol === "https" || forwardedProtocol === "http"
+      ? forwardedProtocol
+      : req.protocol;
+  const host =
+    req.get("x-forwarded-host")?.split(",")[0].trim() ??
+    req.get("host") ??
+    "localhost";
+  return new URL(`${protocol}://${host}`).origin;
 }
 
 function toAbsoluteHttpUrl(value: string, origin: string): string | null {
