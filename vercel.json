@@ -5,6 +5,7 @@
   "outputDirectory": "artifacts/zenkatu/dist/public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.mjs" },
+    { "source": "/obra/:slug", "destination": "/api/index.mjs?slug=:slug" },
     { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ],
   "env": {

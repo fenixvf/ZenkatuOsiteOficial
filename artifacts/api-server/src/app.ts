@@ -5,6 +5,7 @@ import type { IncomingMessage, ServerResponse } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import router from "./routes";
+import obraPageRouter from "./routes/obra-page";
 import { logger } from "./lib/logger";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -35,6 +36,10 @@ app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 app.use("/api", router);
+
+// Páginas de obra servidas pelo servidor com metatags de preview social.
+// Precisa vir antes do fallback estático para funcionar também fora da Vercel.
+app.use(obraPageRouter);
 
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path.resolve(process.cwd(), "artifacts/zenkatu/dist/public");

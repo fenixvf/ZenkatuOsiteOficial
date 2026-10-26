@@ -151,7 +151,7 @@ async function createShareCard({
     .toBuffer();
 }
 
-async function downloadPublicImage(
+export async function downloadPublicImage(
   value: string,
   redirectCount = 0,
 ): Promise<Buffer> {
@@ -326,6 +326,71 @@ function wrapText(value: string, maxCharacters: number, maxLines: number): strin
     lines[lines.length - 1] = `${lastLine.slice(0, maxCharacters - 1).trimEnd()}…`;
   }
   return lines;
+}
+
+/**
+ * Rede de segurança para formatos que o Sharp não consegue processar (ou para
+ * falhas pontuais de decode). Sempre devolve uma imagem utilizável como
+ * og:image: prioriza JPEG recortado em 1200x630 e, se o Sharp falhar, os
+ * bytes originais com o Content-Type correto para o formato de origem.
+ */
+export async function renderImageFallback(
+  url: string,
+): Promise<{ buffer: Buffer; contentType: string }> {
+  const raw = await downloadPublicImage(url);
+
+  try {
+    const jpeg = await sharp(raw, { limitInputPixels: MAX_IMAGE_PIXELS })
+      .rotate()
+      .resize(CARD_WIDTH, CARD_HEIGHT, {
+        fit: "cover",
+        position: "attention",
+      })
+      .jpeg({ quality: 86 })
+      .toBuffer();
+    return { buffer: jpeg, contentType: "image/jpeg" };
+  } catch {
+    return { buffer: raw, contentType: sniffImageContentType(raw) };
+  }
+}
+
+export function sniffImageContentType(buffer: Buffer): string {
+  const ascii = (start: number, length: number) =>
+    buffer.subarray(start, start + length).toString("latin1");
+
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (
+    buffer.length >= 8 &&
+    buffer[0] === 0x89 &&
+    ascii(1, 3) === "PNG"
+  ) {
+    return "image/png";
+  }
+  const gifHeader = ascii(0, 6);
+  if (gifHeader === "GIF87a" || gifHeader === "GIF89a") {
+    return "image/gif";
+  }
+  if (ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP") {
+    return "image/webp";
+  }
+  if (ascii(4, 4) === "ftyp") {
+    const brand = ascii(8, 4);
+    return brand === "avif" || brand === "avis" ? "image/avif" : "image/heif";
+  }
+  if (ascii(0, 2) === "BM") return "image/bmp";
+  if (
+    (ascii(0, 4) === "II*\u0000" || ascii(0, 4) === "MM\u0000*")
+  ) {
+    return "image/tiff";
+  }
+
+  const head = buffer.subarray(0, 512).toString("utf8").trimStart();
+  if (head.startsWith("<svg") || head.startsWith("<?xml")) {
+    return "image/svg+xml";
+  }
+  return "application/octet-stream";
 }
 
 function escapeXml(value: string): string {

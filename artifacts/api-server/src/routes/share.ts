@@ -1,13 +1,16 @@
 import { Router } from "express";
 import { db, obrasTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import type { Request } from "express";
-import { generateShareCard } from "../lib/share-card";
+import { generateShareCard, renderImageFallback } from "../lib/share-card";
+import {
+  buildSharePage,
+  createShareCardUrl,
+  getRequestOrigin,
+  socialPreviewUserAgent,
+  toAbsoluteHttpUrl,
+} from "../lib/share-page";
 
 const router = Router();
-
-const socialPreviewUserAgent =
-  /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|googlebot|bingbot|vkshare|redditbot|skypeuripreview/i;
 
 router.get("/share/:slug/image", async (req, res) => {
   try {
@@ -36,16 +39,29 @@ router.get("/share/:slug/image", async (req, res) => {
       throw new Error("A capa ou a tipografia do projeto não tem uma URL válida.");
     }
 
-    const image = await generateShareCard({
-      title: obra.titulo,
-      synopsis: obra.sinopse,
-      coverUrl,
-      typographyUrl,
-      updatedAt: obra.updatedAt,
-    });
-
     res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
-    res.type("image/jpeg").send(image);
+
+    try {
+      const image = await generateShareCard({
+        title: obra.titulo,
+        synopsis: obra.sinopse,
+        coverUrl,
+        typographyUrl,
+        updatedAt: obra.updatedAt,
+      });
+      res.type("image/jpeg").send(image);
+      return;
+    } catch (cardError) {
+      // Compatibilidade entre formatos: se o card não puder ser montado
+      // (formato exótico da capa, timeout, etc.), serve a capa normalizada
+      // para o preview continuar carregando no Discord/WhatsApp.
+      req.log.warn(
+        { err: cardError, slug: req.params.slug },
+        "Card de compartilhamento falhou; usando a capa como fallback",
+      );
+      const fallback = await renderImageFallback(coverUrl);
+      res.type(fallback.contentType).send(fallback.buffer);
+    }
   } catch (error) {
     req.log.error(error, "Erro ao gerar a imagem de compartilhamento");
     res.status(502).type("text/plain").send("Não foi possível gerar a imagem do preview.");
@@ -104,129 +120,5 @@ router.get("/share/:slug", async (req, res) => {
     res.status(500).type("text/plain").send("Não foi possível gerar o preview.");
   }
 });
-
-function buildSharePage({
-  title,
-  synopsis,
-  coverUrl,
-  typographyUrl,
-  shareCardUrl,
-  canonicalUrl,
-}: {
-  title: string;
-  synopsis: string;
-  coverUrl: string | null;
-  typographyUrl: string | null;
-  shareCardUrl: string;
-  canonicalUrl: string;
-}) {
-  const escapedTitle = escapeHtml(title);
-  const escapedSynopsis = escapeHtml(synopsis);
-  const pageTitle = `${title} | Zenkatu`;
-  const shortDescription =
-    synopsis.length > 157 ? `${synopsis.slice(0, 157).trimEnd()}…` : synopsis;
-  const escapedPageTitle = escapeHtml(pageTitle);
-  const escapedDescription = escapeHtml(shortDescription);
-  const escapedCanonicalUrl = escapeHtml(canonicalUrl);
-  const escapedCoverUrl = coverUrl ? escapeHtml(coverUrl) : null;
-  const escapedTypographyUrl = typographyUrl
-    ? escapeHtml(typographyUrl)
-    : null;
-  const escapedShareCardUrl = escapeHtml(shareCardUrl);
-  const imageTags = `
-    <meta property="og:image" content="${escapedShareCardUrl}" />
-    <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Capa de ${escapedTitle} com a tipografia do projeto" />
-    <meta name="twitter:image" content="${escapedShareCardUrl}" />
-    <meta name="twitter:image:alt" content="Capa de ${escapedTitle} com a tipografia do projeto" />`;
-  const typographyTags = escapedTypographyUrl
-    ? `<meta name="zenkatu:tipografia" content="${escapedTypographyUrl}" />`
-    : "";
-
-  return `<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapedPageTitle}</title>
-    <meta name="description" content="${escapedDescription}" />
-    <meta property="og:title" content="${escapedPageTitle}" />
-    <meta property="og:description" content="${escapedSynopsis}" />
-    <meta property="og:url" content="${escapedCanonicalUrl}" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Zenkatu Streaming" />
-    ${imageTags}
-    ${typographyTags}
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${escapedPageTitle}" />
-    <meta name="twitter:description" content="${escapedSynopsis}" />
-    <link rel="canonical" href="${escapedCanonicalUrl}" />
-  </head>
-  <body>
-    <main>
-      <h1>${escapedTitle}</h1>
-      <p>${escapedSynopsis}</p>
-      ${escapedCoverUrl ? `<img src="${escapedCoverUrl}" alt="Capa de ${escapedTitle}" />` : ""}
-      ${escapedTypographyUrl ? `<img src="${escapedTypographyUrl}" alt="Tipografia de ${escapedTitle}" />` : ""}
-      <p><a href="${escapedCanonicalUrl}">Assistir no Zenkatu</a></p>
-    </main>
-  </body>
-</html>`;
-}
-
-function createShareCardUrl(slug: string, updatedAt: Date, origin: string) {
-  const url = new URL(
-    `/api/share/${encodeURIComponent(slug)}/image`,
-    origin,
-  );
-  url.searchParams.set("v", String(updatedAt.getTime()));
-  return url.toString();
-}
-
-function getRequestOrigin(req: Request): string {
-  const forwardedProtocol = req
-    .get("x-forwarded-proto")
-    ?.split(",")[0]
-    .trim();
-  const protocol =
-    forwardedProtocol === "https" || forwardedProtocol === "http"
-      ? forwardedProtocol
-      : req.protocol;
-  const host =
-    req.get("x-forwarded-host")?.split(",")[0].trim() ??
-    req.get("host") ??
-    "localhost";
-  return new URL(`${protocol}://${host}`).origin;
-}
-
-function toAbsoluteHttpUrl(value: string, origin: string): string | null {
-  try {
-    const url = new URL(value, origin);
-    return url.protocol === "http:" || url.protocol === "https:"
-      ? url.toString()
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-function escapeHtml(value: string): string {
-  return value.replace(/[&<>"']/g, (character) => {
-    switch (character) {
-      case "&":
-        return "&amp;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case '"':
-        return "&quot;";
-      default:
-        return "&#39;";
-    }
-  });
-}
 
 export default router;

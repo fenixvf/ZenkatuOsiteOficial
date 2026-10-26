@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
 import esbuildPluginPino from "esbuild-plugin-pino";
-import { rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 
 globalThis.require = createRequire(import.meta.url);
 
@@ -43,6 +43,22 @@ async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   const apiDir = path.resolve(artifactDir, "../../api");
 
+  // Embute o HTML do frontend no bundle da function: na Vercel o arquivo
+  // gerado pelo build não está no sistema de arquivos da function em runtime,
+  // então a rota /obra/:slug o carrega daqui (com fallback para disco).
+  let spaIndexHtml = "";
+  try {
+    spaIndexHtml = await readFile(
+      path.resolve(artifactDir, "../zenkatu/dist/public/index.html"),
+      "utf8",
+    );
+  } catch {
+    console.warn(
+      "[build] index.html do frontend não encontrado; a rota /obra/:slug usará o fallback em disco.",
+    );
+  }
+  const spaDefine = { __SPA_INDEX_HTML__: JSON.stringify(spaIndexHtml) };
+
   await rm(distDir, { recursive: true, force: true });
 
   // Main server entry (with app.listen — for Replit / Render / Railway)
@@ -56,6 +72,7 @@ async function buildAll() {
     logLevel: "info",
     external,
     sourcemap: "linked",
+    define: spaDefine,
     plugins,
     banner,
   });
@@ -74,6 +91,7 @@ async function buildAll() {
     logLevel: "info",
     external,
     sourcemap: false,
+    define: spaDefine,
     plugins,
     banner,
   });
