@@ -344,31 +344,31 @@ export const CustomPlayer = memo(function CustomPlayer({
           }
         }
 
-        const framework = castApi.framework;
         const isHls = /\.m3u8(?:[?#]|$)/i.test(src);
         const contentType = isHls
           ? "application/x-mpegURL"
           : /\.webm(?:[?#]|$)/i.test(src) ? "video/webm" : "video/mp4";
-        const mediaInfo = new framework.messages.MediaInfo(src, contentType);
-        mediaInfo.streamType = framework.messages.StreamType.BUFFERED;
-        const metadata = new framework.messages.GenericMediaMetadata();
+        const mediaInfo = new chromeCast.media.MediaInfo(src, contentType);
+        mediaInfo.streamType = chromeCast.media.StreamType.BUFFERED;
+        const metadata = new chromeCast.media.GenericMediaMetadata();
         metadata.title = episodeTitle || episodeLabel || "Zenkatu";
         metadata.subtitle = episodeLabel || "Zenkatu";
-        if (synopsis) metadata.description = synopsis;
         mediaInfo.metadata = metadata;
-
-        const request = new framework.messages.LoadRequest(mediaInfo);
+        const request = new chromeCast.media.LoadRequest(mediaInfo);
         request.currentTime = video.currentTime;
         request.autoplay = true;
         try {
           await session.loadMedia(request);
         } catch (error: any) {
+          const errorCode = typeof error === "string"
+            ? error
+            : error?.code || error?.errorCode || error?.message || error?.description || "erro desconhecido";
           console.warn("[Zenkatu Cast] TV conectada, mas o arquivo não iniciou.", {
-            code: error?.code,
+            code: errorCode,
             description: error?.description,
             reason: error?.reason,
           });
-          showCastMessage("TV conectada, mas não foi possível reproduzir este vídeo. Verifique o formato e o acesso ao arquivo.");
+          showCastMessage(`TV conectada, mas o vídeo não iniciou (${errorCode}).`);
           return;
         }
 
@@ -382,12 +382,16 @@ export const CustomPlayer = memo(function CustomPlayer({
           error?.code === "cancel" ||
           error?.code === "cancelled";
         if (!cancelled) {
+          const errorCode = typeof error === "string"
+            ? error
+            : error?.code || error?.errorCode || error?.message || error?.description || "erro desconhecido";
           console.warn("[Zenkatu Cast] Erro inesperado na transmissão.", {
-            code: error?.code,
+            name: error?.name,
+            code: errorCode,
             description: error?.description,
             reason: error?.reason,
           });
-          showCastMessage("Ocorreu um erro ao iniciar a transmissão.");
+          showCastMessage(`Erro ao preparar o vídeo para a TV (${errorCode}).`);
         }
         return;
       }
