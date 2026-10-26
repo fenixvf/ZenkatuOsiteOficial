@@ -22217,7 +22217,7 @@ var require_request = __commonJS({
   "../../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/request.js"(exports, module) {
     "use strict";
     var accepts = require_accepts();
-    var isIP = __require("node:net").isIP;
+    var isIP2 = __require("node:net").isIP;
     var typeis = require_type_is();
     var http = __require("node:http");
     var fresh = require_fresh();
@@ -22307,7 +22307,7 @@ var require_request = __commonJS({
       var hostname2 = this.hostname;
       if (!hostname2) return [];
       var offset = this.app.get("subdomain offset");
-      var subdomains2 = !isIP(hostname2) ? hostname2.split(".").reverse() : [hostname2];
+      var subdomains2 = !isIP2(hostname2) ? hostname2.split(".").reverse() : [hostname2];
       return subdomains2.slice(offset);
     });
     defineGetter(req, "path", function path2() {
@@ -66299,8 +66299,296 @@ var zenkatuber_default = router12;
 // src/routes/share.ts
 var import_express13 = __toESM(require_express2(), 1);
 init_drizzle_orm();
+
+// src/lib/share-card.ts
+import { createHash } from "node:crypto";
+import { lookup as dnsLookup } from "node:dns/promises";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import { isIP } from "node:net";
+import sharp from "sharp";
+var CARD_WIDTH = 1200;
+var CARD_HEIGHT = 630;
+var MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+var MAX_IMAGE_PIXELS = 25e6;
+var REMOTE_TIMEOUT_MS = 8e3;
+var CACHE_TTL_MS = 15 * 60 * 1e3;
+var MAX_CACHED_CARDS = 40;
+var cardCache = /* @__PURE__ */ new Map();
+var cardsBeingGenerated = /* @__PURE__ */ new Map();
+async function generateShareCard(input) {
+  const cacheKey = createHash("sha256").update(
+    JSON.stringify({
+      title: input.title,
+      synopsis: input.synopsis,
+      coverUrl: input.coverUrl,
+      typographyUrl: input.typographyUrl,
+      updatedAt: input.updatedAt.toISOString()
+    })
+  ).digest("hex");
+  const cached2 = cardCache.get(cacheKey);
+  if (cached2 && cached2.expiresAt > Date.now()) return cached2.image;
+  if (cached2) cardCache.delete(cacheKey);
+  const pending = cardsBeingGenerated.get(cacheKey);
+  if (pending) return pending;
+  const generation = createShareCard(input);
+  cardsBeingGenerated.set(cacheKey, generation);
+  try {
+    const image = await generation;
+    cardCache.set(cacheKey, { image, expiresAt: Date.now() + CACHE_TTL_MS });
+    while (cardCache.size > MAX_CACHED_CARDS) {
+      const oldestKey = cardCache.keys().next().value;
+      if (!oldestKey) break;
+      cardCache.delete(oldestKey);
+    }
+    return image;
+  } finally {
+    cardsBeingGenerated.delete(cacheKey);
+  }
+}
+async function createShareCard({
+  title,
+  synopsis,
+  coverUrl,
+  typographyUrl
+}) {
+  const [cover, typography] = await Promise.all([
+    downloadPublicImage(coverUrl),
+    typographyUrl ? downloadPublicImage(typographyUrl) : Promise.resolve(null)
+  ]);
+  const titleLines = wrapText(title, 34, 2);
+  const synopsisLines = wrapText(synopsis, 58, 3);
+  const logo = typography ? await sharp(typography, { limitInputPixels: MAX_IMAGE_PIXELS }).resize({
+    width: 500,
+    height: 190,
+    fit: "inside",
+    withoutEnlargement: true
+  }).png().toBuffer({ resolveWithObject: true }) : null;
+  const titleY = logo ? Math.max(330, 108 + logo.info.height + 34) : 205;
+  const titleText = titleLines.map(
+    (line2, index) => `<text x="66" y="${titleY + index * 42}" class="title">${escapeXml(line2)}</text>`
+  ).join("");
+  const synopsisY = titleY + titleLines.length * 42 + 22;
+  const synopsisText = synopsisLines.map(
+    (line2, index) => `<text x="68" y="${synopsisY + index * 29}" class="synopsis">${escapeXml(line2)}</text>`
+  ).join("");
+  const overlay = Buffer.from(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="${CARD_WIDTH}" height="${CARD_HEIGHT}" viewBox="0 0 ${CARD_WIDTH} ${CARD_HEIGHT}">
+      <defs>
+        <linearGradient id="shade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#050914" stop-opacity="0.98"/>
+          <stop offset="47%" stop-color="#050914" stop-opacity="0.9"/>
+          <stop offset="72%" stop-color="#050914" stop-opacity="0.48"/>
+          <stop offset="100%" stop-color="#050914" stop-opacity="0.16"/>
+        </linearGradient>
+        <linearGradient id="bottom" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="50%" stop-color="#050914" stop-opacity="0"/>
+          <stop offset="100%" stop-color="#050914" stop-opacity="0.55"/>
+        </linearGradient>
+        <style>
+          .brand { font: 700 17px Arial, sans-serif; letter-spacing: 4px; fill: #75a9ff; }
+          .title { font: 700 34px Arial, sans-serif; fill: #fff; }
+          .synopsis { font: 400 19px Arial, sans-serif; fill: #e5e7eb; }
+          .button { font: 700 15px Arial, sans-serif; letter-spacing: 1px; fill: #fff; }
+        </style>
+      </defs>
+      <rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="#050914" fill-opacity="0.18"/>
+      <rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="url(#shade)"/>
+      <rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="url(#bottom)"/>
+      <text x="68" y="58" class="brand">ZENKATU STREAMING</text>
+      ${logo ? `<rect x="56" y="82" width="530" height="225" rx="18" fill="#050914" fill-opacity="0.22"/>` : ""}
+      ${titleText}
+      ${synopsisText}
+      <rect x="66" y="567" width="226" height="42" rx="21" fill="#3178f6"/>
+      <text x="179" y="594" class="button" text-anchor="middle">ASSISTA NO ZENKATU</text>
+    </svg>
+  `);
+  const layers = [
+    { input: overlay, left: 0, top: 0 }
+  ];
+  if (logo) {
+    layers.push({ input: logo.data, left: 70, top: 100 });
+  }
+  const background = await sharp(cover, { limitInputPixels: MAX_IMAGE_PIXELS }).rotate().resize(CARD_WIDTH, CARD_HEIGHT, { fit: "cover", position: "attention" }).jpeg({ quality: 86 }).toBuffer();
+  return sharp(background).composite(layers).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
+}
+async function downloadPublicImage(value, redirectCount = 0) {
+  if (redirectCount > 3) {
+    throw new Error("A imagem excedeu o limite de redirecionamentos.");
+  }
+  const url2 = new URL(value);
+  if (url2.protocol !== "http:" && url2.protocol !== "https:" || url2.username || url2.password || url2.port && url2.port !== (url2.protocol === "https:" ? "443" : "80")) {
+    throw new Error("A URL da imagem n\xE3o \xE9 permitida.");
+  }
+  const pinnedAddress = await getPublicIpv4Address(url2.hostname);
+  return new Promise((resolve, reject) => {
+    const options = {
+      headers: {
+        accept: "image/avif,image/webp,image/png,image/jpeg,image/gif,application/octet-stream",
+        "user-agent": "ZenkatuShareCard/1.0"
+      },
+      lookup: (_hostname, _lookupOptions, callback) => {
+        callback(null, pinnedAddress, 4);
+      }
+    };
+    const onResponse = (response) => {
+      const statusCode = response.statusCode ?? 0;
+      if ([301, 302, 303, 307, 308].includes(statusCode)) {
+        const location = response.headers.location;
+        response.resume();
+        response.once("end", () => {
+          if (!location) {
+            reject(new Error("A imagem redirecionou sem informar o destino."));
+            return;
+          }
+          downloadPublicImage(new URL(location, url2).toString(), redirectCount + 1).then(resolve, reject);
+        });
+        return;
+      }
+      if (statusCode !== 200) {
+        response.resume();
+        reject(new Error(`O servidor da imagem respondeu com HTTP ${statusCode}.`));
+        return;
+      }
+      const contentType = response.headers["content-type"]?.split(";")[0].trim().toLowerCase();
+      if (contentType && !contentType.startsWith("image/") && contentType !== "application/octet-stream") {
+        response.resume();
+        reject(new Error("O endere\xE7o informado n\xE3o retornou uma imagem."));
+        return;
+      }
+      const contentLength = Number(response.headers["content-length"]);
+      if (Number.isFinite(contentLength) && contentLength > MAX_IMAGE_BYTES) {
+        response.resume();
+        reject(new Error("A imagem excede o tamanho m\xE1ximo permitido."));
+        return;
+      }
+      const chunks = [];
+      let totalBytes = 0;
+      response.on("data", (chunk) => {
+        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        totalBytes += buffer.length;
+        if (totalBytes > MAX_IMAGE_BYTES) {
+          response.destroy(new Error("A imagem excede o tamanho m\xE1ximo permitido."));
+          return;
+        }
+        chunks.push(buffer);
+      });
+      response.on("end", () => {
+        if (totalBytes === 0) {
+          reject(new Error("O servidor retornou uma imagem vazia."));
+          return;
+        }
+        resolve(Buffer.concat(chunks, totalBytes));
+      });
+      response.on("error", reject);
+    };
+    const request = url2.protocol === "https:" ? httpsRequest(url2, options, onResponse) : httpRequest(url2, options, onResponse);
+    request.setTimeout(REMOTE_TIMEOUT_MS, () => {
+      request.destroy(new Error("O servidor da imagem demorou demais para responder."));
+    });
+    request.on("error", reject);
+  });
+}
+async function getPublicIpv4Address(hostname2) {
+  const ipVersion = isIP(hostname2);
+  if (ipVersion === 4) {
+    if (!isPublicIpv4(hostname2)) throw new Error("A URL da imagem usa um IP privado.");
+    return hostname2;
+  }
+  if (ipVersion !== 0) {
+    throw new Error("Endere\xE7os IPv6 n\xE3o s\xE3o aceitos para imagens compartilhadas.");
+  }
+  const records = await dnsLookup(hostname2, { all: true, family: 4, verbatim: true });
+  if (records.length === 0 || records.some(({ address }) => !isPublicIpv4(address))) {
+    throw new Error("O dom\xEDnio da imagem n\xE3o aponta apenas para IPs p\xFAblicos.");
+  }
+  return records[0].address;
+}
+function isPublicIpv4(address) {
+  if (isIP(address) !== 4) return false;
+  const [a, b, c] = address.split(".").map(Number);
+  return !(a === 0 || a === 10 || a === 127 || a >= 224 || a === 100 && b >= 64 && b <= 127 || a === 169 && b === 254 || a === 172 && b >= 16 && b <= 31 || a === 192 && b === 0 && (c === 0 || c === 2) || a === 192 && b === 88 && c === 99 || a === 192 && b === 168 || a === 198 && (b === 18 || b === 19 || b === 51 && c === 100) || a === 203 && b === 0 && c === 113);
+}
+function wrapText(value, maxCharacters, maxLines) {
+  const segments = value.trim().split(/\s+/).flatMap((word) => {
+    if (word.length <= maxCharacters) return [word];
+    return word.match(new RegExp(`.{1,${maxCharacters}}`, "gu")) ?? [word];
+  });
+  const lines = [];
+  let currentLine = "";
+  let index = 0;
+  for (; index < segments.length; index += 1) {
+    const candidate = currentLine ? `${currentLine} ${segments[index]}` : segments[index];
+    if (candidate.length <= maxCharacters) {
+      currentLine = candidate;
+      continue;
+    }
+    if (currentLine) lines.push(currentLine);
+    currentLine = segments[index];
+    if (lines.length === maxLines) break;
+  }
+  if (currentLine && lines.length < maxLines) lines.push(currentLine);
+  if (index < segments.length - 1 && lines.length > 0) {
+    const lastLine = lines[lines.length - 1];
+    lines[lines.length - 1] = `${lastLine.slice(0, maxCharacters - 1).trimEnd()}\u2026`;
+  }
+  return lines;
+}
+function escapeXml(value) {
+  return value.replace(/[&<>"']/g, (character) => {
+    switch (character) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      case "'":
+        return "&apos;";
+      default:
+        return character;
+    }
+  });
+}
+
+// src/routes/share.ts
 var router13 = (0, import_express13.Router)();
 var socialPreviewUserAgent = /facebookexternalhit|facebot|twitterbot|slackbot|discordbot|telegrambot|whatsapp|linkedinbot|pinterest|googlebot|bingbot|vkshare|redditbot|skypeuripreview/i;
+router13.get("/share/:slug/image", async (req, res) => {
+  try {
+    const [obra] = await db.select({
+      titulo: obrasTable.titulo,
+      sinopse: obrasTable.sinopse,
+      capaUrl: obrasTable.capaUrl,
+      tipografiaUrl: obrasTable.tipografiaUrl,
+      updatedAt: obrasTable.updatedAt
+    }).from(obrasTable).where(eq(obrasTable.slug, req.params.slug));
+    if (!obra) {
+      res.status(404).type("text/plain").send("Projeto n\xE3o encontrado.");
+      return;
+    }
+    const origin = getRequestOrigin(req);
+    const coverUrl = toAbsoluteHttpUrl(obra.capaUrl, origin);
+    const typographyUrl = obra.tipografiaUrl ? toAbsoluteHttpUrl(obra.tipografiaUrl, origin) : null;
+    if (!coverUrl || obra.tipografiaUrl && !typographyUrl) {
+      throw new Error("A capa ou a tipografia do projeto n\xE3o tem uma URL v\xE1lida.");
+    }
+    const image = await generateShareCard({
+      title: obra.titulo,
+      synopsis: obra.sinopse,
+      coverUrl,
+      typographyUrl,
+      updatedAt: obra.updatedAt
+    });
+    res.set("Cache-Control", "public, max-age=3600, s-maxage=86400");
+    res.type("image/jpeg").send(image);
+  } catch (error40) {
+    req.log.error(error40, "Erro ao gerar a imagem de compartilhamento");
+    res.status(502).type("text/plain").send("N\xE3o foi poss\xEDvel gerar a imagem do preview.");
+  }
+});
 router13.get("/share/:slug", async (req, res) => {
   try {
     const [obra] = await db.select({
@@ -66308,16 +66596,14 @@ router13.get("/share/:slug", async (req, res) => {
       slug: obrasTable.slug,
       sinopse: obrasTable.sinopse,
       capaUrl: obrasTable.capaUrl,
-      tipografiaUrl: obrasTable.tipografiaUrl
+      tipografiaUrl: obrasTable.tipografiaUrl,
+      updatedAt: obrasTable.updatedAt
     }).from(obrasTable).where(eq(obrasTable.slug, req.params.slug));
     if (!obra) {
       res.status(404).type("text/plain").send("Projeto n\xE3o encontrado.");
       return;
     }
-    const forwardedProtocol = req.get("x-forwarded-proto")?.split(",")[0].trim();
-    const protocol = forwardedProtocol === "https" || forwardedProtocol === "http" ? forwardedProtocol : req.protocol;
-    const host = req.get("x-forwarded-host")?.split(",")[0].trim() ?? req.get("host") ?? "localhost";
-    const origin = new URL(`${protocol}://${host}`).origin;
+    const origin = getRequestOrigin(req);
     const canonicalUrl = new URL(
       `/obra/${encodeURIComponent(obra.slug)}`,
       origin
@@ -66335,6 +66621,7 @@ router13.get("/share/:slug", async (req, res) => {
       synopsis: obra.sinopse,
       coverUrl: toAbsoluteHttpUrl(obra.capaUrl, origin),
       typographyUrl: obra.tipografiaUrl ? toAbsoluteHttpUrl(obra.tipografiaUrl, origin) : null,
+      shareCardUrl: createShareCardUrl(obra.slug, obra.updatedAt, origin),
       canonicalUrl: canonicalUrl.toString()
     });
     res.set("Cache-Control", "public, max-age=300, s-maxage=300");
@@ -66349,6 +66636,7 @@ function buildSharePage({
   synopsis,
   coverUrl,
   typographyUrl,
+  shareCardUrl,
   canonicalUrl
 }) {
   const escapedTitle = escapeHtml(title);
@@ -66360,15 +66648,16 @@ function buildSharePage({
   const escapedCanonicalUrl = escapeHtml(canonicalUrl);
   const escapedCoverUrl = coverUrl ? escapeHtml(coverUrl) : null;
   const escapedTypographyUrl = typographyUrl ? escapeHtml(typographyUrl) : null;
-  const imageTags = escapedCoverUrl ? `
-    <meta property="og:image" content="${escapedCoverUrl}" />
-    <meta property="og:image:alt" content="Capa de ${escapedTitle}" />
-    <meta name="twitter:image" content="${escapedCoverUrl}" />
-    <meta name="twitter:image:alt" content="Capa de ${escapedTitle}" />` : "";
-  const typographyTags = escapedTypographyUrl ? `
-    <meta property="og:image" content="${escapedTypographyUrl}" />
-    <meta property="og:image:alt" content="Tipografia de ${escapedTitle}" />
-    <meta name="zenkatu:tipografia" content="${escapedTypographyUrl}" />` : "";
+  const escapedShareCardUrl = escapeHtml(shareCardUrl);
+  const imageTags = `
+    <meta property="og:image" content="${escapedShareCardUrl}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Capa de ${escapedTitle} com a tipografia do projeto" />
+    <meta name="twitter:image" content="${escapedShareCardUrl}" />
+    <meta name="twitter:image:alt" content="Capa de ${escapedTitle} com a tipografia do projeto" />`;
+  const typographyTags = escapedTypographyUrl ? `<meta name="zenkatu:tipografia" content="${escapedTypographyUrl}" />` : "";
   return `<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -66398,6 +66687,20 @@ function buildSharePage({
     </main>
   </body>
 </html>`;
+}
+function createShareCardUrl(slug, updatedAt, origin) {
+  const url2 = new URL(
+    `/api/share/${encodeURIComponent(slug)}/image`,
+    origin
+  );
+  url2.searchParams.set("v", String(updatedAt.getTime()));
+  return url2.toString();
+}
+function getRequestOrigin(req) {
+  const forwardedProtocol = req.get("x-forwarded-proto")?.split(",")[0].trim();
+  const protocol = forwardedProtocol === "https" || forwardedProtocol === "http" ? forwardedProtocol : req.protocol;
+  const host = req.get("x-forwarded-host")?.split(",")[0].trim() ?? req.get("host") ?? "localhost";
+  return new URL(`${protocol}://${host}`).origin;
 }
 function toAbsoluteHttpUrl(value, origin) {
   try {

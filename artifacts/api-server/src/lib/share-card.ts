@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { lookup as dnsLookup } from "node:dns/promises";
 import { request as httpRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as httpsRequest } from "node:https";
+import { isIP } from "node:net";
 import sharp from "sharp";
 
 const CARD_WIDTH = 1200;
