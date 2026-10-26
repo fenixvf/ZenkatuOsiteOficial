@@ -41,6 +41,15 @@ function loadGoogleCastSdk(): Promise<boolean> {
   return googleCastSdkPromise;
 }
 
+async function waitForCurrentCastSession(castContext: any): Promise<any | null> {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const session = castContext.getCurrentSession?.();
+    if (session) return session;
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+  }
+  return null;
+}
+
 interface CustomPlayerProps {
   src: string;
   downloadUrl?: string;
@@ -328,7 +337,8 @@ export const CustomPlayer = memo(function CustomPlayer({
         let session = activeSession;
         if (!session) {
           try {
-            session = await castContext.requestSession();
+            await castContext.requestSession();
+            session = await waitForCurrentCastSession(castContext);
           } catch (error: any) {
             const cancelled = error?.code === chromeCast.ErrorCode?.CANCEL ||
               error?.code === "cancel" ||
@@ -342,6 +352,10 @@ export const CustomPlayer = memo(function CustomPlayer({
             }
             return;
           }
+        }
+        if (!session || typeof session.loadMedia !== "function") {
+          showCastMessage("A TV conectou, mas a sessão do Chromecast não ficou pronta. Tente novamente.");
+          return;
         }
 
         const isHls = /\.m3u8(?:[?#]|$)/i.test(src);
