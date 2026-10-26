@@ -3,7 +3,63 @@ import { lookup as dnsLookup } from "node:dns/promises";
 import { request as httpRequest, type IncomingMessage, type RequestOptions } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import sharp from "sharp";
+import montserratRegular from "../assets/fonts/Montserrat-Regular.ttf";
+import montserratBold from "../assets/fonts/Montserrat-Bold.ttf";
+
+const bundledFonts = [
+  { file: "Montserrat-Regular.ttf", dataUrl: montserratRegular },
+  { file: "Montserrat-Bold.ttf", dataUrl: montserratBold },
+];
+
+function fontBytes(dataUrl: string): Buffer {
+  return Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64");
+}
+
+let bundledFontsInstalled = false;
+
+/**
+ * Ambientes serverless (Vercel) não têm fontes instaladas: sem este passo o
+ * texto do SVG sai como retângulos vazios. Grava as fontes embutidas no
+ * /tmp e aponta o fontconfig para elas antes do primeiro render do Sharp.
+ */
+function installBundledFonts(): void {
+  if (bundledFontsInstalled) return;
+  bundledFontsInstalled = true;
+
+  try {
+    const fontsDir = path.join(os.tmpdir(), "zenkatu-fonts");
+    const cacheDir = path.join(fontsDir, "cache");
+    fs.mkdirSync(cacheDir, { recursive: true });
+
+    for (const { file, dataUrl } of bundledFonts) {
+      fs.writeFileSync(path.join(fontsDir, file), fontBytes(dataUrl));
+    }
+    fs.writeFileSync(
+      path.join(fontsDir, "fonts.conf"),
+      [
+        '<?xml version="1.0"?>',
+        '<!DOCTYPE fontconfig SYSTEM "fonts.dtd">',
+        "<fontconfig>",
+        `  <dir>${fontsDir}</dir>`,
+        `  <cachedir>${cacheDir}</cachedir>`,
+        "</fontconfig>",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    process.env.FONTCONFIG_FILE = path.join(fontsDir, "fonts.conf");
+    process.env.FONTCONFIG_PATH = fontsDir;
+  } catch {
+    // Sem as fontes embutidas o card continua sendo gerado, só sem texto.
+  }
+}
+
+installBundledFonts();
 
 const CARD_WIDTH = 1200;
 const CARD_HEIGHT = 630;
@@ -114,10 +170,10 @@ async function createShareCard({
           <stop offset="100%" stop-color="#050914" stop-opacity="0.55"/>
         </linearGradient>
         <style>
-          .brand { font: 700 17px Arial, sans-serif; letter-spacing: 4px; fill: #75a9ff; }
-          .title { font: 700 34px Arial, sans-serif; fill: #fff; }
-          .synopsis { font: 400 19px Arial, sans-serif; fill: #e5e7eb; }
-          .button { font: 700 15px Arial, sans-serif; letter-spacing: 1px; fill: #fff; }
+          .brand { font-family: Montserrat, sans-serif; font-weight: 700; font-size: 17px; letter-spacing: 4px; fill: #75a9ff; }
+          .title { font-family: Montserrat, sans-serif; font-weight: 700; font-size: 34px; fill: #fff; }
+          .synopsis { font-family: Montserrat, sans-serif; font-weight: 400; font-size: 19px; fill: #e5e7eb; }
+          .button { font-family: Montserrat, sans-serif; font-weight: 700; font-size: 15px; letter-spacing: 1px; fill: #fff; }
         </style>
       </defs>
       <rect width="${CARD_WIDTH}" height="${CARD_HEIGHT}" fill="#050914" fill-opacity="0.18"/>

@@ -39,6 +39,10 @@ globalThis.__dirname = __bannerPath.dirname(globalThis.__filename);
 
 const plugins = [esbuildPluginPino({ transports: ["pino-pretty"] })];
 
+// Fontes do card de compartilhamento entram no bundle como data URL.
+// (O loader "binary" gera Uint8Array.fromBase64, indisponível no Node da Vercel.)
+const loader = { ".ttf": "dataurl" };
+
 async function buildAll() {
   const distDir = path.resolve(artifactDir, "dist");
   const apiDir = path.resolve(artifactDir, "../../api");
@@ -73,6 +77,7 @@ async function buildAll() {
     external,
     sourcemap: "linked",
     define: spaDefine,
+    loader,
     plugins,
     banner,
   });
@@ -92,6 +97,7 @@ async function buildAll() {
     external,
     sourcemap: false,
     define: spaDefine,
+    loader,
     plugins,
     banner,
   });
