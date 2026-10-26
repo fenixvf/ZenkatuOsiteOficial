@@ -3,8 +3,43 @@ import Hls from "hls.js";
 import logoImg from "/logo.png";
 import {
   Play, Pause, Volume2, VolumeX, Maximize, Minimize,
-  RotateCcw, RotateCw, Settings, Download, Loader2,
+  RotateCcw, RotateCw, Settings, Download, Loader2, Cast,
 } from "lucide-react";
+
+declare global {
+  interface Window {
+    __onGCastApiAvailable?: (available: boolean) => void;
+  }
+}
+
+let googleCastSdkPromise: Promise<boolean> | null = null;
+
+function loadGoogleCastSdk(): Promise<boolean> {
+  const existingCast = (window as any).cast;
+  if (existingCast?.framework?.CastContext) return Promise.resolve(true);
+  if (googleCastSdkPromise) return googleCastSdkPromise;
+
+  googleCastSdkPromise = new Promise((resolve) => {
+    let settled = false;
+    const finish = (available: boolean) => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeout);
+      resolve(available && !!(window as any).cast?.framework?.CastContext);
+    };
+    const timeout = window.setTimeout(() => finish(false), 15000);
+    window.__onGCastApiAvailable = (available) => finish(available);
+
+    const script = document.createElement("script");
+    script.id = "zenkatu-google-cast-sdk";
+    script.src = "https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1";
+    script.async = true;
+    script.onerror = () => finish(false);
+    document.head.appendChild(script);
+  });
+
+  return googleCastSdkPromise;
+}
 
 interface CustomPlayerProps {
   src: string;
@@ -77,7 +112,12 @@ export const CustomPlayer = memo(function CustomPlayer({
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const episodeInfoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const castMessageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapRef = useRef<{ time: number; x: number } | null>(null);
+  const sourceRef = useRef(src);
+  const remotePlayerRef = useRef<any>(null);
+  const remotePlayerControllerRef = useRef<any>(null);
+  sourceRef.current = src;
 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -94,11 +134,49 @@ export const CustomPlayer = memo(function CustomPlayer({
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
   const [showEpisodeInfo, setShowEpisodeInfo] = useState(true);
+  const [isCasting, setIsCasting] = useState(false);
+  const [castMessage, setCastMessage] = useState("");
 
   const [resumeChoice, setResumeChoice] = useState<"pending" | "resolved">("resolved");
   const [resumeTime, setResumeTime] = useState(0);
   const pendingSeekRef = useRef<number | null>(null);
   const lastSaveRef = useRef(0);
+
+  const showCastMessage = useCallback((message: string) => {
+    setCastMessage(message);
+    if (castMessageTimerRef.current) clearTimeout(castMessageTimerRef.current);
+    castMessageTimerRef.current = setTimeout(() => setCastMessage(""), 3500);
+  }, []);
+
+  const syncRemotePlayer = useCallback(() => {
+    const remotePlayer = remotePlayerRef.current;
+    if (!remotePlayer) return;
+
+    const connected = !!remotePlayer.isConnected;
+    setIsCasting(connected);
+    if (!connected) {
+      const video = videoRef.current;
+      if (video) setPlaying(!video.paused);
+      return;
+    }
+
+    setPlaying(!remotePlayer.isPaused);
+    if (!remotePlayer.isPaused) {
+      if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
+      setShowEpisodeInfo(false);
+      setShowSpeedMenu(false);
+    }
+    setCurrentTime(remotePlayer.currentTime || 0);
+    setDuration(remotePlayer.duration || 0);
+    setVolume(remotePlayer.volumeLevel ?? 1);
+    setMuted(!!remotePlayer.isMuted);
+
+    const now = Date.now();
+    if (now - lastSaveRef.current > 4000 && remotePlayer.currentTime > 5) {
+      lastSaveRef.current = now;
+      writeProgress(sourceRef.current, remotePlayer.currentTime, remotePlayer.duration || 0);
+    }
+  }, []);
 
   // Check for saved watch progress whenever the video source changes
   useEffect(() => {
@@ -124,7 +202,194 @@ export const CustomPlayer = memo(function CustomPlayer({
     };
   }, [src]);
 
+  // Google Cast sender setup. Native Remote Playback / AirPlay remains available as fallback.
+  useEffect(() => {
+    if (!("chrome" in window)) return;
+
+    let disposed = false;
+    let castContext: any = null;
+    let onSessionStateChanged: (() => void) | null = null;
+    let controllerListeners: Array<[string, () => void]> = [];
+
+    loadGoogleCastSdk().then((available) => {
+      if (disposed || !available) return;
+
+      const castApi = (window as any).cast;
+      const chromeCast = (window as any).chrome?.cast;
+      const framework = castApi?.framework;
+      if (!framework?.CastContext || !chromeCast?.media) return;
+
+      castContext = framework.CastContext.getInstance();
+      castContext.setOptions({
+        receiverApplicationId: chromeCast.media.DEFAULT_MEDIA_RECEIVER_APP_ID || "CC1AD845",
+        autoJoinPolicy: chromeCast.AutoJoinPolicy?.ORIGIN_SCOPED,
+      });
+
+      const remotePlayer = new framework.RemotePlayer();
+      const remoteController = new framework.RemotePlayerController(remotePlayer);
+      remotePlayerRef.current = remotePlayer;
+      remotePlayerControllerRef.current = remoteController;
+
+      const eventTypes = framework.RemotePlayerEventType || {};
+      const eventNames = [
+        eventTypes.IS_CONNECTED_CHANGED,
+        eventTypes.IS_PAUSED_CHANGED,
+        eventTypes.CURRENT_TIME_CHANGED,
+        eventTypes.DURATION_CHANGED,
+        eventTypes.IS_MUTED_CHANGED,
+        eventTypes.VOLUME_LEVEL_CHANGED,
+      ].filter((eventName: unknown): eventName is string => typeof eventName === "string");
+
+      controllerListeners = eventNames.map((eventName: string) => [eventName, syncRemotePlayer]);
+      controllerListeners.forEach(([eventName, listener]) => {
+        remoteController.addEventListener(eventName, listener);
+      });
+
+      const sessionStateEvent = framework.CastContextEventType?.SESSION_STATE_CHANGED;
+      if (sessionStateEvent) {
+        onSessionStateChanged = () => window.setTimeout(syncRemotePlayer, 0);
+        castContext.addEventListener(sessionStateEvent, onSessionStateChanged);
+      }
+      syncRemotePlayer();
+    }).catch(() => {
+      // Native Remote Playback and AirPlay can still work if the Cast SDK is unavailable.
+    });
+
+    return () => {
+      disposed = true;
+      if (castContext && onSessionStateChanged) {
+        castContext.removeEventListener?.(
+          (window as any).cast?.framework?.CastContextEventType?.SESSION_STATE_CHANGED,
+          onSessionStateChanged,
+        );
+      }
+      const controller = remotePlayerControllerRef.current;
+      controllerListeners.forEach(([eventName, listener]) => {
+        controller?.removeEventListener?.(eventName, listener);
+      });
+      remotePlayerRef.current = null;
+      remotePlayerControllerRef.current = null;
+    };
+  }, [syncRemotePlayer]);
+
+  // Observe native Chromecast / AirPlay connections when the browser supports them.
+  useEffect(() => {
+    const video = videoRef.current as (HTMLVideoElement & {
+      remote?: {
+        state?: string;
+        addEventListener?: (type: string, listener: EventListener) => void;
+        removeEventListener?: (type: string, listener: EventListener) => void;
+      };
+      webkitCurrentPlaybackTargetIsWireless?: boolean;
+    }) | null;
+    if (!video) return;
+
+    const remotePlayback = video.remote;
+    const updateNativeConnection = () => {
+      setIsCasting(
+        remotePlayback?.state === "connected" ||
+          !!video.webkitCurrentPlaybackTargetIsWireless ||
+          !!remotePlayerRef.current?.isConnected,
+      );
+    };
+    const remoteEvents = ["connecting", "connect", "disconnect"];
+    remoteEvents.forEach((eventName) => {
+      remotePlayback?.addEventListener?.(eventName, updateNativeConnection);
+    });
+    video.addEventListener("webkitcurrentplaybacktargetiswirelesschanged", updateNativeConnection);
+    updateNativeConnection();
+
+    return () => {
+      remoteEvents.forEach((eventName) => {
+        remotePlayback?.removeEventListener?.(eventName, updateNativeConnection);
+      });
+      video.removeEventListener("webkitcurrentplaybacktargetiswirelesschanged", updateNativeConnection);
+    };
+  }, [src]);
+
+  const handleCast = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const castApi = (window as any).cast;
+    const chromeCast = (window as any).chrome?.cast;
+    const castContext = castApi?.framework?.CastContext?.getInstance?.();
+
+    if (castContext && chromeCast?.media) {
+      try {
+        const activeSession = castContext.getCurrentSession?.();
+        if (activeSession && isCasting) {
+          await activeSession.endSession(true);
+          setIsCasting(false);
+          showCastMessage("Transmissão encerrada.");
+          return;
+        }
+
+        const session = activeSession ?? await castContext.requestSession();
+        const framework = castApi.framework;
+        const isHls = /\.m3u8(?:[?#]|$)/i.test(src);
+        const contentType = isHls
+          ? "application/x-mpegURL"
+          : /\.webm(?:[?#]|$)/i.test(src) ? "video/webm" : "video/mp4";
+        const mediaInfo = new framework.messages.MediaInfo(src, contentType);
+        mediaInfo.streamType = framework.messages.StreamType.BUFFERED;
+        const metadata = new framework.messages.GenericMediaMetadata();
+        metadata.title = episodeTitle || episodeLabel || "Zenkatu";
+        metadata.subtitle = episodeLabel || "Zenkatu";
+        if (synopsis) metadata.description = synopsis;
+        mediaInfo.metadata = metadata;
+
+        const request = new framework.messages.LoadRequest(mediaInfo);
+        request.currentTime = video.currentTime;
+        request.autoplay = !video.paused;
+        await session.loadMedia(request);
+        video.pause();
+        setIsCasting(true);
+        showCastMessage("Transmitindo para a TV.");
+        window.setTimeout(syncRemotePlayer, 250);
+        return;
+      } catch (error: any) {
+        const cancelled = error?.code === chromeCast.ErrorCode?.CANCEL ||
+          error?.code === "cancel" ||
+          error?.code === "cancelled";
+        if (!cancelled) {
+          showCastMessage("Não foi possível conectar. Confira se a TV está na mesma rede.");
+        }
+        return;
+      }
+    }
+
+    const videoWithTargets = video as HTMLVideoElement & {
+      remote?: { prompt?: () => Promise<void> };
+      webkitShowPlaybackTargetPicker?: () => void;
+    };
+    try {
+      if (videoWithTargets.webkitShowPlaybackTargetPicker) {
+        videoWithTargets.webkitShowPlaybackTargetPicker();
+        return;
+      }
+      if (videoWithTargets.remote?.prompt) {
+        await videoWithTargets.remote.prompt();
+        return;
+      }
+      showCastMessage("Este navegador não oferece transmissão. Use o botão de transmissão do player do vídeo.");
+    } catch {
+      showCastMessage("Não foi possível abrir a lista de TVs. Tente novamente.");
+    }
+  }, [episodeLabel, episodeTitle, isCasting, showCastMessage, src, syncRemotePlayer, synopsis]);
+
   const applySeek = useCallback((time: number) => {
+    const remotePlayer = remotePlayerRef.current;
+    const remoteController = remotePlayerControllerRef.current;
+    if (remotePlayer?.isConnected && remoteController) {
+      const maxTime = remotePlayer.duration || time;
+      const nextTime = Math.max(0, Math.min(maxTime, time));
+      remotePlayer.currentTime = nextTime;
+      remoteController.seek();
+      setCurrentTime(nextTime);
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     if (video.readyState >= 1) {
@@ -200,10 +465,14 @@ export const CustomPlayer = memo(function CustomPlayer({
     const onPlay = () => {
       if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
       setShowEpisodeInfo(false);
-      setPlaying(true);
+      if (!remotePlayerRef.current?.isConnected) setPlaying(true);
       setIsVideoLoading(false);
     };
     const onPause = () => {
+      if (remotePlayerRef.current?.isConnected) {
+        setPlaying(!remotePlayerRef.current.isPaused);
+        return;
+      }
       setPlaying(false);
       saveNow();
       if (episodeInfoTimerRef.current) clearTimeout(episodeInfoTimerRef.current);
@@ -232,6 +501,7 @@ export const CustomPlayer = memo(function CustomPlayer({
       setVideoError(true);
     };
     const onTimeUpdate = () => {
+      if (remotePlayerRef.current?.isConnected) return;
       const t = video.currentTime;
       setCurrentTime(t);
       if (video.buffered.length > 0) {
@@ -243,8 +513,11 @@ export const CustomPlayer = memo(function CustomPlayer({
         saveNow();
       }
     };
-    const onDuration = () => setDuration(video.duration);
+    const onDuration = () => {
+      if (!remotePlayerRef.current?.isConnected) setDuration(video.duration);
+    };
     const onVolumeChange = () => {
+      if (remotePlayerRef.current?.isConnected) return;
       setVolume(video.volume);
       setMuted(video.muted);
     };
@@ -331,6 +604,7 @@ export const CustomPlayer = memo(function CustomPlayer({
   useEffect(() => {
     return () => {
       if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+      if (castMessageTimerRef.current) clearTimeout(castMessageTimerRef.current);
     };
   }, []);
 
@@ -344,6 +618,14 @@ export const CustomPlayer = memo(function CustomPlayer({
 
   const togglePlay = useCallback(() => {
     if (resumeChoice === "pending") return;
+    const remotePlayer = remotePlayerRef.current;
+    const remoteController = remotePlayerControllerRef.current;
+    if (remotePlayer?.isConnected && remoteController) {
+      remoteController.playOrPause();
+      resetControlsTimer();
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) video.play();
@@ -352,6 +634,20 @@ export const CustomPlayer = memo(function CustomPlayer({
   }, [resetControlsTimer, resumeChoice]);
 
   const skip = useCallback((seconds: number) => {
+    const remotePlayer = remotePlayerRef.current;
+    const remoteController = remotePlayerControllerRef.current;
+    if (remotePlayer?.isConnected && remoteController) {
+      const nextTime = Math.max(
+        0,
+        Math.min(remotePlayer.duration || Number.POSITIVE_INFINITY, remotePlayer.currentTime + seconds),
+      );
+      remotePlayer.currentTime = nextTime;
+      remoteController.seek();
+      setCurrentTime(nextTime);
+      resetControlsTimer();
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     video.currentTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
@@ -391,6 +687,14 @@ export const CustomPlayer = memo(function CustomPlayer({
   }, [showSkipFeedback, skip, togglePlay]);
 
   const toggleMute = useCallback(() => {
+    const remotePlayer = remotePlayerRef.current;
+    const remoteController = remotePlayerControllerRef.current;
+    if (remotePlayer?.isConnected && remoteController) {
+      remotePlayer.isMuted = !remotePlayer.isMuted;
+      remoteController.muteOrUnmute();
+      return;
+    }
+
     const video = videoRef.current;
     if (!video) return;
     video.muted = !video.muted;
@@ -412,8 +716,16 @@ export const CustomPlayer = memo(function CustomPlayer({
     if (!bar || !video || !duration) return;
     const rect = bar.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    video.currentTime = ratio * duration;
-    setCurrentTime(ratio * duration);
+    const nextTime = ratio * duration;
+    const remotePlayer = remotePlayerRef.current;
+    const remoteController = remotePlayerControllerRef.current;
+    if (remotePlayer?.isConnected && remoteController) {
+      remotePlayer.currentTime = nextTime;
+      remoteController.seek();
+    } else {
+      video.currentTime = nextTime;
+    }
+    setCurrentTime(nextTime);
     resetControlsTimer();
   }, [duration, resetControlsTimer]);
 
@@ -436,6 +748,20 @@ export const CustomPlayer = memo(function CustomPlayer({
     const video = videoRef.current;
     if (!video) return;
     const v = parseFloat(e.target.value);
+    const remotePlayer = remotePlayerRef.current;
+    const remoteController = remotePlayerControllerRef.current;
+    if (remotePlayer?.isConnected && remoteController) {
+      if (v > 0) {
+        remotePlayer.volumeLevel = v;
+        remoteController.setVolumeLevel();
+      }
+      const shouldMute = v === 0;
+      if (remotePlayer.isMuted !== shouldMute) {
+        remotePlayer.isMuted = shouldMute;
+        remoteController.muteOrUnmute();
+      }
+      return;
+    }
     video.volume = v;
     video.muted = v === 0;
   }, []);
@@ -464,6 +790,7 @@ export const CustomPlayer = memo(function CustomPlayer({
         className="w-full h-full object-contain"
         preload="metadata"
         playsInline
+        x-webkit-airplay="allow"
       />
 
       {isVideoLoading && !videoError && (
@@ -715,9 +1042,10 @@ export const CustomPlayer = memo(function CustomPlayer({
             {/* Speed */}
             <div className="relative hidden sm:block">
               <button
+                disabled={isCasting}
                 onClick={() => setShowSpeedMenu((v) => !v)}
-                  className="flex items-center gap-1 rounded border border-white/20 px-1.5 py-1 text-xs font-semibold text-white transition-colors hover:border-primary/50 hover:text-primary"
-                title="Velocidade"
+                  className="flex items-center gap-1 rounded border border-white/20 px-1.5 py-1 text-xs font-semibold text-white transition-colors hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                title={isCasting ? "Velocidade indisponível durante a transmissão" : "Velocidade"}
               >
                 <Settings className="w-3 h-3" />
                 {speed}x
@@ -753,6 +1081,19 @@ export const CustomPlayer = memo(function CustomPlayer({
               </a>
             )}
 
+            {/* Cast / AirPlay */}
+            <button
+              type="button"
+              onClick={handleCast}
+              className={`rounded-md p-1.5 transition-colors hover:bg-white/10 hover:text-primary sm:p-1 ${
+                isCasting ? "text-primary" : "text-white"
+              }`}
+              title={isCasting ? "Desconectar da TV" : "Transmitir para TV"}
+              aria-label={isCasting ? "Desconectar da TV" : "Transmitir para TV"}
+            >
+              <Cast className="h-4 w-4" />
+            </button>
+
             {/* Fullscreen */}
             <button
               onClick={toggleFullscreen}
@@ -764,6 +1105,15 @@ export const CustomPlayer = memo(function CustomPlayer({
           </div>
         </div>
       </div>
+
+      {castMessage && (
+        <div
+          role="status"
+          className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 rounded-lg border border-white/15 bg-black/80 px-4 py-2 text-center text-xs font-medium text-white shadow-lg backdrop-blur-sm sm:text-sm"
+        >
+          {castMessage}
+        </div>
+      )}
     </div>
   );
 });
