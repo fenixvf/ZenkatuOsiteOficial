@@ -69,6 +69,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { ArchiveUploader } from "@/components/admin/ArchiveUploader";
 
 const episodioSchema = z.object({
   temporada: z.coerce.number().int().min(1),
@@ -612,6 +613,14 @@ export default function AdminEpisodios() {
                         ⚠️ A URL não parece ser do Archive.org, mas funcionará se for um link direto de vídeo.
                       </p>
                     )}
+                    <ArchiveUploader
+                      animeTitle={obra?.titulo ?? "zenkatu"}
+                      season={form.watch("temporada")}
+                      episodeNumber={form.watch("numero")}
+                      episodeTitle={form.watch("titulo")}
+                      currentUrl={rawInput}
+                      onUploaded={(url) => handleRawInputChange(url)}
+                    />
                   </div>
                 )}
 
