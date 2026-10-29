@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, memo } from "react";
-import { useParams, useSearch } from "wouter";
+import { useParams, useSearch, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -805,10 +805,13 @@ export default function ObraDetail() {
               </div>
               <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
                 {((isCastExpanded ? (obra as any).cast : (obra as any).cast.slice(0, CAST_PREVIEW_COUNT)) as Array<{
-                  nome: string; papel: string; fotoUrl?: string;
+                  uid?: string; nome: string; papel: string; fotoUrl?: string;
                   links?: { youtube?: string; instagram?: string; discord?: string; twitter?: string; tiktok?: string; site?: string };
-                }>).map((member, idx) => (
-                  <div key={idx} className="flex w-[106px] shrink-0 snap-start flex-col items-center gap-2 text-center sm:w-[116px]">
+                }>).map((member, idx) => {
+                  const shell =
+                    "flex w-[106px] shrink-0 snap-start flex-col items-center gap-2 text-center sm:w-[116px]";
+                  const identity = (
+                    <>
                     <div className="h-[76px] w-[76px] shrink-0 overflow-hidden rounded-full border border-white/15 bg-secondary shadow-[0_8px_24px_rgba(0,0,0,.3)] sm:h-[88px] sm:w-[88px]">
                       {member.fotoUrl ? (
                         <img src={member.fotoUrl} alt={member.nome} className="h-full w-full object-cover" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} data-testid={`img-cast-${idx}`} />
@@ -822,7 +825,9 @@ export default function ObraDetail() {
                       <p className="truncate text-sm font-semibold leading-tight text-foreground" data-testid={`text-cast-name-${idx}`}>{member.nome}</p>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">{member.papel}</p>
                     </div>
-                    {member.links && (
+                    </>
+                  );
+                  const social = member.links ? (
                       <div className="flex flex-wrap justify-center gap-2">
                         {member.links.youtube && (
                   <a href={member.links.youtube} target="_blank" rel="noopener noreferrer" aria-label={`YouTube de ${member.nome}`} className="text-muted-foreground hover:text-red-500 transition-colors" title="YouTube">
@@ -855,9 +860,37 @@ export default function ObraDetail() {
                           </a>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                  ) : null;
+
+                  // Conta na Zenkatu: clicar abre o perfil da pessoa, igual à página Descobrir.
+                  if (member.uid) {
+                    return (
+                      <div
+                        key={idx}
+                        className={`${shell} rounded-xl p-1 transition-all hover:bg-white/[0.06] hover:ring-1 hover:ring-primary/40`}
+                      >
+                        <Link
+                          href={`/perfil/${member.uid}`}
+                          className="flex flex-col items-center gap-2"
+                          title={`Ver perfil de ${member.nome}`}
+                        >
+                          {identity}
+                          <span className="text-[10px] font-semibold text-primary">
+                            Ver perfil
+                          </span>
+                        </Link>
+                        {social}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={idx} className={shell}>
+                      {identity}
+                      {social}
+                    </div>
+                  );
+                })}
               </div>
               {(obra as any).cast.length > CAST_PREVIEW_COUNT && (
                 <Button

@@ -7,6 +7,10 @@ import {
   useUploadAvatar,
   useGetUsuarioLista,
   useRemoveFromLista,
+  useListConvitesCast,
+  useListPersonagensFeitos,
+  useAceitarConviteCast,
+  useRecusarConviteCast,
   type VoicePortfolioItem,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,6 +40,9 @@ import {
   ExternalLink,
   Mic,
   Plus,
+  Check,
+  X,
+  Film,
 } from "lucide-react";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
@@ -76,6 +83,44 @@ export default function Perfil() {
   const push = usePushNotifications(currentUser?.uid ?? null);
   const [localPrefs, setLocalPrefs] = useState({ notifyEpisodios: true, notifyObras: true });
   const [prefsSaving, setPrefsSaving] = useState(false);
+
+  // Abas do perfil: edição, notificações de cast e personagens feitos.
+  const [activeTab, setActiveTab] = useState<"perfil" | "notificacoes" | "personagens">("perfil");
+  const uid = currentUser?.uid ?? "";
+
+  const { data: convitesRaw, isLoading: convitesLoading, refetch: refetchConvites } =
+    useListConvitesCast(uid, {
+      query: { enabled: !!uid, queryKey: ["convitesCast", uid] },
+    });
+  const convites = Array.isArray(convitesRaw) ? convitesRaw : [];
+  const pendentes = convites.filter((c) => c.status === "pending");
+
+  const { data: personagensRaw, isLoading: personagensLoading, refetch: refetchPersonagens } =
+    useListPersonagensFeitos(uid, {
+      query: { enabled: !!uid, queryKey: ["personagensFeitos", uid] },
+    });
+  const personagens = Array.isArray(personagensRaw) ? personagensRaw : [];
+
+  const aceitarConvite = useAceitarConviteCast();
+  const recusarConvite = useRecusarConviteCast();
+
+  const responderConvite = async (conviteId: number, aceitar: boolean) => {
+    try {
+      const mutation = aceitar ? aceitarConvite : recusarConvite;
+      await mutation.mutateAsync({ conviteId, data: { uid } });
+      await Promise.all([refetchConvites(), refetchPersonagens()]);
+      queryClient.invalidateQueries({ queryKey: ["convitesCast", uid] });
+      queryClient.invalidateQueries({ queryKey: ["personagensFeitos", uid] });
+      toast({
+        title: aceitar ? "Convite aceito!" : "Convite recusado",
+        description: aceitar
+          ? "O personagem já aparece na aba Personagens feitos."
+          : "O convite foi recusado.",
+      });
+    } catch {
+      toast({ title: "Erro ao responder ao convite", variant: "destructive" });
+    }
+  };
 
   useEffect(() => {
     if (!push.isLoading) {
@@ -406,6 +451,38 @@ export default function Perfil() {
 
           </CardContent>
         </Card>
+
+        {/* Abas do perfil */}
+        <div className="flex min-w-0 gap-1 overflow-x-auto rounded-xl border border-border bg-card/50 p-1 backdrop-blur">
+          {(
+            [
+              { key: "perfil", label: "Meu perfil" },
+              { key: "notificacoes", label: "Notificações" },
+              { key: "personagens", label: "Personagens feitos" },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex min-w-0 flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors sm:px-4 sm:text-sm ${
+                activeTab === tab.key
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+              }`}
+            >
+              <span className="truncate">{tab.label}</span>
+              {tab.key === "notificacoes" && pendentes.length > 0 && (
+                <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+                  {pendentes.length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === "perfil" && (
+        <>
 
         {/* Informações Pessoais */}
         <Card className="border-border bg-card/50 backdrop-blur">
@@ -834,6 +911,197 @@ export default function Perfil() {
             )}
           </CardContent>
         </Card>
+
+        </>
+        )}
+
+        {/* Notificações de cast */}
+        {activeTab === "notificacoes" && (
+          <Card className="border-border bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="w-5 h-5" />
+                Notificações
+                {pendentes.length > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[11px] font-bold text-destructive-foreground">
+                    {pendentes.length}
+                  </span>
+                )}
+              </CardTitle>
+              <CardDescription>
+                Convites de elenco enviados por donos de projeto para o seu perfil.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {convitesLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : convites.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
+                  <Bell className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">Nenhuma notificação por enquanto.</p>
+                  <p className="text-xs mt-1">
+                    Quando alguém te citar no cast de um projeto, o convite aparece aqui.
+                  </p>
+                </div>
+              ) : (
+                convites.map((convite) => (
+                  <div
+                    key={convite.id}
+                    className="flex flex-col gap-3 rounded-lg border border-border bg-background/50 p-3 sm:flex-row sm:items-center"
+                  >
+                    {convite.obraCapa ? (
+                      <img
+                        src={convite.obraCapa}
+                        alt={convite.obraTitulo}
+                        className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-secondary">
+                        <Film className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        Você foi mencionado no cast de{" "}
+                        <Link
+                          href={`/obra/${convite.obraSlug}`}
+                          className="text-primary hover:underline"
+                        >
+                          {convite.obraTitulo}
+                        </Link>
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Personagem:{" "}
+                        <span className="font-semibold text-foreground">
+                          {convite.personagem}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(convite.createdAt), "dd 'de' MMMM 'de' yyyy", {
+                          locale: ptBR,
+                        })}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 flex-wrap items-center gap-2">
+                      {convite.status === "pending" ? (
+                        <>
+                          <Button
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={() => responderConvite(convite.id, true)}
+                            disabled={aceitarConvite.isPending}
+                          >
+                            <Check className="h-4 w-4" /> Aceitar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5"
+                            onClick={() => responderConvite(convite.id, false)}
+                            disabled={recusarConvite.isPending}
+                          >
+                            <X className="h-4 w-4" /> Recusar
+                          </Button>
+                        </>
+                      ) : convite.status === "accepted" ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
+                          <Check className="h-3.5 w-3.5" /> Aceito
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs text-muted-foreground">
+                          Recusado
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Personagens feitos */}
+        {activeTab === "personagens" && (
+          <Card className="border-border bg-card/50 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Film className="w-5 h-5" />
+                Personagens feitos
+              </CardTitle>
+              <CardDescription>
+                Personagens que você confirmou. Eles também aparecem no seu perfil público.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {personagensLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : personagens.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
+                  <Film className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">Nenhum personagem confirmado ainda.</p>
+                  <p className="text-xs mt-1">
+                    Aceite um convite de cast para que o personagem apareça aqui.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {personagens.map((personagem) => (
+                    <Link
+                      key={personagem.id}
+                      href={`/obra/${personagem.obraSlug}`}
+                      className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-background/50 p-3 transition-all hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      {personagem.fotoUrl ? (
+                        <img
+                          src={personagem.fotoUrl}
+                          alt={personagem.personagem}
+                          className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      ) : personagem.obraCapa ? (
+                        <img
+                          src={personagem.obraCapa}
+                          alt={personagem.obraTitulo}
+                          className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-secondary">
+                          <Film className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
+                          {personagem.personagem}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {personagem.obraTitulo}
+                        </p>
+                        <p className="truncate text-[11px] text-muted-foreground/70">
+                          como {personagem.nome}
+                        </p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       </div>
     </motion.div>

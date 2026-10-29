@@ -11,6 +11,8 @@ export * from './avatarUpload';
 export * from './comentario';
 export * from './comentarioInput';
 export * from './comentarioUpdate';
+export * from './conviteCast';
+export * from './conviteResposta';
 export * from './episodio';
 export * from './episodioInput';
 export * from './episodioUpdate';

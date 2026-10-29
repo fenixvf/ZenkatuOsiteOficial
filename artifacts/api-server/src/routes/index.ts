@@ -13,6 +13,7 @@ import pushRouter from "./push";
 import zenkatuberRouter from "./zenkatuber";
 import shareRouter from "./share";
 import imagenesRouter from "./imagenes";
+import convitesRouter from "./convites";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(generosRouter);
 router.use(configRouter);
 router.use(pushRouter);
 router.use(zenkatuberRouter);
+router.use(convitesRouter);
 
 export default router;

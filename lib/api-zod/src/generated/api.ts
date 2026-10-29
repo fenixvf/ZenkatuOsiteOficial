@@ -798,6 +798,112 @@ export const ClearHistoricoParams = zod.object({
 
 
 /**
+ * @summary Convites de cast recebidos por uma pessoa (notificações no perfil)
+ */
+export const ListConvitesCastParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+export const ListConvitesCastResponseItem = zod.object({
+  "id": zod.number(),
+  "obraId": zod.number(),
+  "obraTitulo": zod.string(),
+  "obraSlug": zod.string(),
+  "obraCapa": zod.string().nullish(),
+  "uid": zod.string(),
+  "convidadoPor": zod.string().nullish(),
+  "nome": zod.string(),
+  "personagem": zod.string(),
+  "fotoUrl": zod.string().nullish(),
+  "status": zod.string().describe('pending | accepted | declined'),
+  "createdAt": zod.string(),
+  "respondedAt": zod.string().nullish()
+}).describe('Convite de cast recebido por uma conta da Zenkatu')
+export const ListConvitesCastResponse = zod.array(ListConvitesCastResponseItem)
+
+
+/**
+ * @summary Aceita o convite e publica o personagem no perfil
+ */
+export const AceitarConviteCastParams = zod.object({
+  "conviteId": zod.coerce.number()
+})
+
+export const AceitarConviteCastBody = zod.object({
+  "uid": zod.string().describe('uid da pessoa convidada (única que pode responder)')
+})
+
+export const AceitarConviteCastResponse = zod.object({
+  "id": zod.number(),
+  "obraId": zod.number(),
+  "obraTitulo": zod.string(),
+  "obraSlug": zod.string(),
+  "obraCapa": zod.string().nullish(),
+  "uid": zod.string(),
+  "convidadoPor": zod.string().nullish(),
+  "nome": zod.string(),
+  "personagem": zod.string(),
+  "fotoUrl": zod.string().nullish(),
+  "status": zod.string().describe('pending | accepted | declined'),
+  "createdAt": zod.string(),
+  "respondedAt": zod.string().nullish()
+}).describe('Convite de cast recebido por uma conta da Zenkatu')
+
+
+/**
+ * @summary Recusa o convite de cast
+ */
+export const RecusarConviteCastParams = zod.object({
+  "conviteId": zod.coerce.number()
+})
+
+export const RecusarConviteCastBody = zod.object({
+  "uid": zod.string().describe('uid da pessoa convidada (única que pode responder)')
+})
+
+export const RecusarConviteCastResponse = zod.object({
+  "id": zod.number(),
+  "obraId": zod.number(),
+  "obraTitulo": zod.string(),
+  "obraSlug": zod.string(),
+  "obraCapa": zod.string().nullish(),
+  "uid": zod.string(),
+  "convidadoPor": zod.string().nullish(),
+  "nome": zod.string(),
+  "personagem": zod.string(),
+  "fotoUrl": zod.string().nullish(),
+  "status": zod.string().describe('pending | accepted | declined'),
+  "createdAt": zod.string(),
+  "respondedAt": zod.string().nullish()
+}).describe('Convite de cast recebido por uma conta da Zenkatu')
+
+
+/**
+ * @summary Personagens aceitos que aparecem na aba do perfil
+ */
+export const ListPersonagensFeitosParams = zod.object({
+  "uid": zod.coerce.string()
+})
+
+export const ListPersonagensFeitosResponseItem = zod.object({
+  "id": zod.number(),
+  "obraId": zod.number(),
+  "obraTitulo": zod.string(),
+  "obraSlug": zod.string(),
+  "obraCapa": zod.string().nullish(),
+  "uid": zod.string(),
+  "convidadoPor": zod.string().nullish(),
+  "nome": zod.string(),
+  "personagem": zod.string(),
+  "fotoUrl": zod.string().nullish(),
+  "status": zod.string().describe('pending | accepted | declined'),
+  "createdAt": zod.string(),
+  "respondedAt": zod.string().nullish()
+}).describe('Convite de cast recebido por uma conta da Zenkatu')
+export const ListPersonagensFeitosResponse = zod.array(ListPersonagensFeitosResponseItem)
+
+
+/**
  * @summary Get admin dashboard statistics
  */
 export const GetAdminStatsResponse = zod.object({

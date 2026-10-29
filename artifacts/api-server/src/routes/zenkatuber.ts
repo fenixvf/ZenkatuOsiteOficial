@@ -1,12 +1,14 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, db2 } from "@workspace/db";
+// Usuários e candidaturas vivem no 2º banco (Supabase #2): `db2`.
+// `db` continua sendo o 1º banco (site_config, obras).
 import { zenkatuberRequestsTable, usersTable, siteConfigTable, obrasTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const router = Router();
 
 async function isAdmin(uid: string): Promise<boolean> {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+  const [user] = await db2.select().from(usersTable).where(eq(usersTable.uid, uid));
   return user?.role === "admin";
 }
 
@@ -137,7 +139,7 @@ router.post("/zenkatuber/solicitar", async (req, res) => {
     }
 
     // Verifica se já existe solicitação pendente
-    const [existing] = await db
+    const [existing] = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.uid, uid));
@@ -148,13 +150,13 @@ router.post("/zenkatuber/solicitar", async (req, res) => {
     }
 
     // Verifica se já é Zenkatuber
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+    const [user] = await db2.select().from(usersTable).where(eq(usersTable.uid, uid));
     if (user?.isZenkatuber) {
       res.status(409).json({ error: "Você já é um Zenkatuber" });
       return;
     }
 
-    const [request] = await db
+    const [request] = await db2
       .insert(zenkatuberRequestsTable)
       .values({
         uid,
@@ -189,7 +191,7 @@ router.get("/zenkatuber/requests/:adminUid", async (req, res) => {
       return;
     }
 
-    const requests = await db
+    const requests = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .orderBy(zenkatuberRequestsTable.createdAt);
@@ -207,12 +209,12 @@ router.get("/zenkatuber/requests/:adminUid", async (req, res) => {
 // Verificar se uid tem solicitação pendente
 router.get("/zenkatuber/status/:uid", async (req, res) => {
   try {
-    const [request] = await db
+    const [request] = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.uid, req.params.uid));
 
-    const [user] = await db
+    const [user] = await db2
       .select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt })
       .from(usersTable)
       .where(eq(usersTable.uid, req.params.uid));
@@ -241,7 +243,7 @@ router.post("/zenkatuber/approve/:id", async (req, res) => {
     }
 
     const id = parseInt(req.params.id);
-    const [request] = await db
+    const [request] = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.id, id));
@@ -252,7 +254,7 @@ router.post("/zenkatuber/approve/:id", async (req, res) => {
     }
 
     // Move para etapa 2 (aguardando divulgação do candidato)
-    await db
+    await db2
       .update(zenkatuberRequestsTable)
       .set({ status: "stage1_approved", stage: 2 })
       .where(eq(zenkatuberRequestsTable.id, id));
@@ -273,7 +275,7 @@ router.post("/zenkatuber/stage2-submit", async (req, res) => {
       return;
     }
 
-    const [request] = await db
+    const [request] = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.uid, uid));
@@ -283,7 +285,7 @@ router.post("/zenkatuber/stage2-submit", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .update(zenkatuberRequestsTable)
       .set({ postUrl, status: "stage2_pending" })
       .where(eq(zenkatuberRequestsTable.id, request.id));
@@ -306,7 +308,7 @@ router.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
     }
 
     const id = parseInt(req.params.id);
-    const [request] = await db
+    const [request] = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.id, id));
@@ -316,7 +318,7 @@ router.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .update(usersTable)
       .set({
         isZenkatuber: true,
@@ -328,7 +330,7 @@ router.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
       })
       .where(eq(usersTable.uid, request.uid));
 
-    await db
+    await db2
       .delete(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.id, id));
 
@@ -350,7 +352,7 @@ router.post("/zenkatuber/reject/:id", async (req, res) => {
     }
 
     const id = parseInt(req.params.id);
-    const [request] = await db
+    const [request] = await db2
       .select()
       .from(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.id, id));
@@ -360,7 +362,7 @@ router.post("/zenkatuber/reject/:id", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .delete(zenkatuberRequestsTable)
       .where(eq(zenkatuberRequestsTable.id, id));
 
@@ -386,7 +388,7 @@ router.post("/zenkatuber/grant", async (req, res) => {
       return;
     }
 
-    const [user] = await db
+    const [user] = await db2
       .select()
       .from(usersTable)
       .where(eq(usersTable.email, email.trim().toLowerCase()));
@@ -396,7 +398,7 @@ router.post("/zenkatuber/grant", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .update(usersTable)
       .set({
         isZenkatuber: true,
@@ -424,7 +426,7 @@ router.get("/zenkatuber/list/:adminUid", async (req, res) => {
       return;
     }
 
-    const zenkatubers = await db
+    const zenkatubers = await db2
       .select({
         uid: usersTable.uid,
         email: usersTable.email,
@@ -457,7 +459,7 @@ router.patch("/zenkatuber/edit/:uid", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .update(usersTable)
       .set({
         contactWhatsapp: whatsapp ?? null,
@@ -484,7 +486,7 @@ router.post("/zenkatuber/revoke/:uid", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .update(usersTable)
       .set({
         isZenkatuber: false,

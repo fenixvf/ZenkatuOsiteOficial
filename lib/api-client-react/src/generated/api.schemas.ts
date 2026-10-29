@@ -298,3 +298,32 @@ export interface AdminStats {
   comentariosHoje: number;
 }
 
+/**
+ * Convite de cast recebido por uma conta da Zenkatu
+ */
+export interface ConviteCast {
+  id: number;
+  obraId: number;
+  obraTitulo: string;
+  obraSlug: string;
+  /** @nullable */
+  obraCapa?: string | null;
+  uid: string;
+  /** @nullable */
+  convidadoPor?: string | null;
+  nome: string;
+  personagem: string;
+  /** @nullable */
+  fotoUrl?: string | null;
+  /** pending | accepted | declined */
+  status: string;
+  createdAt: string;
+  /** @nullable */
+  respondedAt?: string | null;
+}
+
+export interface ConviteResposta {
+  /** uid da pessoa convidada (única que pode responder) */
+  uid: string;
+}
+

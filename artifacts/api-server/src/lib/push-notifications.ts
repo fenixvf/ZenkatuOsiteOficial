@@ -1,5 +1,7 @@
 import webpush from "web-push";
-import { db } from "@workspace/db";
+// site_config/notificacoes_historico ficam no 1º banco; as assinaturas de push
+// são dados de usuários e vão para o 2º banco (Supabase #2).
+import { db, db2 } from "@workspace/db";
 import {
   pushSubscriptionsTable,
   siteConfigTable,
@@ -57,11 +59,11 @@ export async function sendPushToAll(payload: PushPayload, type: NotificationType
   // Sempre incluir ícone do site
   if (!payload.icon) payload = { ...payload, icon: DEFAULT_ICON };
 
-  let vapidSubs = await db.select().from(pushSubscriptionsTable);
+  let vapidSubs = await db2.select().from(pushSubscriptionsTable);
 
   let onesignalSubs: typeof onesignalSubscriptionsTable.$inferSelect[] = [];
   try {
-    onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
+    onesignalSubs = await db2.select().from(onesignalSubscriptionsTable);
   } catch {
     // tabela pode não existir em produção ainda
   }
@@ -100,7 +102,7 @@ export async function sendPushToAll(payload: PushPayload, type: NotificationType
 
         if (expiredIds.length > 0) {
           const { inArray } = await import("drizzle-orm");
-          await db.delete(pushSubscriptionsTable).where(inArray(pushSubscriptionsTable.id, expiredIds));
+          await db2.delete(pushSubscriptionsTable).where(inArray(pushSubscriptionsTable.id, expiredIds));
         }
       }
 

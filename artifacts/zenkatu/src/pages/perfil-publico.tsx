@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useListUsuarios } from "@workspace/api-client-react";
+import { useListUsuarios, useListPersonagensFeitos } from "@workspace/api-client-react";
 import { Link, useRoute } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -12,6 +12,8 @@ import {
   Pencil,
   Mic,
   ExternalLink,
+  Film,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,6 +56,15 @@ export default function PerfilPublico() {
   const { currentUser } = useAuth();
 
   const { data: usuariosRaw, isLoading } = useListUsuarios();
+
+  // Abas do perfil público: informações e personagens confirmados no cast.
+  const [aba, setAba] = useState<"sobre" | "personagens">("sobre");
+  const { data: personagensRaw, isLoading: personagensLoading } =
+    useListPersonagensFeitos(uid, {
+      query: { enabled: !!uid, queryKey: ["personagensFeitos", uid] },
+    });
+  const personagens = Array.isArray(personagensRaw) ? personagensRaw : [];
+
   const usuarios = useMemo(
     () => (Array.isArray(usuariosRaw) ? usuariosRaw : []),
     [usuariosRaw],
@@ -99,6 +110,11 @@ export default function PerfilPublico() {
       ? "Administração"
       : "Membro";
 
+  const abas: Array<{ key: "sobre" | "personagens"; label: string; icon: typeof User }> = [
+    { key: "sobre", label: "Sobre", icon: User },
+    { key: "personagens", label: "Personagens feitos", icon: Film },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -111,6 +127,26 @@ export default function PerfilPublico() {
         </span>
       </Link>
 
+      {/* Abas do perfil público */}
+      <div className="mb-6 flex min-w-0 gap-1 overflow-x-auto rounded-xl border border-border bg-card/50 p-1">
+        {abas.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => setAba(item.key)}
+            className={`flex min-w-0 flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors sm:text-sm ${
+              aba === item.key
+                ? "bg-primary text-primary-foreground shadow"
+                : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+            }`}
+          >
+            <item.icon className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">{item.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {aba === "sobre" && (
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
         {/* Banner */}
         <div className="h-28 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent relative overflow-hidden">
@@ -204,6 +240,74 @@ export default function PerfilPublico() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* Personagens feitos */}
+      {aba === "personagens" && (
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
+            <div className="rounded-lg bg-primary/15 p-2 text-primary">
+              <Film className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-bold text-foreground">
+                Personagens feitos
+              </h2>
+              <p className="truncate text-xs text-muted-foreground">
+                Personagens confirmados por {usuario.username || "esta conta"}.
+              </p>
+            </div>
+          </div>
+
+          {personagensLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : personagens.length === 0 ? (
+            <div className="border-2 border-dashed border-border rounded-xl py-10 text-center text-muted-foreground">
+              <Film className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm font-medium">Nenhum personagem confirmado ainda.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {personagens.map((personagem) => (
+                <Link
+                  key={personagem.id}
+                  href={`/obra/${personagem.obraSlug}`}
+                  className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-background/50 p-3 transition-all hover:border-primary/40 hover:bg-primary/5"
+                >
+                  {personagem.obraCapa ? (
+                    <img
+                      src={personagem.obraCapa}
+                      alt={personagem.obraTitulo}
+                      className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-secondary">
+                      <Film className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
+                      {personagem.personagem}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {personagem.obraTitulo}
+                    </p>
+                    <p className="truncate text-[11px] text-muted-foreground/70">
+                      como {personagem.nome}
+                    </p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }

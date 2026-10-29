@@ -1,11 +1,13 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+// `db` = 1º banco (conteúdo), `db2` = 2º banco (usuários e convites de cast).
+import { db, db2 } from "@workspace/db";
 import { obrasTable, usersTable, siteConfigTable } from "@workspace/db";
 import { eq, desc, inArray, sql } from "drizzle-orm";
 import { sendPushToAll } from "../lib/push-notifications";
+import { syncCastConvites, deleteCastConvitesDaObra } from "../lib/cast-convites";
 
 async function canEditObra(uid: string, obra: typeof obrasTable.$inferSelect): Promise<boolean> {
-  const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, uid));
+  const [user] = await db2.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, uid));
   if (!user) return false;
   if (user.role === "admin") return true;
   return obra.ownerId === uid;
@@ -190,7 +192,7 @@ router.post("/obras", async (req, res) => {
     } = req.body;
 
     if (ownerId) {
-      const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, ownerId));
+      const [user] = await db2.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, ownerId));
       if (!user || user.role !== "admin") {
         const existing = await db
           .select({ id: obrasTable.id })
@@ -216,6 +218,22 @@ router.post("/obras", async (req, res) => {
       ownerId: ownerId ?? null,
     }).returning();
     res.status(201).json(serializeObra(obra));
+
+    // Cria a notificação no perfil de cada pessoa citada no cast.
+    setImmediate(async () => {
+      try {
+        await syncCastConvites({
+          obraId: obra.id,
+          obraTitulo: titulo,
+          obraSlug: slug,
+          obraCapa: capaUrl ?? null,
+          convidadoPor: ownerId ?? null,
+          cast: cast ?? [],
+        });
+      } catch (castErr) {
+        req.log.error({ castErr }, "Erro ao criar convites de cast");
+      }
+    });
 
     setImmediate(async () => {
       try {
@@ -265,6 +283,24 @@ router.patch("/obras/:id", async (req, res) => {
       .where(eq(obrasTable.id, id))
       .returning();
     res.json(serializeObra(obra));
+
+    // Mantém os convites de cast em dia (só quando o cast foi enviado).
+    if (Object.prototype.hasOwnProperty.call(req.body, "cast")) {
+      setImmediate(async () => {
+        try {
+          await syncCastConvites({
+            obraId: obra.id,
+            obraTitulo: obra.titulo,
+            obraSlug: obra.slug,
+            obraCapa: obra.capaUrl,
+            convidadoPor: obra.ownerId ?? null,
+            cast: obra.cast ?? [],
+          });
+        } catch (castErr) {
+          req.log.error({ castErr }, "Erro ao sincronizar convites de cast");
+        }
+      });
+    }
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -292,6 +328,13 @@ router.delete("/obras/:id", async (req, res) => {
       }
     }
     await db.delete(obrasTable).where(eq(obrasTable.id, id));
+    setImmediate(async () => {
+      try {
+        await deleteCastConvitesDaObra(id);
+      } catch (castErr) {
+        req.log.error({ castErr }, "Erro ao remover convites de cast");
+      }
+    });
     res.status(204).send();
   } catch (e) {
     req.log.error(e);

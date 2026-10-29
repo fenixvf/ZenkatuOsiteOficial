@@ -19,6 +19,8 @@ tags:
     description: User profile management
   - name: imagenes
     description: Image uploads stored as WebP
+  - name: cast
+    description: Convites de cast e personagens do perfil
   - name: stats
     description: Dashboard statistics
   - name: generos
@@ -718,6 +720,106 @@ paths:
         "204":
           description: Cleared
 
+  /convites-cast/{uid}:
+    get:
+      operationId: listConvitesCast
+      tags: [cast]
+      summary: Convites de cast recebidos por uma pessoa (notificações no perfil)
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lista de convites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConviteCast"
+
+  /convites-cast/{conviteId}/aceitar:
+    post:
+      operationId: aceitarConviteCast
+      tags: [cast]
+      summary: Aceita o convite e publica o personagem no perfil
+      parameters:
+        - name: conviteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConviteResposta"
+      responses:
+        "200":
+          description: Convite aceito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConviteCast"
+        "403":
+          description: O convite não é da pessoa convidada
+        "404":
+          description: Convite não encontrado
+
+  /convites-cast/{conviteId}/recusar:
+    post:
+      operationId: recusarConviteCast
+      tags: [cast]
+      summary: Recusa o convite de cast
+      parameters:
+        - name: conviteId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConviteResposta"
+      responses:
+        "200":
+          description: Convite recusado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConviteCast"
+        "403":
+          description: O convite não é da pessoa convidada
+        "404":
+          description: Convite não encontrado
+
+  /personagens-feitos/{uid}:
+    get:
+      operationId: listPersonagensFeitos
+      tags: [cast]
+      summary: Personagens aceitos que aparecem na aba do perfil
+      parameters:
+        - name: uid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Personagens confirmados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConviteCast"
+
   /stats/admin:
     get:
       operationId: getAdminStats
@@ -1279,3 +1381,54 @@ components:
           type: integer
         comentariosHoje:
           type: integer
+
+    ConviteCast:
+      type: object
+      description: Convite de cast recebido por uma conta da Zenkatu
+      required:
+        - id
+        - obraId
+        - obraTitulo
+        - obraSlug
+        - uid
+        - nome
+        - personagem
+        - status
+        - createdAt
+      properties:
+        id:
+          type: integer
+        obraId:
+          type: integer
+        obraTitulo:
+          type: string
+        obraSlug:
+          type: string
+        obraCapa:
+          type: ["string", "null"]
+        uid:
+          type: string
+        convidadoPor:
+          type: ["string", "null"]
+        nome:
+          type: string
+        personagem:
+          type: string
+        fotoUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          description: pending | accepted | declined
+        createdAt:
+          type: string
+        respondedAt:
+          type: ["string", "null"]
+
+    ConviteResposta:
+      type: object
+      required:
+        - uid
+      properties:
+        uid:
+          type: string
+          description: uid da pessoa convidada (única que pode responder)

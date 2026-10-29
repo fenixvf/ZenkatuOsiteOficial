@@ -25,6 +25,8 @@ import type {
   Comentario,
   ComentarioInput,
   ComentarioUpdate,
+  ConviteCast,
+  ConviteResposta,
   Episodio,
   EpisodioInput,
   EpisodioUpdate,
@@ -2791,6 +2793,304 @@ export const useClearHistorico = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getClearHistoricoMutationOptions(options));
     }
+
+export const getListConvitesCastUrl = (uid: string,) => {
+
+
+
+
+  return `/api/convites-cast/${uid}`
+}
+
+/**
+ * @summary Convites de cast recebidos por uma pessoa (notificações no perfil)
+ */
+export const listConvitesCast = async (uid: string, options?: RequestInit): Promise<ConviteCast[]> => {
+
+  return customFetch<ConviteCast[]>(getListConvitesCastUrl(uid),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConvitesCastQueryKey = (uid: string,) => {
+    return [
+    `/api/convites-cast/${uid}`
+    ] as const;
+    }
+
+
+export const getListConvitesCastQueryOptions = <TData = Awaited<ReturnType<typeof listConvitesCast>>, TError = ErrorType<unknown>>(uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConvitesCast>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConvitesCastQueryKey(uid);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConvitesCast>>> = ({ signal }) => listConvitesCast(uid, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(uid), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConvitesCast>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConvitesCastQueryResult = NonNullable<Awaited<ReturnType<typeof listConvitesCast>>>
+export type ListConvitesCastQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Convites de cast recebidos por uma pessoa (notificações no perfil)
+ */
+
+export function useListConvitesCast<TData = Awaited<ReturnType<typeof listConvitesCast>>, TError = ErrorType<unknown>>(
+ uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConvitesCast>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConvitesCastQueryOptions(uid,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getAceitarConviteCastUrl = (conviteId: number,) => {
+
+
+
+
+  return `/api/convites-cast/${conviteId}/aceitar`
+}
+
+/**
+ * @summary Aceita o convite e publica o personagem no perfil
+ */
+export const aceitarConviteCast = async (conviteId: number,
+    conviteResposta: ConviteResposta, options?: RequestInit): Promise<ConviteCast> => {
+
+  return customFetch<ConviteCast>(getAceitarConviteCastUrl(conviteId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      conviteResposta,)
+  }
+);}
+
+
+
+
+export const getAceitarConviteCastMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aceitarConviteCast>>, TError,{conviteId: number;data: BodyType<ConviteResposta>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aceitarConviteCast>>, TError,{conviteId: number;data: BodyType<ConviteResposta>}, TContext> => {
+
+const mutationKey = ['aceitarConviteCast'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aceitarConviteCast>>, {conviteId: number;data: BodyType<ConviteResposta>}> = (props) => {
+          const {conviteId,data} = props ?? {};
+
+          return  aceitarConviteCast(conviteId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AceitarConviteCastMutationResult = NonNullable<Awaited<ReturnType<typeof aceitarConviteCast>>>
+    export type AceitarConviteCastMutationBody = BodyType<ConviteResposta>
+    export type AceitarConviteCastMutationError = ErrorType<void>
+
+    /**
+ * @summary Aceita o convite e publica o personagem no perfil
+ */
+export const useAceitarConviteCast = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aceitarConviteCast>>, TError,{conviteId: number;data: BodyType<ConviteResposta>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aceitarConviteCast>>,
+        TError,
+        {conviteId: number;data: BodyType<ConviteResposta>},
+        TContext
+      > => {
+      return useMutation(getAceitarConviteCastMutationOptions(options));
+    }
+
+export const getRecusarConviteCastUrl = (conviteId: number,) => {
+
+
+
+
+  return `/api/convites-cast/${conviteId}/recusar`
+}
+
+/**
+ * @summary Recusa o convite de cast
+ */
+export const recusarConviteCast = async (conviteId: number,
+    conviteResposta: ConviteResposta, options?: RequestInit): Promise<ConviteCast> => {
+
+  return customFetch<ConviteCast>(getRecusarConviteCastUrl(conviteId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      conviteResposta,)
+  }
+);}
+
+
+
+
+export const getRecusarConviteCastMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recusarConviteCast>>, TError,{conviteId: number;data: BodyType<ConviteResposta>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recusarConviteCast>>, TError,{conviteId: number;data: BodyType<ConviteResposta>}, TContext> => {
+
+const mutationKey = ['recusarConviteCast'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recusarConviteCast>>, {conviteId: number;data: BodyType<ConviteResposta>}> = (props) => {
+          const {conviteId,data} = props ?? {};
+
+          return  recusarConviteCast(conviteId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecusarConviteCastMutationResult = NonNullable<Awaited<ReturnType<typeof recusarConviteCast>>>
+    export type RecusarConviteCastMutationBody = BodyType<ConviteResposta>
+    export type RecusarConviteCastMutationError = ErrorType<void>
+
+    /**
+ * @summary Recusa o convite de cast
+ */
+export const useRecusarConviteCast = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recusarConviteCast>>, TError,{conviteId: number;data: BodyType<ConviteResposta>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof recusarConviteCast>>,
+        TError,
+        {conviteId: number;data: BodyType<ConviteResposta>},
+        TContext
+      > => {
+      return useMutation(getRecusarConviteCastMutationOptions(options));
+    }
+
+export const getListPersonagensFeitosUrl = (uid: string,) => {
+
+
+
+
+  return `/api/personagens-feitos/${uid}`
+}
+
+/**
+ * @summary Personagens aceitos que aparecem na aba do perfil
+ */
+export const listPersonagensFeitos = async (uid: string, options?: RequestInit): Promise<ConviteCast[]> => {
+
+  return customFetch<ConviteCast[]>(getListPersonagensFeitosUrl(uid),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPersonagensFeitosQueryKey = (uid: string,) => {
+    return [
+    `/api/personagens-feitos/${uid}`
+    ] as const;
+    }
+
+
+export const getListPersonagensFeitosQueryOptions = <TData = Awaited<ReturnType<typeof listPersonagensFeitos>>, TError = ErrorType<unknown>>(uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPersonagensFeitos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPersonagensFeitosQueryKey(uid);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPersonagensFeitos>>> = ({ signal }) => listPersonagensFeitos(uid, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(uid), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPersonagensFeitos>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPersonagensFeitosQueryResult = NonNullable<Awaited<ReturnType<typeof listPersonagensFeitos>>>
+export type ListPersonagensFeitosQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Personagens aceitos que aparecem na aba do perfil
+ */
+
+export function useListPersonagensFeitos<TData = Awaited<ReturnType<typeof listPersonagensFeitos>>, TError = ErrorType<unknown>>(
+ uid: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPersonagensFeitos>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPersonagensFeitosQueryOptions(uid,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetAdminStatsUrl = () => {
 

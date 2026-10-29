@@ -1,7 +1,9 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+// Comentários ficam no 1º banco e perfis de usuário no 2º (Supabase #2),
+// então as consultas são feitas separadamente em cada banco.
+import { db, db2 } from "@workspace/db";
 import { comentariosTable, usersTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 
 const router = Router();
 
@@ -24,14 +26,27 @@ router.get("/obras/:obraId/comentarios", async (req, res) => {
         editado: comentariosTable.editado,
         createdAt: comentariosTable.createdAt,
         updatedAt: comentariosTable.updatedAt,
-        isZenkatuber: usersTable.isZenkatuber,
-        verifiedAt: usersTable.verifiedAt,
       })
       .from(comentariosTable)
-      .leftJoin(usersTable, eq(comentariosTable.userId, usersTable.uid))
       .where(eq(comentariosTable.obraId, obraId))
       .orderBy(desc(comentariosTable.createdAt));
-    res.json(rows.map(r => ({
+
+    const uids = [...new Set(rows.map((r) => r.userId))];
+    const perfis = uids.length
+      ? await db2
+          .select({
+            uid: usersTable.uid,
+            isZenkatuber: usersTable.isZenkatuber,
+            verifiedAt: usersTable.verifiedAt,
+          })
+          .from(usersTable)
+          .where(inArray(usersTable.uid, uids))
+      : [];
+    const porUid = new Map(perfis.map((p) => [p.uid, p]));
+
+    res.json(rows.map(r => {
+      const perfil = porUid.get(r.userId);
+      return {
       id: r.id,
       obraId: r.obraId,
       userId: r.userId,
@@ -42,9 +57,10 @@ router.get("/obras/:obraId/comentarios", async (req, res) => {
       editado: r.editado,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
-      isZenkatuber: r.isZenkatuber ?? false,
-      verifiedAt: r.verifiedAt ? r.verifiedAt.toISOString() : null,
-    })));
+      isZenkatuber: perfil?.isZenkatuber ?? false,
+      verifiedAt: perfil?.verifiedAt ? perfil.verifiedAt.toISOString() : null,
+      };
+    }));
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -67,7 +83,7 @@ router.post("/obras/:obraId/comentarios", async (req, res) => {
       obraId, userId, username, userPhoto,
       texto, parentId: parentId ?? null,
     }).returning();
-    const [user] = await db
+    const [user] = await db2
       .select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt })
       .from(usersTable)
       .where(eq(usersTable.uid, userId));
@@ -112,7 +128,7 @@ router.patch("/comentarios/:id", async (req, res) => {
       res.status(404).json({ error: "Not found" });
       return;
     }
-    const [user] = await db
+    const [user] = await db2
       .select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt })
       .from(usersTable)
       .where(eq(usersTable.uid, comentario.userId));

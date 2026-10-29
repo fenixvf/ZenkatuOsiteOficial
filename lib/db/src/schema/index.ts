@@ -12,3 +12,4 @@ export * from "./pushSubscriptions";
 export * from "./onesignalSubscriptions";
 export * from "./notificacoesHistorico";
 export * from "./zenkatuberRequests";
+export * from "./castConvites";

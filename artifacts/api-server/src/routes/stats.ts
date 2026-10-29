@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, db2 } from "@workspace/db";
 import { obrasTable, episodiosTable, usersTable, comentariosTable } from "@workspace/db";
 import { count, gte } from "drizzle-orm";
 import { sql } from "drizzle-orm";
@@ -12,7 +12,8 @@ router.get("/stats/admin", async (req, res) => {
     const [[obraCount], [epCount], [userCount], [commentCount]] = await Promise.all([
       db.select({ count: count() }).from(obrasTable),
       db.select({ count: count() }).from(episodiosTable),
-      db.select({ count: count() }).from(usersTable),
+      // Contagem de usuários vem do segundo banco (Supabase #2).
+      db2.select({ count: count() }).from(usersTable),
       db.select({ count: count() }).from(comentariosTable).where(
         gte(comentariosTable.createdAt, sql`NOW() - INTERVAL '1 day'`)
       ),

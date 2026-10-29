@@ -15190,7 +15190,7 @@ var require_mimeScore = __commonJS({
 var require_mime_types = __commonJS({
   "../../node_modules/.pnpm/mime-types@3.0.2/node_modules/mime-types/index.js"(exports) {
     "use strict";
-    var db2 = require_mime_db();
+    var db3 = require_mime_db();
     var extname = __require("path").extname;
     var mimeScore = require_mimeScore();
     var EXTRACT_TYPE_REGEXP = /^\s*([^;\s]*)(?:;|\s|$)/;
@@ -15209,7 +15209,7 @@ var require_mime_types = __commonJS({
         return false;
       }
       var match = EXTRACT_TYPE_REGEXP.exec(type);
-      var mime = match && db2[match[1].toLowerCase()];
+      var mime = match && db3[match[1].toLowerCase()];
       if (mime && mime.charset) {
         return mime.charset;
       }
@@ -15254,8 +15254,8 @@ var require_mime_types = __commonJS({
       return exports.types[extension2] || false;
     }
     function populateMaps(extensions, types3) {
-      Object.keys(db2).forEach(function forEachMimeType(type) {
-        var mime = db2[type];
+      Object.keys(db3).forEach(function forEachMimeType(type) {
+        var mime = db3[type];
         var exts = mime.extensions;
         if (!exts || !exts.length) {
           return;
@@ -15276,14 +15276,14 @@ var require_mime_types = __commonJS({
       });
     }
     function _preferredType(ext, type0, type1) {
-      var score0 = type0 ? mimeScore(type0, db2[type0].source) : 0;
-      var score1 = type1 ? mimeScore(type1, db2[type1].source) : 0;
+      var score0 = type0 ? mimeScore(type0, db3[type0].source) : 0;
+      var score1 = type1 ? mimeScore(type1, db3[type1].source) : 0;
       return score0 > score1 ? type0 : type1;
     }
     function _preferredTypeLegacy(ext, type0, type1) {
       var SOURCE_RANK = ["nginx", "apache", void 0, "iana"];
-      var score0 = type0 ? SOURCE_RANK.indexOf(db2[type0].source) : 0;
-      var score1 = type1 ? SOURCE_RANK.indexOf(db2[type1].source) : 0;
+      var score0 = type0 ? SOURCE_RANK.indexOf(db3[type0].source) : 0;
+      var score1 = type1 ? SOURCE_RANK.indexOf(db3[type1].source) : 0;
       if (exports.types[extension] !== "application/octet-stream" && (score0 > score1 || score0 === score1 && exports.types[extension]?.slice(0, 12) === "application/")) {
         return type0;
       }
@@ -20820,27 +20820,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router17;
+    module.exports = Router18;
     module.exports.Route = Route;
-    function Router17(options) {
-      if (!(this instanceof Router17)) {
-        return new Router17(options);
+    function Router18(options) {
+      if (!(this instanceof Router18)) {
+        return new Router18(options);
       }
       const opts = options || {};
-      function router17(req, res, next) {
-        router17.handle(req, res, next);
+      function router18(req, res, next) {
+        router18.handle(req, res, next);
       }
-      Object.setPrototypeOf(router17, this);
-      router17.caseSensitive = opts.caseSensitive;
-      router17.mergeParams = opts.mergeParams;
-      router17.params = {};
-      router17.strict = opts.strict;
-      router17.stack = [];
-      return router17;
+      Object.setPrototypeOf(router18, this);
+      router18.caseSensitive = opts.caseSensitive;
+      router18.mergeParams = opts.mergeParams;
+      router18.params = {};
+      router18.strict = opts.strict;
+      router18.stack = [];
+      return router18;
     }
-    Router17.prototype = function() {
+    Router18.prototype = function() {
     };
-    Router17.prototype.param = function param2(name2, fn) {
+    Router18.prototype.param = function param2(name2, fn) {
       if (!name2) {
         throw new TypeError("argument name is required");
       }
@@ -20860,7 +20860,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router17.prototype.handle = function handle(req, res, callback) {
+    Router18.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20987,7 +20987,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router17.prototype.use = function use(handler) {
+    Router18.prototype.use = function use(handler) {
       let offset = 0;
       let path4 = "/";
       if (typeof handler !== "function") {
@@ -21020,7 +21020,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router17.prototype.route = function route(path4) {
+    Router18.prototype.route = function route(path4) {
       const route2 = new Route(path4);
       const layer = new Layer(path4, {
         sensitive: this.caseSensitive,
@@ -21035,7 +21035,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router17.prototype[method] = function(path4) {
+      Router18.prototype[method] = function(path4) {
         const route = this.route(path4);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -21218,13 +21218,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router17 = require_router();
+    var Router18 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router17 = null;
+      var router18 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21233,13 +21233,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router17 === null) {
-            router17 = new Router17({
+          if (router18 === null) {
+            router18 = new Router18({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router17;
+          return router18;
         }
       });
     };
@@ -21310,15 +21310,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router17 = this.router;
+      var router18 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router17.use(path4, fn2);
+          return router18.use(path4, fn2);
         }
         debug(".use app under %s", path4);
         fn2.mountpath = path4;
         fn2.parent = this;
-        router17.use(path4, function mounted_app(req, res, next) {
+        router18.use(path4, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -22672,7 +22672,7 @@ var require_cookie = __commonJS({
   "../../node_modules/.pnpm/cookie@0.7.2/node_modules/cookie/index.js"(exports) {
     "use strict";
     exports.parse = parse3;
-    exports.serialize = serialize2;
+    exports.serialize = serialize3;
     var __toString = Object.prototype.toString;
     var __hasOwnProperty = Object.prototype.hasOwnProperty;
     var cookieNameRegExp = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
@@ -22731,7 +22731,7 @@ var require_cookie = __commonJS({
       }
       return min2;
     }
-    function serialize2(name2, val, opt) {
+    function serialize3(name2, val, opt) {
       var enc = opt && opt.encode || encodeURIComponent;
       if (typeof enc !== "function") {
         throw new TypeError("option encode is invalid");
@@ -23971,7 +23971,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router17 = require_router();
+    var Router18 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23993,8 +23993,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router17.Route;
-    exports.Router = Router17;
+    exports.Route = Router18.Route;
+    exports.Router = Router18;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -25084,7 +25084,7 @@ var require_redact = __commonJS({
       const {
         paths = [],
         censor = "[REDACTED]",
-        serialize: serialize2 = JSON.stringify,
+        serialize: serialize3 = JSON.stringify,
         strict = true,
         remove = false
       } = options;
@@ -25093,10 +25093,10 @@ var require_redact = __commonJS({
       return function redact(obj) {
         if (strict && (obj === null || typeof obj !== "object")) {
           if (obj === null || obj === void 0) {
-            return serialize2 ? serialize2(obj) : obj;
+            return serialize3 ? serialize3(obj) : obj;
           }
           if (typeof obj !== "object") {
-            return serialize2 ? serialize2(obj) : obj;
+            return serialize3 ? serialize3(obj) : obj;
           }
         }
         const cloned = selectiveClone(obj, pathStructure);
@@ -25106,14 +25106,14 @@ var require_redact = __commonJS({
           actualCensor = censor;
         }
         redactPaths(cloned, paths, actualCensor, remove);
-        if (serialize2 === false) {
+        if (serialize3 === false) {
           cloned.restore = function() {
             return deepClone(original);
           };
           return cloned;
         }
-        if (typeof serialize2 === "function") {
-          return serialize2(cloned);
+        if (typeof serialize3 === "function") {
+          return serialize3(cloned);
         }
         return JSON.stringify(cloned);
       };
@@ -25202,7 +25202,7 @@ var require_redaction = __commonJS({
     var rx = /[^.[\]]+|\[([^[\]]*?)\]/g;
     var CENSOR = "[Redacted]";
     var strict = false;
-    function redaction(opts, serialize2) {
+    function redaction(opts, serialize3) {
       const { paths, censor, remove } = handle(opts);
       const shape = paths.reduce((o, str) => {
         rx.lastIndex = 0;
@@ -25236,10 +25236,10 @@ var require_redaction = __commonJS({
         return o;
       }, {});
       const result = {
-        [redactFmtSym]: Redact({ paths, censor, serialize: serialize2, strict, remove })
+        [redactFmtSym]: Redact({ paths, censor, serialize: serialize3, strict, remove })
       };
       const topCensor = (...args) => {
-        return typeof censor === "function" ? serialize2(censor(...args)) : serialize2(censor);
+        return typeof censor === "function" ? serialize3(censor(...args)) : serialize3(censor);
       };
       return [...Object.keys(shape), ...Object.getOwnPropertySymbols(shape)].reduce((o, k) => {
         if (shape[k] === null) {
@@ -25251,7 +25251,7 @@ var require_redaction = __commonJS({
           o[k] = Redact({
             paths: shape[k],
             censor: wrappedCensor,
-            serialize: serialize2,
+            serialize: serialize3,
             strict,
             remove
           });
@@ -28390,7 +28390,7 @@ var require_pino = __commonJS({
     function pinoBundlerAbsolutePath(p) {
       try {
         const path4 = __require("path");
-        const outputDir = "/workspace/chats/cbab109d15014cdd6a149166/api";
+        const outputDir = "/workspace/chats/009ecf042640d0f74d0fa715/api";
         return path4.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
@@ -31479,7 +31479,7 @@ var require_serializer = __commonJS({
       99
       /* code.copyDone */
     );
-    var serialize2 = {
+    var serialize3 = {
       startup,
       password,
       requestSsl,
@@ -31499,7 +31499,7 @@ var require_serializer = __commonJS({
       copyFail,
       cancel
     };
-    exports.serialize = serialize2;
+    exports.serialize = serialize3;
   }
 });
 
@@ -31973,11 +31973,11 @@ var require_connection = __commonJS({
   "../../node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/connection.js"(exports, module) {
     "use strict";
     var EventEmitter = __require("events").EventEmitter;
-    var { parse: parse3, serialize: serialize2 } = require_dist4();
+    var { parse: parse3, serialize: serialize3 } = require_dist4();
     var { getStream, getSecureStream } = require_stream();
-    var flushBuffer = serialize2.flush();
-    var syncBuffer = serialize2.sync();
-    var endBuffer = serialize2.end();
+    var flushBuffer = serialize3.flush();
+    var syncBuffer = serialize3.sync();
+    var endBuffer = serialize3.end();
     var Connection2 = class extends EventEmitter {
       constructor(config2) {
         super();
@@ -32068,22 +32068,22 @@ var require_connection = __commonJS({
         });
       }
       requestSsl() {
-        this.stream.write(serialize2.requestSsl());
+        this.stream.write(serialize3.requestSsl());
       }
       startup(config2) {
-        this.stream.write(serialize2.startup(config2));
+        this.stream.write(serialize3.startup(config2));
       }
       cancel(processID, secretKey) {
-        this._send(serialize2.cancel(processID, secretKey));
+        this._send(serialize3.cancel(processID, secretKey));
       }
       password(password) {
-        this._send(serialize2.password(password));
+        this._send(serialize3.password(password));
       }
       sendSASLInitialResponseMessage(mechanism, initialResponse) {
-        this._send(serialize2.sendSASLInitialResponseMessage(mechanism, initialResponse));
+        this._send(serialize3.sendSASLInitialResponseMessage(mechanism, initialResponse));
       }
       sendSCRAMClientFinalMessage(additionalData) {
-        this._send(serialize2.sendSCRAMClientFinalMessage(additionalData));
+        this._send(serialize3.sendSCRAMClientFinalMessage(additionalData));
       }
       _send(buffer) {
         if (!this.stream.writable) {
@@ -32092,19 +32092,19 @@ var require_connection = __commonJS({
         return this.stream.write(buffer);
       }
       query(text2) {
-        this._send(serialize2.query(text2));
+        this._send(serialize3.query(text2));
       }
       // send parse message
       parse(query) {
-        this._send(serialize2.parse(query));
+        this._send(serialize3.parse(query));
       }
       // send bind message
       bind(config2) {
-        this._send(serialize2.bind(config2));
+        this._send(serialize3.bind(config2));
       }
       // send execute message
       execute(config2) {
-        this._send(serialize2.execute(config2));
+        this._send(serialize3.execute(config2));
       }
       flush() {
         if (this.stream.writable) {
@@ -32132,19 +32132,19 @@ var require_connection = __commonJS({
         });
       }
       close(msg) {
-        this._send(serialize2.close(msg));
+        this._send(serialize3.close(msg));
       }
       describe(msg) {
-        this._send(serialize2.describe(msg));
+        this._send(serialize3.describe(msg));
       }
       sendCopyFromChunk(chunk) {
-        this._send(serialize2.copyData(chunk));
+        this._send(serialize3.copyData(chunk));
       }
       endCopyFrom() {
-        this._send(serialize2.copyDone());
+        this._send(serialize3.copyDone());
       }
       sendCopyFail(msg) {
-        this._send(serialize2.copyFail(msg));
+        this._send(serialize3.copyFail(msg));
       }
     };
     module.exports = Connection2;
@@ -33106,15 +33106,15 @@ var require_pg_pool = __commonJS({
       });
       return { callback: cb, result };
     }
-    function makeIdleListener(pool2, client) {
+    function makeIdleListener(pool3, client) {
       return function idleListener(err) {
         err.client = client;
         client.removeListener("error", idleListener);
         client.on("error", () => {
-          pool2.log("additional client error after disconnection due to error", err);
+          pool3.log("additional client error after disconnection due to error", err);
         });
-        pool2._remove(client);
-        pool2.emit("error", err, client);
+        pool3._remove(client);
+        pool3.emit("error", err, client);
       };
     }
     var Pool4 = class extends EventEmitter {
@@ -44651,14 +44651,14 @@ var require_src2 = __commonJS({
 });
 
 // src/app.ts
-var import_express17 = __toESM(require_express2(), 1);
+var import_express18 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 import path3 from "path";
 import { fileURLToPath } from "url";
 
 // src/routes/index.ts
-var import_express15 = __toESM(require_express2(), 1);
+var import_express16 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -49129,6 +49129,86 @@ var AddToHistoricoBody = objectType({
 var ClearHistoricoParams = objectType({
   "uid": coerce.string()
 });
+var ListConvitesCastParams = objectType({
+  "uid": coerce.string()
+});
+var ListConvitesCastResponseItem = objectType({
+  "id": numberType(),
+  "obraId": numberType(),
+  "obraTitulo": stringType(),
+  "obraSlug": stringType(),
+  "obraCapa": stringType().nullish(),
+  "uid": stringType(),
+  "convidadoPor": stringType().nullish(),
+  "nome": stringType(),
+  "personagem": stringType(),
+  "fotoUrl": stringType().nullish(),
+  "status": stringType().describe("pending | accepted | declined"),
+  "createdAt": stringType(),
+  "respondedAt": stringType().nullish()
+}).describe("Convite de cast recebido por uma conta da Zenkatu");
+var ListConvitesCastResponse = arrayType(ListConvitesCastResponseItem);
+var AceitarConviteCastParams = objectType({
+  "conviteId": coerce.number()
+});
+var AceitarConviteCastBody = objectType({
+  "uid": stringType().describe("uid da pessoa convidada (\xFAnica que pode responder)")
+});
+var AceitarConviteCastResponse = objectType({
+  "id": numberType(),
+  "obraId": numberType(),
+  "obraTitulo": stringType(),
+  "obraSlug": stringType(),
+  "obraCapa": stringType().nullish(),
+  "uid": stringType(),
+  "convidadoPor": stringType().nullish(),
+  "nome": stringType(),
+  "personagem": stringType(),
+  "fotoUrl": stringType().nullish(),
+  "status": stringType().describe("pending | accepted | declined"),
+  "createdAt": stringType(),
+  "respondedAt": stringType().nullish()
+}).describe("Convite de cast recebido por uma conta da Zenkatu");
+var RecusarConviteCastParams = objectType({
+  "conviteId": coerce.number()
+});
+var RecusarConviteCastBody = objectType({
+  "uid": stringType().describe("uid da pessoa convidada (\xFAnica que pode responder)")
+});
+var RecusarConviteCastResponse = objectType({
+  "id": numberType(),
+  "obraId": numberType(),
+  "obraTitulo": stringType(),
+  "obraSlug": stringType(),
+  "obraCapa": stringType().nullish(),
+  "uid": stringType(),
+  "convidadoPor": stringType().nullish(),
+  "nome": stringType(),
+  "personagem": stringType(),
+  "fotoUrl": stringType().nullish(),
+  "status": stringType().describe("pending | accepted | declined"),
+  "createdAt": stringType(),
+  "respondedAt": stringType().nullish()
+}).describe("Convite de cast recebido por uma conta da Zenkatu");
+var ListPersonagensFeitosParams = objectType({
+  "uid": coerce.string()
+});
+var ListPersonagensFeitosResponseItem = objectType({
+  "id": numberType(),
+  "obraId": numberType(),
+  "obraTitulo": stringType(),
+  "obraSlug": stringType(),
+  "obraCapa": stringType().nullish(),
+  "uid": stringType(),
+  "convidadoPor": stringType().nullish(),
+  "nome": stringType(),
+  "personagem": stringType(),
+  "fotoUrl": stringType().nullish(),
+  "status": stringType().describe("pending | accepted | declined"),
+  "createdAt": stringType(),
+  "respondedAt": stringType().nullish()
+}).describe("Convite de cast recebido por uma conta da Zenkatu");
+var ListPersonagensFeitosResponse = arrayType(ListPersonagensFeitosResponseItem);
 var GetAdminStatsResponse = objectType({
   "totalObras": numberType(),
   "totalEpisodios": numberType(),
@@ -52900,13 +52980,13 @@ function construct(client, config2 = {}) {
   }
   const driver = new NodePgDriver(client, dialect, { logger: logger2, cache: config2.cache });
   const session = driver.createSession(schema);
-  const db2 = new NodePgDatabase(dialect, session, schema);
-  db2.$client = client;
-  db2.$cache = config2.cache;
-  if (db2.$cache) {
-    db2.$cache["invalidate"] = config2.cache?.onMutate;
+  const db3 = new NodePgDatabase(dialect, session, schema);
+  db3.$client = client;
+  db3.$cache = config2.cache;
+  if (db3.$cache) {
+    db3.$cache["invalidate"] = config2.cache?.onMutate;
   }
-  return db2;
+  return db3;
 }
 function drizzle(...params) {
   if (typeof params[0] === "string") {
@@ -52935,6 +53015,7 @@ function drizzle(...params) {
 // ../../lib/db/src/schema/index.ts
 var schema_exports = {};
 __export(schema_exports, {
+  castConvitesTable: () => castConvitesTable,
   comentariosTable: () => comentariosTable,
   episodiosTable: () => episodiosTable,
   generosTable: () => generosTable,
@@ -64418,7 +64499,7 @@ var insertComentarioSchema = createInsertSchema(comentariosTable).omit({ id: tru
 // ../../lib/db/src/schema/lista.ts
 var listaObrasTable = pgTable("lista_obras", {
   id: serial("id").primaryKey(),
-  uid: varchar("uid", { length: 128 }).notNull().references(() => usersTable.uid, { onDelete: "cascade" }),
+  uid: varchar("uid", { length: 128 }).notNull(),
   obraId: integer("obra_id").notNull().references(() => obrasTable.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull()
 }, (t) => [
@@ -64428,7 +64509,7 @@ var listaObrasTable = pgTable("lista_obras", {
 // ../../lib/db/src/schema/historico.ts
 var historicoTable = pgTable("historico", {
   id: serial("id").primaryKey(),
-  uid: varchar("uid", { length: 128 }).notNull().references(() => usersTable.uid, { onDelete: "cascade" }),
+  uid: varchar("uid", { length: 128 }).notNull(),
   episodioId: integer("episodio_id").notNull().references(() => episodiosTable.id, { onDelete: "cascade" }),
   obraId: integer("obra_id").notNull().references(() => obrasTable.id, { onDelete: "cascade" }),
   watchedAt: timestamp("watched_at").defaultNow().notNull()
@@ -64519,6 +64600,32 @@ var zenkatuberRequestsTable = pgTable("zenkatuber_requests", {
   createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// ../../lib/db/src/schema/castConvites.ts
+var castConvitesTable = pgTable(
+  "cast_convites",
+  {
+    id: serial("id").primaryKey(),
+    obraId: integer("obra_id").notNull(),
+    obraTitulo: text("obra_titulo").notNull(),
+    obraSlug: text("obra_slug").notNull(),
+    obraCapa: text("obra_capa"),
+    /** uid da pessoa convidada (precisa ter conta na Zenkatu) */
+    uid: varchar("uid", { length: 128 }).notNull(),
+    /** uid de quem editou a obra (dono do projeto) */
+    convidadoPor: varchar("convidado_por", { length: 128 }),
+    /** nome de quem foi convidado, como apareceu no cast */
+    nome: varchar("nome", { length: 120 }).notNull(),
+    /** papel/personagem interpretado na obra */
+    personagem: varchar("personagem", { length: 160 }).notNull(),
+    fotoUrl: text("foto_url"),
+    /** pending | accepted | declined */
+    status: varchar("status", { length: 20 }).default("pending").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    respondedAt: timestamp("responded_at")
+  },
+  (t) => [unique("cast_convites_obra_uid_unique").on(t.obraId, t.uid)]
+);
+
 // ../../lib/db/src/index.ts
 var { Pool: Pool3 } = esm_default;
 var connectionString = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
@@ -64533,6 +64640,13 @@ var pool = new Pool3({
   ...isSupabase ? { ssl: { rejectUnauthorized: false } } : {}
 });
 var db = drizzle(pool, { schema: schema_exports });
+var usersConnectionString = process.env.SUPABASE2_DATABASE_URL || connectionString;
+var isUsersSupabase = usersConnectionString.includes("supabase.com");
+var pool2 = new Pool3({
+  connectionString: usersConnectionString,
+  ...isUsersSupabase ? { ssl: { rejectUnauthorized: false } } : {}
+});
+var db2 = drizzle(pool2, { schema: schema_exports });
 
 // src/routes/obras.ts
 init_drizzle_orm();
@@ -64603,10 +64717,10 @@ async function sendPushToAll(payload, type) {
   if (type === "episodio" && !await isAutoEnabled("push_auto_episodios")) return { sent: 0, failed: 0, skipped: true };
   if (type === "obra" && !await isAutoEnabled("push_auto_obras")) return { sent: 0, failed: 0, skipped: true };
   if (!payload.icon) payload = { ...payload, icon: DEFAULT_ICON };
-  let vapidSubs = await db.select().from(pushSubscriptionsTable);
+  let vapidSubs = await db2.select().from(pushSubscriptionsTable);
   let onesignalSubs = [];
   try {
-    onesignalSubs = await db.select().from(onesignalSubscriptionsTable);
+    onesignalSubs = await db2.select().from(onesignalSubscriptionsTable);
   } catch {
   }
   if (type === "episodio") {
@@ -64635,7 +64749,7 @@ async function sendPushToAll(payload, type) {
         }).map(({ sub }) => sub.id);
         if (expiredIds.length > 0) {
           const { inArray: inArray2 } = await Promise.resolve().then(() => (init_drizzle_orm(), drizzle_orm_exports));
-          await db.delete(pushSubscriptionsTable).where(inArray2(pushSubscriptionsTable.id, expiredIds));
+          await db2.delete(pushSubscriptionsTable).where(inArray2(pushSubscriptionsTable.id, expiredIds));
         }
       }
       return { sent: vapidSubs.length - failed.length, failed: failed.length };
@@ -64658,9 +64772,55 @@ async function sendPushToAll(payload, type) {
   };
 }
 
+// src/lib/cast-convites.ts
+init_drizzle_orm();
+async function syncCastConvites({
+  obraId,
+  obraTitulo,
+  obraSlug,
+  obraCapa,
+  convidadoPor,
+  cast
+}) {
+  if (!Array.isArray(cast)) return;
+  const members = cast.filter((m) => !!m?.uid);
+  const uids = members.map((m) => m.uid);
+  const existing = await db2.select().from(castConvitesTable).where(eq(castConvitesTable.obraId, obraId));
+  const byUid = new Map(existing.map((row) => [row.uid, row]));
+  for (const member of members) {
+    const dados = {
+      obraTitulo,
+      obraSlug,
+      obraCapa: obraCapa ?? null,
+      convidadoPor: convidadoPor ?? null,
+      nome: (member.nome ?? "").trim().slice(0, 120) || "Sem nome",
+      personagem: (member.papel ?? "").trim().slice(0, 160) || "Personagem",
+      fotoUrl: member.fotoUrl?.trim() || null
+    };
+    const atual = byUid.get(member.uid);
+    if (atual) {
+      await db2.update(castConvitesTable).set(dados).where(eq(castConvitesTable.id, atual.id));
+    } else {
+      await db2.insert(castConvitesTable).values({
+        obraId,
+        uid: member.uid,
+        ...dados,
+        status: "pending"
+      });
+    }
+  }
+  const removidos = existing.filter((row) => !uids.includes(row.uid));
+  if (removidos.length > 0) {
+    await db2.delete(castConvitesTable).where(inArray(castConvitesTable.id, removidos.map((r) => r.id)));
+  }
+}
+async function deleteCastConvitesDaObra(obraId) {
+  await db2.delete(castConvitesTable).where(eq(castConvitesTable.obraId, obraId));
+}
+
 // src/routes/obras.ts
 async function canEditObra(uid, obra) {
-  const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, uid));
+  const [user] = await db2.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, uid));
   if (!user) return false;
   if (user.role === "admin") return true;
   return obra.ownerId === uid;
@@ -64802,7 +64962,7 @@ router2.post("/obras", async (req, res) => {
       ownerId
     } = req.body;
     if (ownerId) {
-      const [user] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, ownerId));
+      const [user] = await db2.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.uid, ownerId));
       if (!user || user.role !== "admin") {
         const existing = await db.select({ id: obrasTable.id }).from(obrasTable).where(eq(obrasTable.ownerId, ownerId));
         if (existing.length >= ZENKATUBER_PROJECT_LIMIT) {
@@ -64831,6 +64991,20 @@ router2.post("/obras", async (req, res) => {
       ownerId: ownerId ?? null
     }).returning();
     res.status(201).json(serializeObra(obra));
+    setImmediate(async () => {
+      try {
+        await syncCastConvites({
+          obraId: obra.id,
+          obraTitulo: titulo,
+          obraSlug: slug,
+          obraCapa: capaUrl ?? null,
+          convidadoPor: ownerId ?? null,
+          cast: cast ?? []
+        });
+      } catch (castErr) {
+        req.log.error({ castErr }, "Erro ao criar convites de cast");
+      }
+    });
     setImmediate(async () => {
       try {
         await sendPushToAll(
@@ -64874,6 +65048,22 @@ router2.patch("/obras/:id", async (req, res) => {
     const { callerUid: _ignored, ...updateData } = req.body;
     const [obra] = await db.update(obrasTable).set({ ...updateData, updatedAt: /* @__PURE__ */ new Date() }).where(eq(obrasTable.id, id)).returning();
     res.json(serializeObra(obra));
+    if (Object.prototype.hasOwnProperty.call(req.body, "cast")) {
+      setImmediate(async () => {
+        try {
+          await syncCastConvites({
+            obraId: obra.id,
+            obraTitulo: obra.titulo,
+            obraSlug: obra.slug,
+            obraCapa: obra.capaUrl,
+            convidadoPor: obra.ownerId ?? null,
+            cast: obra.cast ?? []
+          });
+        } catch (castErr) {
+          req.log.error({ castErr }, "Erro ao sincronizar convites de cast");
+        }
+      });
+    }
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -64900,6 +65090,13 @@ router2.delete("/obras/:id", async (req, res) => {
       }
     }
     await db.delete(obrasTable).where(eq(obrasTable.id, id));
+    setImmediate(async () => {
+      try {
+        await deleteCastConvitesDaObra(id);
+      } catch (castErr) {
+        req.log.error({ castErr }, "Erro ao remover convites de cast");
+      }
+    });
     res.status(204).send();
   } catch (e) {
     req.log.error(e);
@@ -65192,24 +65389,32 @@ router4.get("/obras/:obraId/comentarios", async (req, res) => {
       parentId: comentariosTable.parentId,
       editado: comentariosTable.editado,
       createdAt: comentariosTable.createdAt,
-      updatedAt: comentariosTable.updatedAt,
+      updatedAt: comentariosTable.updatedAt
+    }).from(comentariosTable).where(eq(comentariosTable.obraId, obraId)).orderBy(desc(comentariosTable.createdAt));
+    const uids = [...new Set(rows.map((r) => r.userId))];
+    const perfis = uids.length ? await db2.select({
+      uid: usersTable.uid,
       isZenkatuber: usersTable.isZenkatuber,
       verifiedAt: usersTable.verifiedAt
-    }).from(comentariosTable).leftJoin(usersTable, eq(comentariosTable.userId, usersTable.uid)).where(eq(comentariosTable.obraId, obraId)).orderBy(desc(comentariosTable.createdAt));
-    res.json(rows.map((r) => ({
-      id: r.id,
-      obraId: r.obraId,
-      userId: r.userId,
-      username: r.username,
-      userPhoto: r.userPhoto,
-      texto: r.texto,
-      parentId: r.parentId,
-      editado: r.editado,
-      createdAt: r.createdAt.toISOString(),
-      updatedAt: r.updatedAt.toISOString(),
-      isZenkatuber: r.isZenkatuber ?? false,
-      verifiedAt: r.verifiedAt ? r.verifiedAt.toISOString() : null
-    })));
+    }).from(usersTable).where(inArray(usersTable.uid, uids)) : [];
+    const porUid = new Map(perfis.map((p) => [p.uid, p]));
+    res.json(rows.map((r) => {
+      const perfil = porUid.get(r.userId);
+      return {
+        id: r.id,
+        obraId: r.obraId,
+        userId: r.userId,
+        username: r.username,
+        userPhoto: r.userPhoto,
+        texto: r.texto,
+        parentId: r.parentId,
+        editado: r.editado,
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+        isZenkatuber: perfil?.isZenkatuber ?? false,
+        verifiedAt: perfil?.verifiedAt ? perfil.verifiedAt.toISOString() : null
+      };
+    }));
   } catch (e) {
     req.log.error(e);
     res.status(500).json({ error: "Internal server error" });
@@ -65235,7 +65440,7 @@ router4.post("/obras/:obraId/comentarios", async (req, res) => {
       texto,
       parentId: parentId ?? null
     }).returning();
-    const [user] = await db.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, userId));
+    const [user] = await db2.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, userId));
     res.status(201).json({
       id: comentario.id,
       obraId: comentario.obraId,
@@ -65272,7 +65477,7 @@ router4.patch("/comentarios/:id", async (req, res) => {
       res.status(404).json({ error: "Not found" });
       return;
     }
-    const [user] = await db.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, comentario.userId));
+    const [user] = await db2.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, comentario.userId));
     res.json({
       id: comentario.id,
       obraId: comentario.obraId,
@@ -65315,7 +65520,7 @@ var router5 = (0, import_express5.Router)();
 var ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
 router5.get("/usuarios", async (req, res) => {
   try {
-    const users = await db.select().from(usersTable).orderBy(desc(usersTable.createdAt));
+    const users = await db2.select().from(usersTable).orderBy(desc(usersTable.createdAt));
     res.json(users.map(serializePublicUser));
   } catch (e) {
     req.log.error(e);
@@ -65324,7 +65529,7 @@ router5.get("/usuarios", async (req, res) => {
 });
 router5.get("/usuarios/:uid", async (req, res) => {
   try {
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, req.params.uid));
+    const [user] = await db2.select().from(usersTable).where(eq(usersTable.uid, req.params.uid));
     if (!user) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -65367,7 +65572,7 @@ router5.patch("/usuarios/:uid", async (req, res) => {
         url: String(item.url).trim()
       }));
     }
-    const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.uid, req.params.uid)).returning();
+    const [user] = await db2.update(usersTable).set(updateData).where(eq(usersTable.uid, req.params.uid)).returning();
     if (!user) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -65390,14 +65595,14 @@ router5.post("/usuarios", async (req, res) => {
       return;
     }
     const role = email3 === ADMIN_EMAIL ? "admin" : "user";
-    const [existing] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+    const [existing] = await db2.select().from(usersTable).where(eq(usersTable.uid, uid));
     if (existing) {
-      const [updated] = await db.update(usersTable).set({ role, updatedAt: /* @__PURE__ */ new Date() }).where(eq(usersTable.uid, uid)).returning();
+      const [updated] = await db2.update(usersTable).set({ role, updatedAt: /* @__PURE__ */ new Date() }).where(eq(usersTable.uid, uid)).returning();
       res.json(serializeUser(updated));
       return;
     }
     const baseUsername = (displayName ?? email3.split("@")[0]).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 20);
-    const [user] = await db.insert(usersTable).values({
+    const [user] = await db2.insert(usersTable).values({
       uid,
       email: email3,
       username: baseUsername,
@@ -65412,7 +65617,7 @@ router5.post("/usuarios", async (req, res) => {
 });
 router5.get("/avatars/:uid", async (req, res) => {
   try {
-    const [img] = await db.select().from(profileImagesTable).where(eq(profileImagesTable.uid, req.params.uid));
+    const [img] = await db2.select().from(profileImagesTable).where(eq(profileImagesTable.uid, req.params.uid));
     if (!img) {
       res.status(404).end();
       return;
@@ -65434,12 +65639,12 @@ router5.post("/usuarios/:uid/avatar", async (req, res) => {
       return;
     }
     const base64Data = imageData.replace(/^data:image\/\w+;base64,/, "");
-    await db.insert(profileImagesTable).values({ uid: req.params.uid, imageData: base64Data }).onConflictDoUpdate({
+    await db2.insert(profileImagesTable).values({ uid: req.params.uid, imageData: base64Data }).onConflictDoUpdate({
       target: profileImagesTable.uid,
       set: { imageData: base64Data, updatedAt: /* @__PURE__ */ new Date() }
     });
     const photoUrl = `/api/avatars/${req.params.uid}?v=${Date.now()}`;
-    const [user] = await db.update(usersTable).set({ photoUrl, updatedAt: /* @__PURE__ */ new Date() }).where(eq(usersTable.uid, req.params.uid)).returning();
+    const [user] = await db2.update(usersTable).set({ photoUrl, updatedAt: /* @__PURE__ */ new Date() }).where(eq(usersTable.uid, req.params.uid)).returning();
     if (!user) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -65509,7 +65714,8 @@ router6.get("/stats/admin", async (req, res) => {
     const [[obraCount], [epCount], [userCount], [commentCount]] = await Promise.all([
       db.select({ count: count() }).from(obrasTable),
       db.select({ count: count() }).from(episodiosTable),
-      db.select({ count: count() }).from(usersTable),
+      // Contagem de usuários vem do segundo banco (Supabase #2).
+      db2.select({ count: count() }).from(usersTable),
       db.select({ count: count() }).from(comentariosTable).where(
         gte(comentariosTable.createdAt, sql`NOW() - INTERVAL '1 day'`)
       )
@@ -65770,7 +65976,7 @@ router11.post("/push/subscribe", async (req, res) => {
       res.status(400).json({ error: "uid, subscription.endpoint, subscription.keys.p256dh e subscription.keys.auth s\xE3o obrigat\xF3rios" });
       return;
     }
-    await db.insert(pushSubscriptionsTable).values({
+    await db2.insert(pushSubscriptionsTable).values({
       uid,
       endpoint: subscription.endpoint,
       p256dh: subscription.keys.p256dh,
@@ -65800,7 +66006,7 @@ router11.delete("/push/subscribe", async (req, res) => {
       res.status(400).json({ error: "uid e endpoint s\xE3o obrigat\xF3rios" });
       return;
     }
-    await db.delete(pushSubscriptionsTable).where(and(eq(pushSubscriptionsTable.uid, uid), eq(pushSubscriptionsTable.endpoint, endpoint)));
+    await db2.delete(pushSubscriptionsTable).where(and(eq(pushSubscriptionsTable.uid, uid), eq(pushSubscriptionsTable.endpoint, endpoint)));
     res.json({ ok: true });
   } catch (e) {
     req.log.error(e);
@@ -65809,7 +66015,7 @@ router11.delete("/push/subscribe", async (req, res) => {
 });
 router11.get("/push/preferences/:uid", async (req, res) => {
   try {
-    const subs = await db.select().from(pushSubscriptionsTable).where(eq(pushSubscriptionsTable.uid, req.params.uid));
+    const subs = await db2.select().from(pushSubscriptionsTable).where(eq(pushSubscriptionsTable.uid, req.params.uid));
     res.json(subs);
   } catch (e) {
     req.log.error(e);
@@ -65823,7 +66029,7 @@ router11.patch("/push/preferences/:uid", async (req, res) => {
       res.status(400).json({ error: "endpoint \xE9 obrigat\xF3rio" });
       return;
     }
-    const [updated] = await db.update(pushSubscriptionsTable).set({
+    const [updated] = await db2.update(pushSubscriptionsTable).set({
       notifyEpisodios: notifyEpisodios !== false,
       notifyObras: notifyObras !== false
     }).where(
@@ -65845,7 +66051,7 @@ router11.post("/push/onesignal-subscribe", async (req, res) => {
       res.status(400).json({ error: "uid e playerId s\xE3o obrigat\xF3rios" });
       return;
     }
-    await db.insert(onesignalSubscriptionsTable).values({
+    await db2.insert(onesignalSubscriptionsTable).values({
       uid,
       playerId,
       notifyEpisodios: notifyEpisodios !== false,
@@ -65871,7 +66077,7 @@ router11.delete("/push/onesignal-subscribe", async (req, res) => {
       res.status(400).json({ error: "uid e playerId s\xE3o obrigat\xF3rios" });
       return;
     }
-    await db.delete(onesignalSubscriptionsTable).where(and(eq(onesignalSubscriptionsTable.uid, uid), eq(onesignalSubscriptionsTable.playerId, playerId)));
+    await db2.delete(onesignalSubscriptionsTable).where(and(eq(onesignalSubscriptionsTable.uid, uid), eq(onesignalSubscriptionsTable.playerId, playerId)));
     res.json({ ok: true });
   } catch (e) {
     req.log.error(e);
@@ -65880,7 +66086,7 @@ router11.delete("/push/onesignal-subscribe", async (req, res) => {
 });
 router11.get("/push/onesignal-preferences/:uid", async (req, res) => {
   try {
-    const subs = await db.select().from(onesignalSubscriptionsTable).where(eq(onesignalSubscriptionsTable.uid, req.params.uid));
+    const subs = await db2.select().from(onesignalSubscriptionsTable).where(eq(onesignalSubscriptionsTable.uid, req.params.uid));
     res.json(subs);
   } catch (e) {
     req.log.error(e);
@@ -65894,7 +66100,7 @@ router11.patch("/push/onesignal-preferences/:uid", async (req, res) => {
       res.status(400).json({ error: "playerId \xE9 obrigat\xF3rio" });
       return;
     }
-    const [updated] = await db.update(onesignalSubscriptionsTable).set({
+    const [updated] = await db2.update(onesignalSubscriptionsTable).set({
       notifyEpisodios: notifyEpisodios !== false,
       notifyObras: notifyObras !== false
     }).where(
@@ -65917,8 +66123,8 @@ router11.get("/push/stats", async (req, res) => {
       return;
     }
     const [vapidSubs, onesignalSubs] = await Promise.all([
-      db.select().from(pushSubscriptionsTable),
-      db.select().from(onesignalSubscriptionsTable)
+      db2.select().from(pushSubscriptionsTable),
+      db2.select().from(onesignalSubscriptionsTable)
     ]);
     const configRows = await db.select().from(siteConfigTable).where(
       sql`${siteConfigTable.key} IN ('push_auto_episodios', 'push_auto_obras')`
@@ -66028,7 +66234,7 @@ var import_express12 = __toESM(require_express2(), 1);
 init_drizzle_orm();
 var router12 = (0, import_express12.Router)();
 async function isAdmin(uid) {
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+  const [user] = await db2.select().from(usersTable).where(eq(usersTable.uid, uid));
   return user?.role === "admin";
 }
 var CONFIG_KEYS = {
@@ -66139,17 +66345,17 @@ router12.post("/zenkatuber/solicitar", async (req, res) => {
       });
       return;
     }
-    const [existing] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
+    const [existing] = await db2.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
     if (existing) {
       res.status(409).json({ error: "Voc\xEA j\xE1 tem uma solicita\xE7\xE3o em andamento" });
       return;
     }
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
+    const [user] = await db2.select().from(usersTable).where(eq(usersTable.uid, uid));
     if (user?.isZenkatuber) {
       res.status(409).json({ error: "Voc\xEA j\xE1 \xE9 um Zenkatuber" });
       return;
     }
-    const [request] = await db.insert(zenkatuberRequestsTable).values({
+    const [request] = await db2.insert(zenkatuberRequestsTable).values({
       uid,
       email: email3,
       username: username || email3,
@@ -66177,7 +66383,7 @@ router12.get("/zenkatuber/requests/:adminUid", async (req, res) => {
       res.status(403).json({ error: "Acesso negado" });
       return;
     }
-    const requests = await db.select().from(zenkatuberRequestsTable).orderBy(zenkatuberRequestsTable.createdAt);
+    const requests = await db2.select().from(zenkatuberRequestsTable).orderBy(zenkatuberRequestsTable.createdAt);
     res.json(requests.map((r) => ({
       ...r,
       createdAt: r.createdAt.toISOString()
@@ -66189,8 +66395,8 @@ router12.get("/zenkatuber/requests/:adminUid", async (req, res) => {
 });
 router12.get("/zenkatuber/status/:uid", async (req, res) => {
   try {
-    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, req.params.uid));
-    const [user] = await db.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, req.params.uid));
+    const [request] = await db2.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, req.params.uid));
+    const [user] = await db2.select({ isZenkatuber: usersTable.isZenkatuber, verifiedAt: usersTable.verifiedAt }).from(usersTable).where(eq(usersTable.uid, req.params.uid));
     res.json({
       hasPendingRequest: !!request,
       isZenkatuber: user?.isZenkatuber ?? false,
@@ -66212,12 +66418,12 @@ router12.post("/zenkatuber/approve/:id", async (req, res) => {
       return;
     }
     const id = parseInt(req.params.id);
-    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    const [request] = await db2.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
     if (!request) {
       res.status(404).json({ error: "Solicita\xE7\xE3o n\xE3o encontrada" });
       return;
     }
-    await db.update(zenkatuberRequestsTable).set({ status: "stage1_approved", stage: 2 }).where(eq(zenkatuberRequestsTable.id, id));
+    await db2.update(zenkatuberRequestsTable).set({ status: "stage1_approved", stage: 2 }).where(eq(zenkatuberRequestsTable.id, id));
     res.json({ ok: true, message: `${request.username} passou para a Etapa 2!` });
   } catch (e) {
     req.log.error(e);
@@ -66231,12 +66437,12 @@ router12.post("/zenkatuber/stage2-submit", async (req, res) => {
       res.status(400).json({ error: "uid e postUrl s\xE3o obrigat\xF3rios" });
       return;
     }
-    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
+    const [request] = await db2.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.uid, uid));
     if (!request || request.status !== "stage1_approved") {
       res.status(400).json({ error: "Nenhuma candidatura aprovada na etapa 1 encontrada" });
       return;
     }
-    await db.update(zenkatuberRequestsTable).set({ postUrl, status: "stage2_pending" }).where(eq(zenkatuberRequestsTable.id, request.id));
+    await db2.update(zenkatuberRequestsTable).set({ postUrl, status: "stage2_pending" }).where(eq(zenkatuberRequestsTable.id, request.id));
     res.json({ ok: true });
   } catch (e) {
     req.log.error(e);
@@ -66252,12 +66458,12 @@ router12.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
       return;
     }
     const id = parseInt(req.params.id);
-    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    const [request] = await db2.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
     if (!request) {
       res.status(404).json({ error: "Solicita\xE7\xE3o n\xE3o encontrada" });
       return;
     }
-    await db.update(usersTable).set({
+    await db2.update(usersTable).set({
       isZenkatuber: true,
       verifiedAt: /* @__PURE__ */ new Date(),
       contactWhatsapp: request.whatsapp,
@@ -66265,7 +66471,7 @@ router12.post("/zenkatuber/stage2-approve/:id", async (req, res) => {
       contactDiscord: request.discord,
       updatedAt: /* @__PURE__ */ new Date()
     }).where(eq(usersTable.uid, request.uid));
-    await db.delete(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    await db2.delete(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
     res.json({ ok: true, message: `${request.username} agora \xE9 Zenkatuber!` });
   } catch (e) {
     req.log.error(e);
@@ -66281,12 +66487,12 @@ router12.post("/zenkatuber/reject/:id", async (req, res) => {
       return;
     }
     const id = parseInt(req.params.id);
-    const [request] = await db.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    const [request] = await db2.select().from(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
     if (!request) {
       res.status(404).json({ error: "Solicita\xE7\xE3o n\xE3o encontrada" });
       return;
     }
-    await db.delete(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
+    await db2.delete(zenkatuberRequestsTable).where(eq(zenkatuberRequestsTable.id, id));
     res.json({ ok: true, message: `Solicita\xE7\xE3o de ${request.username} rejeitada.` });
   } catch (e) {
     req.log.error(e);
@@ -66305,12 +66511,12 @@ router12.post("/zenkatuber/grant", async (req, res) => {
       res.status(400).json({ error: "E-mail \xE9 obrigat\xF3rio" });
       return;
     }
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email3.trim().toLowerCase()));
+    const [user] = await db2.select().from(usersTable).where(eq(usersTable.email, email3.trim().toLowerCase()));
     if (!user) {
       res.status(404).json({ error: "Usu\xE1rio n\xE3o encontrado. O usu\xE1rio precisa ter feito login ao menos uma vez." });
       return;
     }
-    await db.update(usersTable).set({
+    await db2.update(usersTable).set({
       isZenkatuber: true,
       verifiedAt: /* @__PURE__ */ new Date(),
       contactWhatsapp: whatsapp || user.contactWhatsapp,
@@ -66331,7 +66537,7 @@ router12.get("/zenkatuber/list/:adminUid", async (req, res) => {
       res.status(403).json({ error: "Acesso negado" });
       return;
     }
-    const zenkatubers = await db.select({
+    const zenkatubers = await db2.select({
       uid: usersTable.uid,
       email: usersTable.email,
       username: usersTable.username,
@@ -66356,7 +66562,7 @@ router12.patch("/zenkatuber/edit/:uid", async (req, res) => {
       res.status(403).json({ error: "Acesso negado" });
       return;
     }
-    await db.update(usersTable).set({
+    await db2.update(usersTable).set({
       contactWhatsapp: whatsapp ?? null,
       contactInstagram: instagram ?? null,
       contactDiscord: discord ?? null,
@@ -66376,7 +66582,7 @@ router12.post("/zenkatuber/revoke/:uid", async (req, res) => {
       res.status(403).json({ error: "Acesso negado" });
       return;
     }
-    await db.update(usersTable).set({
+    await db2.update(usersTable).set({
       isZenkatuber: false,
       verifiedAt: null,
       updatedAt: /* @__PURE__ */ new Date()
@@ -66855,8 +67061,8 @@ function injectObraHead(html, head) {
 ${cleaned}`;
 }
 function loadSpaIndexHtml() {
-  if ("".length > 0) {
-    return "";
+  if ('<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-DbMpSnTU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-Dqc5669h.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n'.length > 0) {
+    return '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-DbMpSnTU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-Dqc5669h.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n';
   }
   try {
     const filePath = path2.resolve(
@@ -67094,28 +67300,109 @@ router14.get("/imagens/:id", async (req, res) => {
 });
 var imagenes_default = router14;
 
-// src/routes/index.ts
+// src/routes/convites.ts
+var import_express15 = __toESM(require_express2(), 1);
+init_drizzle_orm();
 var router15 = (0, import_express15.Router)();
-router15.use(health_default);
-router15.use(share_default);
-router15.use(imagenes_default);
-router15.use(obras_default);
-router15.use(episodios_default);
-router15.use(comentarios_default);
-router15.use(usuarios_default);
-router15.use(stats_default);
-router15.use(lista_default);
-router15.use(historico_default);
-router15.use(generos_default);
-router15.use(config_default);
-router15.use(push_default);
-router15.use(zenkatuber_default);
-var routes_default = router15;
+function serialize2(convite) {
+  return {
+    id: convite.id,
+    obraId: convite.obraId,
+    obraTitulo: convite.obraTitulo,
+    obraSlug: convite.obraSlug,
+    obraCapa: convite.obraCapa ?? null,
+    uid: convite.uid,
+    convidadoPor: convite.convidadoPor ?? null,
+    nome: convite.nome,
+    personagem: convite.personagem,
+    fotoUrl: convite.fotoUrl ?? null,
+    status: convite.status,
+    createdAt: convite.createdAt.toISOString(),
+    respondedAt: convite.respondedAt ? convite.respondedAt.toISOString() : null
+  };
+}
+router15.get("/convites-cast/:uid", async (req, res) => {
+  try {
+    const convites = await db2.select().from(castConvitesTable).where(eq(castConvitesTable.uid, req.params.uid)).orderBy(desc(castConvitesTable.createdAt));
+    res.json(convites.map(serialize2));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router15.get("/personagens-feitos/:uid", async (req, res) => {
+  try {
+    const convites = await db2.select().from(castConvitesTable).where(eq(castConvitesTable.uid, req.params.uid)).orderBy(desc(castConvitesTable.createdAt));
+    res.json(convites.filter((c) => c.status === "accepted").map(serialize2));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+async function responder(req, res, status) {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+  const { uid } = req.body ?? {};
+  if (!uid) {
+    res.status(400).json({ error: "uid \xE9 obrigat\xF3rio" });
+    return;
+  }
+  const [convite] = await db2.select().from(castConvitesTable).where(eq(castConvitesTable.id, id));
+  if (!convite) {
+    res.status(404).json({ error: "Convite n\xE3o encontrado" });
+    return;
+  }
+  if (convite.uid !== uid) {
+    res.status(403).json({ error: "Este convite n\xE3o \xE9 seu" });
+    return;
+  }
+  const [atualizado] = await db2.update(castConvitesTable).set({ status, respondedAt: /* @__PURE__ */ new Date() }).where(eq(castConvitesTable.id, id)).returning();
+  res.json(serialize2(atualizado));
+}
+router15.post("/convites-cast/:id/aceitar", async (req, res) => {
+  try {
+    await responder(req, res, "accepted");
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router15.post("/convites-cast/:id/recusar", async (req, res) => {
+  try {
+    await responder(req, res, "declined");
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+var convites_default = router15;
+
+// src/routes/index.ts
+var router16 = (0, import_express16.Router)();
+router16.use(health_default);
+router16.use(share_default);
+router16.use(imagenes_default);
+router16.use(obras_default);
+router16.use(episodios_default);
+router16.use(comentarios_default);
+router16.use(usuarios_default);
+router16.use(stats_default);
+router16.use(lista_default);
+router16.use(historico_default);
+router16.use(generos_default);
+router16.use(config_default);
+router16.use(push_default);
+router16.use(zenkatuber_default);
+router16.use(convites_default);
+var routes_default = router16;
 
 // src/routes/obra-page.ts
-var import_express16 = __toESM(require_express2(), 1);
+var import_express17 = __toESM(require_express2(), 1);
 init_drizzle_orm();
-var router16 = (0, import_express16.Router)();
+var router17 = (0, import_express17.Router)();
 async function handleObraPage(req, res) {
   const slug = resolveObraSlug(req);
   const template = loadSpaIndexHtml();
@@ -67178,9 +67465,9 @@ async function handleObraPage(req, res) {
   res.set("Cache-Control", cacheHeader);
   res.type("html").send(injectObraHead(template, head));
 }
-router16.get("/obra/:slug", (req, res) => void handleObraPage(req, res));
-router16.get("/obra/:slug/", (req, res) => void handleObraPage(req, res));
-var obra_page_default = router16;
+router17.get("/obra/:slug", (req, res) => void handleObraPage(req, res));
+router17.get("/obra/:slug/", (req, res) => void handleObraPage(req, res));
+var obra_page_default = router17;
 
 // src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
@@ -67202,7 +67489,7 @@ var logger = (0, import_pino.default)({
 
 // src/app.ts
 var __dirname2 = path3.dirname(fileURLToPath(import.meta.url));
-var app = (0, import_express17.default)();
+var app = (0, import_express18.default)();
 app.use(
   (0, import_pino_http.pinoHttp)({
     logger,
@@ -67223,13 +67510,13 @@ app.use(
   })
 );
 app.use((0, import_cors.default)());
-app.use(import_express17.default.json({ limit: "5mb" }));
-app.use(import_express17.default.urlencoded({ extended: true, limit: "5mb" }));
+app.use(import_express18.default.json({ limit: "5mb" }));
+app.use(import_express18.default.urlencoded({ extended: true, limit: "5mb" }));
 app.use("/api", routes_default);
 app.use(obra_page_default);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path3.resolve(process.cwd(), "artifacts/zenkatu/dist/public");
-  app.use(import_express17.default.static(frontendDist));
+  app.use(import_express18.default.static(frontendDist));
   app.use((_req, res, next) => {
     res.sendFile(path3.join(frontendDist, "index.html"), (err) => {
       if (err) next(err);

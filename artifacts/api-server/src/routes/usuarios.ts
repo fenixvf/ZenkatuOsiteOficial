@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+// Todo o conteúdo desta rota são dados de usuários, então usa o segundo banco
+// (Supabase #2). `db2` cai para o primeiro banco quando SUPABASE2_DATABASE_URL
+// ainda não estiver configurado.
+import { db2 as db } from "@workspace/db";
 import { usersTable, profileImagesTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
+import { db, db2 } from "@workspace/db";
 import { pushSubscriptionsTable, siteConfigTable, onesignalSubscriptionsTable, notificacoesHistoricoTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { sendPushToAll, type PushPayload } from "../lib/push-notifications";
@@ -22,7 +22,8 @@ router.post("/push/subscribe", async (req, res) => {
       return;
     }
 
-    await db
+    // Assinaturas de push são dados de usuários → segundo banco (Supabase #2).
+    await db2
       .insert(pushSubscriptionsTable)
       .values({
         uid,
@@ -57,7 +58,7 @@ router.delete("/push/subscribe", async (req, res) => {
       res.status(400).json({ error: "uid e endpoint são obrigatórios" });
       return;
     }
-    await db
+    await db2
       .delete(pushSubscriptionsTable)
       .where(and(eq(pushSubscriptionsTable.uid, uid), eq(pushSubscriptionsTable.endpoint, endpoint)));
     res.json({ ok: true });
@@ -69,7 +70,7 @@ router.delete("/push/subscribe", async (req, res) => {
 
 router.get("/push/preferences/:uid", async (req, res) => {
   try {
-    const subs = await db
+    const subs = await db2
       .select()
       .from(pushSubscriptionsTable)
       .where(eq(pushSubscriptionsTable.uid, req.params.uid));
@@ -87,7 +88,7 @@ router.patch("/push/preferences/:uid", async (req, res) => {
       res.status(400).json({ error: "endpoint é obrigatório" });
       return;
     }
-    const [updated] = await db
+    const [updated] = await db2
       .update(pushSubscriptionsTable)
       .set({
         notifyEpisodios: notifyEpisodios !== false,
@@ -117,7 +118,7 @@ router.post("/push/onesignal-subscribe", async (req, res) => {
       return;
     }
 
-    await db
+    await db2
       .insert(onesignalSubscriptionsTable)
       .values({
         uid,
@@ -148,7 +149,7 @@ router.delete("/push/onesignal-subscribe", async (req, res) => {
       res.status(400).json({ error: "uid e playerId são obrigatórios" });
       return;
     }
-    await db
+    await db2
       .delete(onesignalSubscriptionsTable)
       .where(and(eq(onesignalSubscriptionsTable.uid, uid), eq(onesignalSubscriptionsTable.playerId, playerId)));
     res.json({ ok: true });
@@ -160,7 +161,7 @@ router.delete("/push/onesignal-subscribe", async (req, res) => {
 
 router.get("/push/onesignal-preferences/:uid", async (req, res) => {
   try {
-    const subs = await db
+    const subs = await db2
       .select()
       .from(onesignalSubscriptionsTable)
       .where(eq(onesignalSubscriptionsTable.uid, req.params.uid));
@@ -178,7 +179,7 @@ router.patch("/push/onesignal-preferences/:uid", async (req, res) => {
       res.status(400).json({ error: "playerId é obrigatório" });
       return;
     }
-    const [updated] = await db
+    const [updated] = await db2
       .update(onesignalSubscriptionsTable)
       .set({
         notifyEpisodios: notifyEpisodios !== false,
@@ -208,8 +209,8 @@ router.get("/push/stats", async (req, res) => {
       return;
     }
     const [vapidSubs, onesignalSubs] = await Promise.all([
-      db.select().from(pushSubscriptionsTable),
-      db.select().from(onesignalSubscriptionsTable),
+      db2.select().from(pushSubscriptionsTable),
+      db2.select().from(onesignalSubscriptionsTable),
     ]);
 
     const configRows = await db
