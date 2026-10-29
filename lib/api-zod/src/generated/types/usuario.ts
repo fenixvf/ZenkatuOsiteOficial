@@ -5,6 +5,7 @@
  * Zenkatu Streaming API
  * OpenAPI spec version: 0.1.0
  */
+import type { VoicePortfolioItem } from './voicePortfolioItem';
 
 export interface Usuario {
   id: number;
@@ -18,6 +19,9 @@ export interface Usuario {
   isZenkatuber?: boolean;
   /** @nullable */
   verifiedAt?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  voicePortfolio?: VoicePortfolioItem[];
   /** @nullable */
   contactWhatsapp?: string | null;
   /** @nullable */

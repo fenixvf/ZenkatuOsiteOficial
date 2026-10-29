@@ -1,6 +1,11 @@
-import { pgTable, serial, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+export type VoicePortfolioItem = {
+  titulo: string;
+  url: string;
+};
 
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -14,6 +19,8 @@ export const usersTable = pgTable("users", {
   contactWhatsapp: text("contact_whatsapp"),
   contactInstagram: text("contact_instagram"),
   contactDiscord: text("contact_discord"),
+  bio: text("bio"),
+  voicePortfolio: jsonb("voice_portfolio").$type<VoicePortfolioItem[]>().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

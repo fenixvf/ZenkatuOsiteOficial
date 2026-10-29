@@ -17,6 +17,8 @@ tags:
     description: Comments management
   - name: usuarios
     description: User profile management
+  - name: imagenes
+    description: Image uploads stored as WebP
   - name: stats
     description: Dashboard statistics
   - name: generos
@@ -518,6 +520,19 @@ paths:
                 $ref: "#/components/schemas/Usuario"
 
   /usuarios:
+    get:
+      operationId: listUsuarios
+      tags: [usuarios]
+      summary: List public profiles of all linked accounts
+      responses:
+        "200":
+          description: List of public profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UsuarioPublico"
     post:
       operationId: upsertUsuario
       tags: [usuarios]
@@ -535,6 +550,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Usuario"
+
+  /imagens:
+    post:
+      operationId: uploadImagen
+      tags: [imagenes]
+      summary: Upload image converted to WebP and stored in the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImagenUpload"
+      responses:
+        "201":
+          description: Image stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Imagen"
+        "400":
+          description: Invalid image
 
   /usuarios/{uid}/avatar:
     post:
@@ -990,6 +1026,12 @@ components:
           type: boolean
         verifiedAt:
           type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        voicePortfolio:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoicePortfolioItem"
         contactWhatsapp:
           type: ["string", "null"]
         contactInstagram:
@@ -999,6 +1041,39 @@ components:
         createdAt:
           type: string
         updatedAt:
+          type: string
+
+    UsuarioPublico:
+      type: object
+      description: Public profile fields of a linked account (no private data)
+      required:
+        - id
+        - uid
+        - role
+        - isZenkatuber
+        - createdAt
+      properties:
+        id:
+          type: integer
+        uid:
+          type: string
+        username:
+          type: ["string", "null"]
+        photoUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+        isZenkatuber:
+          type: boolean
+        verifiedAt:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        voicePortfolio:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoicePortfolioItem"
+        createdAt:
           type: string
 
     UsuarioInput:
@@ -1023,6 +1098,36 @@ components:
           type: ["string", "null"]
         photoUrl:
           type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        voicePortfolio:
+          type: array
+          items:
+            $ref: "#/components/schemas/VoicePortfolioItem"
+
+    VoicePortfolioItem:
+      type: object
+      description: Item do portfólio de voz (apenas URLs do Google Drive)
+      required:
+        - titulo
+        - url
+      properties:
+        titulo:
+          type: string
+        url:
+          type: string
+
+    Imagen:
+      type: object
+      description: Imagem enviada e convertida para WebP no banco de dados
+      required:
+        - id
+        - url
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
 
     AvatarUpload:
       type: object
@@ -1032,6 +1137,15 @@ components:
         imageData:
           type: string
           description: Base64-encoded WebP image data
+
+    ImagenUpload:
+      type: object
+      required:
+        - imageData
+      properties:
+        imageData:
+          type: string
+          description: Base64-encoded image data (any format)
 
     ListaItem:
       type: object

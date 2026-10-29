@@ -20820,27 +20820,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router16;
+    module.exports = Router17;
     module.exports.Route = Route;
-    function Router16(options) {
-      if (!(this instanceof Router16)) {
-        return new Router16(options);
+    function Router17(options) {
+      if (!(this instanceof Router17)) {
+        return new Router17(options);
       }
       const opts = options || {};
-      function router16(req, res, next) {
-        router16.handle(req, res, next);
+      function router17(req, res, next) {
+        router17.handle(req, res, next);
       }
-      Object.setPrototypeOf(router16, this);
-      router16.caseSensitive = opts.caseSensitive;
-      router16.mergeParams = opts.mergeParams;
-      router16.params = {};
-      router16.strict = opts.strict;
-      router16.stack = [];
-      return router16;
+      Object.setPrototypeOf(router17, this);
+      router17.caseSensitive = opts.caseSensitive;
+      router17.mergeParams = opts.mergeParams;
+      router17.params = {};
+      router17.strict = opts.strict;
+      router17.stack = [];
+      return router17;
     }
-    Router16.prototype = function() {
+    Router17.prototype = function() {
     };
-    Router16.prototype.param = function param2(name2, fn) {
+    Router17.prototype.param = function param2(name2, fn) {
       if (!name2) {
         throw new TypeError("argument name is required");
       }
@@ -20860,7 +20860,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router16.prototype.handle = function handle(req, res, callback) {
+    Router17.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20987,7 +20987,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router16.prototype.use = function use(handler) {
+    Router17.prototype.use = function use(handler) {
       let offset = 0;
       let path4 = "/";
       if (typeof handler !== "function") {
@@ -21020,7 +21020,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router16.prototype.route = function route(path4) {
+    Router17.prototype.route = function route(path4) {
       const route2 = new Route(path4);
       const layer = new Layer(path4, {
         sensitive: this.caseSensitive,
@@ -21035,7 +21035,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router16.prototype[method] = function(path4) {
+      Router17.prototype[method] = function(path4) {
         const route = this.route(path4);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -21218,13 +21218,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router16 = require_router();
+    var Router17 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router16 = null;
+      var router17 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21233,13 +21233,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router16 === null) {
-            router16 = new Router16({
+          if (router17 === null) {
+            router17 = new Router17({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router16;
+          return router17;
         }
       });
     };
@@ -21310,15 +21310,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router16 = this.router;
+      var router17 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router16.use(path4, fn2);
+          return router17.use(path4, fn2);
         }
         debug(".use app under %s", path4);
         fn2.mountpath = path4;
         fn2.parent = this;
-        router16.use(path4, function mounted_app(req, res, next) {
+        router17.use(path4, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -23971,7 +23971,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router16 = require_router();
+    var Router17 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23993,8 +23993,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router16.Route;
-    exports.Router = Router16;
+    exports.Route = Router17.Route;
+    exports.Router = Router17;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -28390,7 +28390,7 @@ var require_pino = __commonJS({
     function pinoBundlerAbsolutePath(p) {
       try {
         const path4 = __require("path");
-        const outputDir = "/home/runner/workspace/api";
+        const outputDir = "/workspace/chats/cbab109d15014cdd6a149166/api";
         return path4.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
@@ -44651,14 +44651,14 @@ var require_src2 = __commonJS({
 });
 
 // src/app.ts
-var import_express16 = __toESM(require_express2(), 1);
+var import_express17 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 import path3 from "path";
 import { fileURLToPath } from "url";
 
 // src/routes/index.ts
-var import_express14 = __toESM(require_express2(), 1);
+var import_express15 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -48852,7 +48852,9 @@ var GetEpisodioResponse = objectType({
   "id": numberType(),
   "obraId": numberType(),
   "obraTitulo": stringType().nullish(),
+  "obraSlug": stringType().nullish(),
   "obraCapaUrl": stringType().nullish(),
+  "obraTipografiaUrl": stringType().nullish(),
   "temporada": numberType(),
   "numero": numberType(),
   "titulo": stringType(),
@@ -48875,7 +48877,9 @@ var UpdateEpisodioResponse = objectType({
   "id": numberType(),
   "obraId": numberType(),
   "obraTitulo": stringType().nullish(),
+  "obraSlug": stringType().nullish(),
   "obraCapaUrl": stringType().nullish(),
+  "obraTipografiaUrl": stringType().nullish(),
   "temporada": numberType(),
   "numero": numberType(),
   "titulo": stringType(),
@@ -48949,6 +48953,11 @@ var GetUsuarioResponse = objectType({
   "role": stringType().optional(),
   "isZenkatuber": booleanType().optional(),
   "verifiedAt": stringType().nullish(),
+  "bio": stringType().nullish(),
+  "voicePortfolio": arrayType(objectType({
+    "titulo": stringType(),
+    "url": stringType()
+  }).describe("Item do portf\xF3lio de voz (apenas URLs do Google Drive)")).optional(),
   "contactWhatsapp": stringType().nullish(),
   "contactInstagram": stringType().nullish(),
   "contactDiscord": stringType().nullish(),
@@ -48960,7 +48969,12 @@ var UpdateUsuarioParams = objectType({
 });
 var UpdateUsuarioBody = objectType({
   "username": stringType().nullish(),
-  "photoUrl": stringType().nullish()
+  "photoUrl": stringType().nullish(),
+  "bio": stringType().nullish(),
+  "voicePortfolio": arrayType(objectType({
+    "titulo": stringType(),
+    "url": stringType()
+  }).describe("Item do portf\xF3lio de voz (apenas URLs do Google Drive)")).optional()
 });
 var UpdateUsuarioResponse = objectType({
   "id": numberType(),
@@ -48971,12 +48985,33 @@ var UpdateUsuarioResponse = objectType({
   "role": stringType().optional(),
   "isZenkatuber": booleanType().optional(),
   "verifiedAt": stringType().nullish(),
+  "bio": stringType().nullish(),
+  "voicePortfolio": arrayType(objectType({
+    "titulo": stringType(),
+    "url": stringType()
+  }).describe("Item do portf\xF3lio de voz (apenas URLs do Google Drive)")).optional(),
   "contactWhatsapp": stringType().nullish(),
   "contactInstagram": stringType().nullish(),
   "contactDiscord": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
 });
+var ListUsuariosResponseItem = objectType({
+  "id": numberType(),
+  "uid": stringType(),
+  "username": stringType().nullish(),
+  "photoUrl": stringType().nullish(),
+  "role": stringType(),
+  "isZenkatuber": booleanType(),
+  "verifiedAt": stringType().nullish(),
+  "bio": stringType().nullish(),
+  "voicePortfolio": arrayType(objectType({
+    "titulo": stringType(),
+    "url": stringType()
+  }).describe("Item do portf\xF3lio de voz (apenas URLs do Google Drive)")).optional(),
+  "createdAt": stringType()
+}).describe("Public profile fields of a linked account (no private data)");
+var ListUsuariosResponse = arrayType(ListUsuariosResponseItem);
 var UpsertUsuarioBody = objectType({
   "uid": stringType(),
   "email": stringType(),
@@ -48992,11 +49027,19 @@ var UpsertUsuarioResponse = objectType({
   "role": stringType().optional(),
   "isZenkatuber": booleanType().optional(),
   "verifiedAt": stringType().nullish(),
+  "bio": stringType().nullish(),
+  "voicePortfolio": arrayType(objectType({
+    "titulo": stringType(),
+    "url": stringType()
+  }).describe("Item do portf\xF3lio de voz (apenas URLs do Google Drive)")).optional(),
   "contactWhatsapp": stringType().nullish(),
   "contactInstagram": stringType().nullish(),
   "contactDiscord": stringType().nullish(),
   "createdAt": stringType().optional(),
   "updatedAt": stringType().optional()
+});
+var UploadImagenBody = objectType({
+  "imageData": stringType().describe("Base64-encoded image data (any format)")
 });
 var UploadAvatarParams = objectType({
   "uid": coerce.string()
@@ -49013,6 +49056,11 @@ var UploadAvatarResponse = objectType({
   "role": stringType().optional(),
   "isZenkatuber": booleanType().optional(),
   "verifiedAt": stringType().nullish(),
+  "bio": stringType().nullish(),
+  "voicePortfolio": arrayType(objectType({
+    "titulo": stringType(),
+    "url": stringType()
+  }).describe("Item do portf\xF3lio de voz (apenas URLs do Google Drive)")).optional(),
   "contactWhatsapp": stringType().nullish(),
   "contactInstagram": stringType().nullish(),
   "contactDiscord": stringType().nullish(),
@@ -52897,6 +52945,7 @@ __export(schema_exports, {
   insertObraSchema: () => insertObraSchema,
   insertUserSchema: () => insertUserSchema,
   listaObrasTable: () => listaObrasTable,
+  mediaImagesTable: () => mediaImagesTable,
   notificacoesHistoricoTable: () => notificacoesHistoricoTable,
   obrasTable: () => obrasTable,
   onesignalSubscriptionsTable: () => onesignalSubscriptionsTable,
@@ -64307,6 +64356,8 @@ var usersTable = pgTable("users", {
   contactWhatsapp: text("contact_whatsapp"),
   contactInstagram: text("contact_instagram"),
   contactDiscord: text("contact_discord"),
+  bio: text("bio"),
+  voicePortfolio: jsonb("voice_portfolio").$type().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -64390,6 +64441,13 @@ var profileImagesTable = pgTable("profile_images", {
   uid: varchar("uid", { length: 128 }).primaryKey(),
   imageData: text("image_data").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// ../../lib/db/src/schema/mediaImages.ts
+var mediaImagesTable = pgTable("media_images", {
+  id: serial("id").primaryKey(),
+  imageData: text("image_data").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // ../../lib/db/src/schema/generos.ts
@@ -65255,6 +65313,15 @@ var import_express5 = __toESM(require_express2(), 1);
 init_drizzle_orm();
 var router5 = (0, import_express5.Router)();
 var ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
+router5.get("/usuarios", async (req, res) => {
+  try {
+    const users = await db.select().from(usersTable).orderBy(desc(usersTable.createdAt));
+    res.json(users.map(serializePublicUser));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 router5.get("/usuarios/:uid", async (req, res) => {
   try {
     const [user] = await db.select().from(usersTable).where(eq(usersTable.uid, req.params.uid));
@@ -65270,10 +65337,36 @@ router5.get("/usuarios/:uid", async (req, res) => {
 });
 router5.patch("/usuarios/:uid", async (req, res) => {
   try {
-    const { username, photoUrl } = req.body;
+    const { username, photoUrl, bio, voicePortfolio } = req.body;
     const updateData = { updatedAt: /* @__PURE__ */ new Date() };
     if (username !== void 0) updateData.username = username;
     if (photoUrl !== void 0) updateData.photoUrl = photoUrl;
+    if (bio !== void 0) {
+      if (bio !== null && typeof bio !== "string") {
+        res.status(400).json({ error: "Bio inv\xE1lida" });
+        return;
+      }
+      updateData.bio = bio === null ? null : bio.slice(0, 1e3);
+    }
+    if (voicePortfolio !== void 0) {
+      if (!Array.isArray(voicePortfolio)) {
+        res.status(400).json({ error: "Portf\xF3lio de voz inv\xE1lido" });
+        return;
+      }
+      const invalid = voicePortfolio.find(
+        (item) => !item || typeof item.titulo !== "string" || typeof item.url !== "string" || !isDriveUrl(item.url)
+      );
+      if (invalid) {
+        res.status(400).json({
+          error: "O portf\xF3lio aceita apenas URLs do Google Drive."
+        });
+        return;
+      }
+      updateData.voicePortfolio = voicePortfolio.map((item) => ({
+        titulo: String(item.titulo).trim().slice(0, 80),
+        url: String(item.url).trim()
+      }));
+    }
     const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.uid, req.params.uid)).returning();
     if (!user) {
       res.status(404).json({ error: "Not found" });
@@ -65357,6 +65450,34 @@ router5.post("/usuarios/:uid/avatar", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+var DRIVE_HOSTS = [
+  "drive.google.com",
+  "docs.google.com",
+  "drive.usercontent.google.com",
+  "docs.googleusercontent.com"
+];
+function isDriveUrl(value) {
+  try {
+    const url2 = new URL(value);
+    return (url2.protocol === "https:" || url2.protocol === "http:") && DRIVE_HOSTS.includes(url2.hostname);
+  } catch {
+    return false;
+  }
+}
+function serializePublicUser(u) {
+  return {
+    id: u.id,
+    uid: u.uid,
+    username: u.username,
+    photoUrl: u.photoUrl,
+    role: u.role,
+    isZenkatuber: u.isZenkatuber ?? false,
+    verifiedAt: u.verifiedAt ? u.verifiedAt.toISOString() : null,
+    bio: u.bio ?? null,
+    voicePortfolio: u.voicePortfolio ?? [],
+    createdAt: u.createdAt.toISOString()
+  };
+}
 function serializeUser(u) {
   return {
     id: u.id,
@@ -65370,6 +65491,8 @@ function serializeUser(u) {
     contactWhatsapp: u.contactWhatsapp ?? null,
     contactInstagram: u.contactInstagram ?? null,
     contactDiscord: u.contactDiscord ?? null,
+    bio: u.bio ?? null,
+    voicePortfolio: u.voicePortfolio ?? [],
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString()
   };
@@ -66732,8 +66855,8 @@ function injectObraHead(html, head) {
 ${cleaned}`;
 }
 function loadSpaIndexHtml() {
-  if ('<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-CT7jx3SC.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-DIFZS3f9.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n'.length > 0) {
-    return '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-CT7jx3SC.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-DIFZS3f9.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n';
+  if ("".length > 0) {
+    return "";
   }
   try {
     const filePath = path2.resolve(
@@ -66906,27 +67029,93 @@ router13.get("/share/:slug", async (req, res) => {
 });
 var share_default = router13;
 
-// src/routes/index.ts
+// src/routes/imagenes.ts
+var import_express14 = __toESM(require_express2(), 1);
+import sharp2 from "sharp";
+init_drizzle_orm();
 var router14 = (0, import_express14.Router)();
-router14.use(health_default);
-router14.use(share_default);
-router14.use(obras_default);
-router14.use(episodios_default);
-router14.use(comentarios_default);
-router14.use(usuarios_default);
-router14.use(stats_default);
-router14.use(lista_default);
-router14.use(historico_default);
-router14.use(generos_default);
-router14.use(config_default);
-router14.use(push_default);
-router14.use(zenkatuber_default);
-var routes_default = router14;
+var MAX_DIMENSION = 1600;
+var MAX_BASE64_LENGTH = 3.5 * 1024 * 1024;
+router14.post("/imagens", async (req, res) => {
+  try {
+    const { imageData } = req.body ?? {};
+    if (typeof imageData !== "string" || !imageData.trim()) {
+      res.status(400).json({ error: "imageData required" });
+      return;
+    }
+    if (imageData.length > MAX_BASE64_LENGTH) {
+      res.status(413).json({ error: "Imagem grande demais. Use uma resolu\xE7\xE3o menor." });
+      return;
+    }
+    const base643 = imageData.replace(/^data:image\/\w+;base64,/, "");
+    const input = Buffer.from(base643, "base64");
+    if (input.length === 0) {
+      res.status(400).json({ error: "Imagem inv\xE1lida" });
+      return;
+    }
+    let webp;
+    try {
+      webp = await sharp2(input).rotate().resize({
+        width: MAX_DIMENSION,
+        height: MAX_DIMENSION,
+        fit: "inside",
+        withoutEnlargement: true
+      }).webp({ quality: 80 }).toBuffer();
+    } catch {
+      res.status(400).json({ error: "N\xE3o foi poss\xEDvel processar a imagem." });
+      return;
+    }
+    const [row] = await db.insert(mediaImagesTable).values({ imageData: webp.toString("base64") }).returning();
+    res.status(201).json({ id: row.id, url: `/api/imagens/${row.id}` });
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router14.get("/imagens/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).end();
+      return;
+    }
+    const [img] = await db.select().from(mediaImagesTable).where(eq(mediaImagesTable.id, id));
+    if (!img) {
+      res.status(404).end();
+      return;
+    }
+    res.set("Content-Type", "image/webp");
+    res.set("Cache-Control", "public, max-age=31536000, immutable");
+    res.send(Buffer.from(img.imageData, "base64"));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).end();
+  }
+});
+var imagenes_default = router14;
+
+// src/routes/index.ts
+var router15 = (0, import_express15.Router)();
+router15.use(health_default);
+router15.use(share_default);
+router15.use(imagenes_default);
+router15.use(obras_default);
+router15.use(episodios_default);
+router15.use(comentarios_default);
+router15.use(usuarios_default);
+router15.use(stats_default);
+router15.use(lista_default);
+router15.use(historico_default);
+router15.use(generos_default);
+router15.use(config_default);
+router15.use(push_default);
+router15.use(zenkatuber_default);
+var routes_default = router15;
 
 // src/routes/obra-page.ts
-var import_express15 = __toESM(require_express2(), 1);
+var import_express16 = __toESM(require_express2(), 1);
 init_drizzle_orm();
-var router15 = (0, import_express15.Router)();
+var router16 = (0, import_express16.Router)();
 async function handleObraPage(req, res) {
   const slug = resolveObraSlug(req);
   const template = loadSpaIndexHtml();
@@ -66989,9 +67178,9 @@ async function handleObraPage(req, res) {
   res.set("Cache-Control", cacheHeader);
   res.type("html").send(injectObraHead(template, head));
 }
-router15.get("/obra/:slug", (req, res) => void handleObraPage(req, res));
-router15.get("/obra/:slug/", (req, res) => void handleObraPage(req, res));
-var obra_page_default = router15;
+router16.get("/obra/:slug", (req, res) => void handleObraPage(req, res));
+router16.get("/obra/:slug/", (req, res) => void handleObraPage(req, res));
+var obra_page_default = router16;
 
 // src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
@@ -67013,7 +67202,7 @@ var logger = (0, import_pino.default)({
 
 // src/app.ts
 var __dirname2 = path3.dirname(fileURLToPath(import.meta.url));
-var app = (0, import_express16.default)();
+var app = (0, import_express17.default)();
 app.use(
   (0, import_pino_http.pinoHttp)({
     logger,
@@ -67034,13 +67223,13 @@ app.use(
   })
 );
 app.use((0, import_cors.default)());
-app.use(import_express16.default.json({ limit: "5mb" }));
-app.use(import_express16.default.urlencoded({ extended: true, limit: "5mb" }));
+app.use(import_express17.default.json({ limit: "5mb" }));
+app.use(import_express17.default.urlencoded({ extended: true, limit: "5mb" }));
 app.use("/api", routes_default);
 app.use(obra_page_default);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path3.resolve(process.cwd(), "artifacts/zenkatu/dist/public");
-  app.use(import_express16.default.static(frontendDist));
+  app.use(import_express17.default.static(frontendDist));
   app.use((_req, res, next) => {
     res.sendFile(path3.join(frontendDist, "index.html"), (err) => {
       if (err) next(err);

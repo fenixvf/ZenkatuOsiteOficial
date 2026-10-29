@@ -23,17 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, X, Plus, Trash2, Users } from "lucide-react";
-import { SOCIAL_PLATFORMS, detectPlatform, type SocialPlatformKey } from "@/lib/social-platforms";
+import { CastEditor, type CastMember } from "@/components/cast-editor";
+import { ImageUploadField } from "@/components/image-upload";
 
 const API_BASE = "/api";
 
@@ -50,28 +44,12 @@ const schema = z.object({
   ano: z.coerce.number().int().min(1900).max(2100),
   nota: z.coerce.number().min(0).max(10).optional().nullable().or(z.literal("")),
   totalEps: z.coerce.number().int().min(0).optional().nullable().or(z.literal("")),
-  capaUrl: z.string().url("URL inválida"),
-  bannerUrl: z.string().url("URL inválida"),
-  tipografiaUrl: z.string().url("URL inválida").optional().nullable().or(z.literal("")),
+  capaUrl: z.string().min(1, "Envie a imagem da capa"),
+  bannerUrl: z.string().min(1, "Envie a imagem do banner"),
+  tipografiaUrl: z.string().optional().nullable().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
-
-type CastMember = {
-  nome: string;
-  papel: string;
-  fotoUrl?: string;
-  links?: {
-    youtube?: string;
-    instagram?: string;
-    discord?: string;
-    twitter?: string;
-    tiktok?: string;
-    site?: string;
-  };
-};
-
-type SocialLinks = NonNullable<CastMember["links"]>;
 
 function slugify(text: string) {
   return text
@@ -83,268 +61,6 @@ function slugify(text: string) {
     .replace(/--+/g, "-")
     .replace(/^-+/, "")
     .replace(/-+$/, "");
-}
-
-function SocialLinksEditor({
-  links,
-  onChange,
-}: {
-  links: SocialLinks;
-  onChange: (links: SocialLinks) => void;
-}) {
-  const [inputUrl, setInputUrl] = useState("");
-
-  const addLink = () => {
-    const url = inputUrl.trim();
-    if (!url) return;
-    const platform = detectPlatform(url);
-    onChange({ ...links, [platform.key]: url });
-    setInputUrl("");
-  };
-
-  const removeLink = (key: SocialPlatformKey) => {
-    const updated = { ...links };
-    delete updated[key];
-    onChange(updated);
-  };
-
-  const activeLinks = SOCIAL_PLATFORMS.filter((p) => links[p.key as SocialPlatformKey]);
-
-  return (
-    <div className="space-y-3">
-      {activeLinks.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {activeLinks.map(({ key, label, icon: Icon, color }) => (
-            <div
-              key={key}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-border bg-secondary/50 text-xs font-medium"
-            >
-              <Icon className={`w-3.5 h-3.5 ${color}`} />
-              <span className="text-foreground max-w-[120px] truncate">{label}</span>
-              <button
-                type="button"
-                onClick={() => removeLink(key as SocialPlatformKey)}
-                className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="flex items-center gap-2">
-        <Input
-          value={inputUrl}
-          onChange={(e) => setInputUrl(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addLink();
-            }
-          }}
-          placeholder="Cole o link (Instagram, Discord, YouTube...) e pressione Enter"
-          className="bg-background h-8 text-xs flex-1"
-        />
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="h-8 px-3 text-xs shrink-0"
-          onClick={addLink}
-        >
-          <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar
-        </Button>
-      </div>
-      <p className="text-xs text-muted-foreground/70">
-        Cole qualquer link — o ícone da rede social é detectado automaticamente.
-      </p>
-    </div>
-  );
-}
-
-const emptyCastMember = (): CastMember => ({
-  nome: "",
-  papel: "",
-  fotoUrl: "",
-  links: { youtube: "", instagram: "", discord: "", twitter: "", tiktok: "", site: "" },
-});
-
-function CastEditor({
-  cast,
-  onChange,
-}: {
-  cast: CastMember[];
-  onChange: (c: CastMember[]) => void;
-}) {
-  const [editingIdx, setEditingIdx] = useState<number | null>(null);
-  const [draft, setDraft] = useState<CastMember>(emptyCastMember());
-
-  const openAdd = () => {
-    setDraft(emptyCastMember());
-    setEditingIdx(-1);
-  };
-
-  const openEdit = (idx: number) => {
-    setDraft(JSON.parse(JSON.stringify(cast[idx])));
-    setEditingIdx(idx);
-  };
-
-  const handleSave = () => {
-    if (!draft.nome.trim() || !draft.papel.trim()) return;
-    const cleaned: CastMember = {
-      nome: draft.nome.trim(),
-      papel: draft.papel.trim(),
-      fotoUrl: draft.fotoUrl?.trim() || undefined,
-      links: {
-        youtube: draft.links?.youtube?.trim() || undefined,
-        instagram: draft.links?.instagram?.trim() || undefined,
-        discord: draft.links?.discord?.trim() || undefined,
-        twitter: draft.links?.twitter?.trim() || undefined,
-        tiktok: draft.links?.tiktok?.trim() || undefined,
-        site: draft.links?.site?.trim() || undefined,
-      },
-    };
-    if (editingIdx === -1) {
-      onChange([...cast, cleaned]);
-    } else if (editingIdx !== null) {
-      const updated = [...cast];
-      updated[editingIdx] = cleaned;
-      onChange(updated);
-    }
-    setEditingIdx(null);
-  };
-
-  const handleRemove = (idx: number) => {
-    onChange(cast.filter((_, i) => i !== idx));
-  };
-
-  const isOpen = editingIdx !== null;
-
-  return (
-    <div className="space-y-4">
-      {cast.length === 0 && (
-        <p className="text-sm text-muted-foreground italic">Nenhum membro adicionado ainda.</p>
-      )}
-      <div className="space-y-3">
-        {cast.map((member, idx) => (
-          <div
-            key={idx}
-            className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background/50"
-          >
-            {member.fotoUrl ? (
-              <img
-                src={member.fotoUrl}
-                alt={member.nome}
-                className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 text-sm font-bold text-muted-foreground">
-                {member.nome[0]?.toUpperCase()}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground truncate">{member.nome}</p>
-              <p className="text-xs text-muted-foreground truncate">{member.papel}</p>
-            </div>
-            <div className="flex gap-1 flex-shrink-0">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-8 px-2 text-xs"
-                onClick={() => openEdit(idx)}
-              >
-                Editar
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-8 px-2 text-destructive hover:text-destructive"
-                onClick={() => handleRemove(idx)}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <Button type="button" variant="outline" size="sm" onClick={openAdd} className="gap-2">
-        <Plus className="w-4 h-4" /> Adicionar membro
-      </Button>
-
-      <Dialog open={isOpen} onOpenChange={(o) => !o && setEditingIdx(null)}>
-        <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingIdx === -1 ? "Adicionar membro" : "Editar membro"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Nome *</label>
-                <Input
-                  value={draft.nome}
-                  onChange={(e) => setDraft((d) => ({ ...d, nome: e.target.value }))}
-                  placeholder="Ex: João Silva"
-                  className="bg-background h-9 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-muted-foreground">Papel *</label>
-                <Input
-                  value={draft.papel}
-                  onChange={(e) => setDraft((d) => ({ ...d, papel: e.target.value }))}
-                  placeholder="Ex: Dublador, Editor"
-                  className="bg-background h-9 text-sm"
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">
-                URL da Foto de Perfil
-              </label>
-              <Input
-                value={draft.fotoUrl || ""}
-                onChange={(e) => setDraft((d) => ({ ...d, fotoUrl: e.target.value }))}
-                placeholder="https://..."
-                className="bg-background h-9 text-sm"
-              />
-              {draft.fotoUrl && (
-                <img
-                  src={draft.fotoUrl}
-                  alt="preview"
-                  className="w-12 h-12 rounded-full object-cover border border-border mt-1"
-                  onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
-                />
-              )}
-            </div>
-            <div className="border-t border-border pt-4 space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Redes Sociais
-              </p>
-              <SocialLinksEditor
-                links={draft.links ?? {}}
-                onChange={(links) => setDraft((d) => ({ ...d, links }))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setEditingIdx(null)}>
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              disabled={!draft.nome.trim() || !draft.papel.trim()}
-              onClick={handleSave}
-            >
-              <Save className="w-4 h-4 mr-1" /> Salvar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
 }
 
 export default function ZenkatuberObraForm() {
@@ -478,7 +194,7 @@ export default function ZenkatuberObraForm() {
         </Link>
       </Button>
 
-      <h1 className="font-display text-3xl font-bold mb-8">
+      <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
         {isNew ? "Nova Obra" : "Editar Obra"}
       </h1>
 
@@ -665,21 +381,18 @@ export default function ZenkatuberObraForm() {
               name="capaUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL da capa *</FormLabel>
+                  <FormLabel>Capa *</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-background" placeholder="https://..." />
-                  </FormControl>
-                  <FormMessage />
-                  {field.value && (
-                    <img
-                      src={field.value}
-                      alt="capa"
-                      className="w-16 h-24 rounded-lg object-cover mt-2"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
+                    <ImageUploadField
+                      value={field.value || null}
+                      onChange={field.onChange}
+                      previewClassName="h-32 w-[85px]"
                     />
-                  )}
+                  </FormControl>
+                  <FormDescription>
+                    Convertida para WebP e salva no banco de dados.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -688,21 +401,18 @@ export default function ZenkatuberObraForm() {
               name="bannerUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>URL do banner *</FormLabel>
+                  <FormLabel>Banner *</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-background" placeholder="https://..." />
-                  </FormControl>
-                  <FormMessage />
-                  {field.value && (
-                    <img
-                      src={field.value}
-                      alt="banner"
-                      className="w-full max-w-xs h-20 rounded-lg object-cover mt-2"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
+                    <ImageUploadField
+                      value={field.value || null}
+                      onChange={field.onChange}
+                      previewClassName="h-20 w-36"
                     />
-                  )}
+                  </FormControl>
+                  <FormDescription>
+                    Convertida para WebP e salva no banco de dados.
+                  </FormDescription>
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -711,19 +421,15 @@ export default function ZenkatuberObraForm() {
               name="tipografiaUrl"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>Tipografia URL (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://..."
-                      {...field}
-                      value={field.value || ""}
-                      className="bg-background"
-                    />
+                  <FormLabel>Tipografia (Opcional)</FormLabel>
+                  <FormControl>                      <ImageUploadField
+                        value={field.value || null}
+                        onChange={field.onChange}
+                        previewClassName="h-16 w-full max-w-[256px]"
+                        fit="contain"
+                        hint="PNG com fundo transparente, convertido para WebP."
+                      />
                   </FormControl>
-                  <FormDescription>
-                    URL de imagem com o logo/tipografia personalizada da obra (PNG transparente
-                    recomendado).
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -739,8 +445,8 @@ export default function ZenkatuberObraForm() {
             <CastEditor cast={cast} onChange={setCast} />
           </div>
 
-          <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={submitting} className="flex-1 gap-2">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+            <Button type="submit" disabled={submitting} className="w-full sm:flex-1 gap-2">
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
@@ -748,7 +454,7 @@ export default function ZenkatuberObraForm() {
               )}
               {isNew ? "Criar obra" : "Salvar alterações"}
             </Button>
-            <Button type="button" variant="outline" asChild>
+            <Button type="button" variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/meus-projetos">Cancelar</Link>
             </Button>
           </div>

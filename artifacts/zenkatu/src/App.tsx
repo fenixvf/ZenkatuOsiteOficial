@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import Home from "@/pages/home";
 import Login from "@/pages/login";
 import Perfil from "@/pages/perfil";
+import PerfilPublico from "@/pages/perfil-publico";
+import Descobrir from "@/pages/descobrir";
 import ObraDetail from "@/pages/obra-detail";
 import Generos from "@/pages/generos";
 import GeneroDetail from "@/pages/genero-detail";
@@ -89,6 +91,8 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
         <Route path="/perfil" component={Perfil} />
+        <Route path="/perfil/:uid" component={PerfilPublico} />
+        <Route path="/descobrir" component={Descobrir} />
         <Route path="/obra/:slug" component={ObraDetail} />
         <Route path="/generos" component={Generos} />
         <Route path="/genero/:slug" component={GeneroDetail} />

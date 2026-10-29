@@ -412,7 +412,9 @@ export const GetEpisodioResponse = zod.object({
   "id": zod.number(),
   "obraId": zod.number(),
   "obraTitulo": zod.string().nullish(),
+  "obraSlug": zod.string().nullish(),
   "obraCapaUrl": zod.string().nullish(),
+  "obraTipografiaUrl": zod.string().nullish(),
   "temporada": zod.number(),
   "numero": zod.number(),
   "titulo": zod.string(),
@@ -442,7 +444,9 @@ export const UpdateEpisodioResponse = zod.object({
   "id": zod.number(),
   "obraId": zod.number(),
   "obraTitulo": zod.string().nullish(),
+  "obraSlug": zod.string().nullish(),
   "obraCapaUrl": zod.string().nullish(),
+  "obraTipografiaUrl": zod.string().nullish(),
   "temporada": zod.number(),
   "numero": zod.number(),
   "titulo": zod.string(),
@@ -551,6 +555,11 @@ export const GetUsuarioResponse = zod.object({
   "role": zod.string().optional(),
   "isZenkatuber": zod.boolean().optional(),
   "verifiedAt": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "voicePortfolio": zod.array(zod.object({
+  "titulo": zod.string(),
+  "url": zod.string()
+}).describe('Item do portfólio de voz (apenas URLs do Google Drive)')).optional(),
   "contactWhatsapp": zod.string().nullish(),
   "contactInstagram": zod.string().nullish(),
   "contactDiscord": zod.string().nullish(),
@@ -568,7 +577,12 @@ export const UpdateUsuarioParams = zod.object({
 
 export const UpdateUsuarioBody = zod.object({
   "username": zod.string().nullish(),
-  "photoUrl": zod.string().nullish()
+  "photoUrl": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "voicePortfolio": zod.array(zod.object({
+  "titulo": zod.string(),
+  "url": zod.string()
+}).describe('Item do portfólio de voz (apenas URLs do Google Drive)')).optional()
 })
 
 export const UpdateUsuarioResponse = zod.object({
@@ -580,12 +594,38 @@ export const UpdateUsuarioResponse = zod.object({
   "role": zod.string().optional(),
   "isZenkatuber": zod.boolean().optional(),
   "verifiedAt": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "voicePortfolio": zod.array(zod.object({
+  "titulo": zod.string(),
+  "url": zod.string()
+}).describe('Item do portfólio de voz (apenas URLs do Google Drive)')).optional(),
   "contactWhatsapp": zod.string().nullish(),
   "contactInstagram": zod.string().nullish(),
   "contactDiscord": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
 })
+
+
+/**
+ * @summary List public profiles of all linked accounts
+ */
+export const ListUsuariosResponseItem = zod.object({
+  "id": zod.number(),
+  "uid": zod.string(),
+  "username": zod.string().nullish(),
+  "photoUrl": zod.string().nullish(),
+  "role": zod.string(),
+  "isZenkatuber": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "voicePortfolio": zod.array(zod.object({
+  "titulo": zod.string(),
+  "url": zod.string()
+}).describe('Item do portfólio de voz (apenas URLs do Google Drive)')).optional(),
+  "createdAt": zod.string()
+}).describe('Public profile fields of a linked account (no private data)')
+export const ListUsuariosResponse = zod.array(ListUsuariosResponseItem)
 
 
 /**
@@ -607,11 +647,24 @@ export const UpsertUsuarioResponse = zod.object({
   "role": zod.string().optional(),
   "isZenkatuber": zod.boolean().optional(),
   "verifiedAt": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "voicePortfolio": zod.array(zod.object({
+  "titulo": zod.string(),
+  "url": zod.string()
+}).describe('Item do portfólio de voz (apenas URLs do Google Drive)')).optional(),
   "contactWhatsapp": zod.string().nullish(),
   "contactInstagram": zod.string().nullish(),
   "contactDiscord": zod.string().nullish(),
   "createdAt": zod.string().optional(),
   "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Upload image converted to WebP and stored in the database
+ */
+export const UploadImagenBody = zod.object({
+  "imageData": zod.string().describe('Base64-encoded image data (any format)')
 })
 
 
@@ -635,6 +688,11 @@ export const UploadAvatarResponse = zod.object({
   "role": zod.string().optional(),
   "isZenkatuber": zod.boolean().optional(),
   "verifiedAt": zod.string().nullish(),
+  "bio": zod.string().nullish(),
+  "voicePortfolio": zod.array(zod.object({
+  "titulo": zod.string(),
+  "url": zod.string()
+}).describe('Item do portfólio de voz (apenas URLs do Google Drive)')).optional(),
   "contactWhatsapp": zod.string().nullish(),
   "contactInstagram": zod.string().nullish(),
   "contactDiscord": zod.string().nullish(),

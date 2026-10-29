@@ -7,13 +7,13 @@ import {
   useUploadAvatar,
   useGetUsuarioLista,
   useRemoveFromLista,
-  useGetUsuarioHistorico,
-  useClearHistorico,
+  type VoicePortfolioItem,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -21,24 +21,47 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
-import { Camera, Loader2, Save, Trash2, BookmarkX, History, Clock, Bell, BellOff, BadgeCheck } from "lucide-react";
+import {
+  Camera,
+  Loader2,
+  Save,
+  Trash2,
+  BookmarkX,
+  Bell,
+  BellOff,
+  BadgeCheck,
+  CalendarDays,
+  AlignLeft,
+  ExternalLink,
+  Mic,
+  Plus,
+} from "lucide-react";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+
+// Somente links do Google Drive são aceitos no portfólio de voz.
+const DRIVE_HOSTS = [
+  "drive.google.com",
+  "docs.google.com",
+  "drive.usercontent.google.com",
+  "docs.googleusercontent.com",
+];
+
+function isDriveUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      DRIVE_HOSTS.includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
 
 export default function Perfil() {
   const { currentUser, userProfile, loading, isAdmin } = useAuth();
@@ -49,7 +72,6 @@ export default function Perfil() {
   const updateUsuario = useUpdateUsuario();
   const uploadAvatar = useUploadAvatar();
   const removeFromLista = useRemoveFromLista();
-  const clearHistorico = useClearHistorico();
 
   const push = usePushNotifications(currentUser?.uid ?? null);
   const [localPrefs, setLocalPrefs] = useState({ notifyEpisodios: true, notifyObras: true });
@@ -68,6 +90,25 @@ export default function Perfil() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [bio, setBio] = useState(userProfile?.bio || "");
+  const [portfolio, setPortfolio] = useState<VoicePortfolioItem[]>(
+    userProfile?.voicePortfolio ?? [],
+  );
+  const [portfolioTitulo, setPortfolioTitulo] = useState("");
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [isSavingBio, setIsSavingBio] = useState(false);
+  const [isSavingPortfolio, setIsSavingPortfolio] = useState(false);
+  const profileLoadedRef = useRef(false);
+
+  // Preenche bio e portfólio assim que o perfil chega do servidor.
+  useEffect(() => {
+    if (userProfile && !profileLoadedRef.current) {
+      profileLoadedRef.current = true;
+      setBio(userProfile.bio || "");
+      setPortfolio(userProfile.voicePortfolio ?? []);
+    }
+  }, [userProfile]);
+
   const { data: listaRaw, isLoading: listaLoading } = useGetUsuarioLista(
     currentUser?.uid || "",
     {
@@ -78,17 +119,6 @@ export default function Perfil() {
     },
   );
   const lista = Array.isArray(listaRaw) ? listaRaw : [];
-
-  const { data: historicoRaw, isLoading: historicoLoading } = useGetUsuarioHistorico(
-    currentUser?.uid || "",
-    {
-      query: {
-        enabled: !!currentUser?.uid,
-        queryKey: ["getUsuarioHistorico", currentUser?.uid || ""],
-      },
-    },
-  );
-  const historico = Array.isArray(historicoRaw) ? historicoRaw : [];
 
   useEffect(() => {
     if (!loading && !currentUser) {
@@ -134,6 +164,78 @@ export default function Perfil() {
       toast({ title: "Erro ao salvar", variant: "destructive" });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveBio = async () => {
+    try {
+      setIsSavingBio(true);
+      await updateUsuario.mutateAsync({
+        uid: currentUser!.uid,
+        data: { bio: bio.trim() || null },
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["getUsuario", currentUser!.uid],
+      });
+      toast({ title: "Biografia salva" });
+    } catch {
+      toast({ title: "Erro ao salvar a biografia", variant: "destructive" });
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const addPortfolioItem = () => {
+    const titulo = portfolioTitulo.trim();
+    const url = portfolioUrl.trim();
+    if (!titulo) {
+      toast({
+        title: "Dê um título ao item",
+        description: "Ex: Demo reel, Dublagem, Locução...",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!isDriveUrl(url)) {
+      toast({
+        title: "Somente URLs do Google Drive",
+        description: "Cole um link drive.google.com ou docs.google.com.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPortfolio((p) => [...p, { titulo, url }]);
+    setPortfolioTitulo("");
+    setPortfolioUrl("");
+  };
+
+  const removePortfolioItem = (index: number) => {
+    setPortfolio((p) => p.filter((_, i) => i !== index));
+  };
+
+  const handleSavePortfolio = async () => {
+    if (portfolio.some((item) => !isDriveUrl(item.url))) {
+      toast({
+        title: "Somente URLs do Google Drive",
+        description: "Revise os links antes de salvar.",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      setIsSavingPortfolio(true);
+      await updateUsuario.mutateAsync({
+        uid: currentUser!.uid,
+        data: { voicePortfolio: portfolio },
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["getUsuario", currentUser!.uid],
+      });
+      toast({ title: "Portfólio de voz salvo" });
+    } catch {
+      toast({ title: "Erro ao salvar o portfólio", variant: "destructive" });
+    } finally {
+      setIsSavingPortfolio(false);
     }
   };
 
@@ -220,19 +322,6 @@ export default function Perfil() {
     }
   };
 
-  const handleClearHistorico = async () => {
-    if (!currentUser) return;
-    try {
-      await clearHistorico.mutateAsync({ uid: currentUser.uid });
-      queryClient.invalidateQueries({
-        queryKey: ["getUsuarioHistorico", currentUser.uid],
-      });
-      toast({ title: "Histórico limpo" });
-    } catch {
-      toast({ title: "Erro ao limpar histórico", variant: "destructive" });
-    }
-  };
-
   const avatarSrc =
     previewUrl ||
     userProfile.photoUrl ||
@@ -245,109 +334,283 @@ export default function Perfil() {
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto w-full min-w-0 max-w-screen-md overflow-x-clip px-4 py-8"
     >
-      <div className="flex items-center gap-3 mb-8">
-        <h1 className="font-display text-3xl font-bold text-foreground">
-          Meu Perfil
-        </h1>
-        {userProfile.isZenkatuber && (
-          <VerifiedBadge verifiedAt={userProfile.verifiedAt ?? null} size="lg" />
-        )}
-      </div>
-
       <div className="grid min-w-0 gap-6">
+        {/* Cabeçalho do perfil */}
+        <Card className="border-border bg-card/50 backdrop-blur overflow-hidden">
+          <div className="h-28 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent relative">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.35),transparent_60%)]" />
+          </div>
+          <CardContent className="px-6 pb-6 -mt-14 flex flex-col items-center text-center">
+            <div className="relative group shrink-0">
+              <div className="h-28 w-28 rounded-full border-4 border-background shadow-xl overflow-hidden bg-secondary flex items-center justify-center">
+                <img
+                  src={avatarSrc}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+                {!avatarSrc && (
+                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground">
+                    {userProfile.username?.[0]?.toUpperCase() ||
+                      currentUser?.email?.[0]?.toUpperCase() ||
+                      "Z"}
+                  </div>
+                )}
+              </div>
+              <div
+                className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
+                onClick={handleAvatarClick}
+              >
+                {isUploading ? (
+                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-8 h-8 text-white" />
+                )}
+              </div>
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 mt-3 min-w-0">
+              <h1 className="font-display text-2xl font-bold text-foreground truncate">
+                {userProfile.username || "Sem nome de usuário"}
+              </h1>
+              {userProfile.isZenkatuber && (
+                <VerifiedBadge verifiedAt={userProfile.verifiedAt ?? null} size="lg" />
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border border-primary/25 bg-primary/10 text-primary">
+                <BadgeCheck className="w-3.5 h-3.5" />
+                {userProfile.isZenkatuber ? "Zenkatuber" : "Membro"}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border border-border bg-secondary/60 text-muted-foreground">
+                <CalendarDays className="w-3.5 h-3.5" />
+                {userProfile.createdAt
+                  ? `Membro desde ${format(
+                      new Date(userProfile.createdAt),
+                      "MMMM 'de' yyyy",
+                      { locale: ptBR },
+                    )}`
+                  : "Membro da Zenkatu"}
+              </span>
+            </div>
+
+          </CardContent>
+        </Card>
+
         {/* Informações Pessoais */}
         <Card className="border-border bg-card/50 backdrop-blur">
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
+            <CardDescription>Atualize seu nome de usuário.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-muted-foreground">
+                Email
+              </Label>
+              <Input
+                id="email"
+                value={userProfile.email}
+                disabled
+                className="bg-secondary/50 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-muted-foreground">
+                Nome de Usuário
+              </Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) =>
+                  setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))
+                }
+                className="bg-background border-border"
+                placeholder="Seu nome de exibição"
+                maxLength={20}
+              />
+              <p className="text-xs text-muted-foreground">
+                Apenas letras, números e underline (_). Entre 3 e 20 caracteres.
+              </p>
+            </div>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || username === userProfile.username}
+              className="font-display tracking-wide"
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Salvar Alterações
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Biografia */}
+        <Card className="min-w-0 border-border bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlignLeft className="w-5 h-5" />
+              Biografia
+            </CardTitle>
             <CardDescription>
-              Atualize seu nome de usuário e foto de perfil.
+              Conte um pouco sobre você — aparece no seu perfil público.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-8">
-            <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
-              <div className="relative group shrink-0">
-                <div className="h-32 w-32 rounded-full border-4 border-background shadow-xl overflow-hidden bg-secondary">
-                  <img
-                    src={avatarSrc}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  {!avatarSrc && (
-                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground">
-                      {userProfile.username?.[0]?.toUpperCase() ||
-                        currentUser?.email?.[0]?.toUpperCase() ||
-                        "Z"}
+          <CardContent className="space-y-3">
+            <Textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={1000}
+              placeholder="Escreva sua biografia..."
+              className="min-h-[120px] bg-background border-border resize-y"
+            />
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">{bio.length}/1000</p>
+              <Button
+                onClick={handleSaveBio}
+                disabled={isSavingBio || bio.trim() === (userProfile.bio || "")}
+                className="font-display tracking-wide"
+              >
+                {isSavingBio ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Salvar biografia
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Portfólio de Voz */}
+        <Card className="min-w-0 border-border bg-card/50 backdrop-blur">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="w-5 h-5" />
+              Portfólio de Voz
+            </CardTitle>
+            <CardDescription>
+              Adicione seus trabalhos de voz. Somente links do Google Drive são aceitos.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {portfolio.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
+                <Mic className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p className="text-sm">Nenhum trabalho adicionado ainda.</p>
+                <p className="text-xs mt-1">Adicione um link do Drive abaixo.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {portfolio.map((item, index) => (
+                  <div
+                    key={`${item.url}-${index}`}
+                    className="flex min-w-0 items-center gap-3 p-3 rounded-lg border border-border bg-background/50 overflow-hidden"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {item.titulo}
+                      </p>
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex min-w-0 items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-3 h-3 shrink-0" />
+                        <span className="min-w-0 truncate">{item.url}</span>
+                      </a>
                     </div>
-                  )}
-                </div>
-                <div
-                  className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
-                  onClick={handleAvatarClick}
-                >
-                  {isUploading ? (
-                    <Loader2 className="w-8 h-8 text-white animate-spin" />
-                  ) : (
-                    <Camera className="w-8 h-8 text-white" />
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/jpg, image/webp"
-                  className="hidden"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-destructive hover:text-destructive shrink-0"
+                      onClick={() => removePortfolioItem(index)}
+                      aria-label="Remover item"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="portfolioTitulo" className="text-muted-foreground">
+                  Título
+                </Label>
+                <Input
+                  id="portfolioTitulo"
+                  value={portfolioTitulo}
+                  onChange={(e) => setPortfolioTitulo(e.target.value)}
+                  placeholder="Ex: Demo reel 2026"
+                  className="bg-background border-border"
+                  maxLength={80}
                 />
               </div>
-
-              <div className="flex-1 space-y-4 w-full">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-muted-foreground">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    value={userProfile.email}
-                    disabled
-                    className="bg-secondary/50 border-border"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-muted-foreground">
-                    Nome de Usuário
-                  </Label>
-                  <Input
-                    id="username"
-                    value={username}
-                    onChange={(e) =>
-                      setUsername(
-                        e.target.value.replace(/[^a-zA-Z0-9_]/g, ""),
-                      )
+              <div className="space-y-1">
+                <Label htmlFor="portfolioUrl" className="text-muted-foreground">
+                  Link do Google Drive
+                </Label>
+                <Input
+                  id="portfolioUrl"
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addPortfolioItem();
                     }
-                    className="bg-background border-border"
-                    placeholder="Seu nome de exibição"
-                    maxLength={20}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Apenas letras, números e underline (_). Entre 3 e 20 caracteres.
-                  </p>
-                </div>
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving || username === userProfile.username}
-                  className="font-display tracking-wide"
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4 mr-2" />
-                  )}
-                  Salvar Alterações
-                </Button>
+                  }}
+                  placeholder="https://drive.google.com/..."
+                  className="bg-background border-border"
+                />
               </div>
             </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 shrink-0"
+                onClick={addPortfolioItem}
+              >
+                <Plus className="w-4 h-4" /> Adicionar item
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSavePortfolio}
+                disabled={isSavingPortfolio}
+                className="font-display tracking-wide"
+              >
+                {isSavingPortfolio ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                Salvar portfólio
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              No Drive, abra o arquivo em Compartilhar → "Qualquer pessoa com o link".
+            </p>
           </CardContent>
         </Card>
 
@@ -572,97 +835,6 @@ export default function Perfil() {
           </CardContent>
         </Card>
 
-        {/* Histórico */}
-        <Card className="min-w-0 border-border bg-card/50 backdrop-blur">
-          <CardHeader className="flex min-w-0 flex-row flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <History className="w-5 h-5" />
-                Histórico
-              </CardTitle>
-              <CardDescription>
-                Episódios assistidos recentemente.
-              </CardDescription>
-            </div>
-            {historico.length > 0 && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive shrink-0">
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Limpar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Limpar histórico?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Todos os episódios assistidos serão removidos do seu histórico. Essa ação não pode ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleClearHistorico}
-                      className="bg-destructive hover:bg-destructive/90"
-                    >
-                      Limpar histórico
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </CardHeader>
-          <CardContent>
-            {historicoLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : historico.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
-                <History className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p>Nenhum episódio no histórico ainda.</p>
-                <p className="text-xs mt-1">Assista algum episódio para ele aparecer aqui.</p>
-              </div>
-            ) : (
-              <div className="w-full min-w-0 space-y-3">
-                {historico.map((item) => (
-                  <Link key={item.id} href={`/obra/${item.obraSlug}`} className="block w-full min-w-0">
-                    <div className="flex w-full min-w-0 items-center gap-3 overflow-hidden rounded-lg border border-border bg-background/50 p-3 transition-all hover:border-primary/40 hover:bg-primary/5 group cursor-pointer">
-                      <div className="relative w-12 h-16 flex-shrink-0">
-                        <img
-                          src={item.obraCapaUrl || `https://placehold.co/56x80/0F1C2E/1E3A8A`}
-                          alt={item.obraTitulo}
-                          className="w-full h-full object-cover rounded"
-                        />
-                        {item.obraTipografiaUrl && (
-                          <div className="absolute inset-0 flex items-end justify-start p-0.5 bg-gradient-to-t from-background/80 to-transparent rounded">
-                            <img
-                              src={item.obraTipografiaUrl}
-                              alt={item.obraTitulo}
-                              className="max-h-4 w-auto object-contain drop-shadow"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                          {item.obraTitulo}
-                        </p>
-                        <p className="min-w-0 break-words text-xs text-muted-foreground mt-0.5">
-                          T{item.episodioTemporada} E{item.episodioNumero} — {item.episodioTitulo}
-                        </p>
-                        <p className="text-xs text-muted-foreground/60 mt-1 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(new Date(item.watchedAt), { addSuffix: true, locale: ptBR })}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </motion.div>
   );

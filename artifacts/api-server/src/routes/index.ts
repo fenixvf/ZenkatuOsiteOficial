@@ -12,11 +12,13 @@ import configRouter from "./config";
 import pushRouter from "./push";
 import zenkatuberRouter from "./zenkatuber";
 import shareRouter from "./share";
+import imagenesRouter from "./imagenes";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(shareRouter);
+router.use(imagenesRouter);
 router.use(obrasRouter);
 router.use(episodiosRouter);
 router.use(comentariosRouter);

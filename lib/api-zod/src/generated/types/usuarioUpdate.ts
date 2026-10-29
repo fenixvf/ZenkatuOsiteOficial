@@ -5,10 +5,14 @@
  * Zenkatu Streaming API
  * OpenAPI spec version: 0.1.0
  */
+import type { VoicePortfolioItem } from './voicePortfolioItem';
 
 export interface UsuarioUpdate {
   /** @nullable */
   username?: string | null;
   /** @nullable */
   photoUrl?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  voicePortfolio?: VoicePortfolioItem[];
 }

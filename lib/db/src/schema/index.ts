@@ -5,6 +5,7 @@ export * from "./comentarios";
 export * from "./lista";
 export * from "./historico";
 export * from "./profileImages";
+export * from "./mediaImages";
 export * from "./generos";
 export * from "./siteConfig";
 export * from "./pushSubscriptions";

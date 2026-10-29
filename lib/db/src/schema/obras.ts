@@ -3,6 +3,8 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export type CastMember = {
+  /** uid do perfil na Zenkatu, quando a pessoa tem conta */
+  uid?: string;
   nome: string;
   papel: string;
   fotoUrl?: string;

@@ -1,11 +1,25 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, profileImagesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const router = Router();
 
 const ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
+
+// Public directory of linked accounts (safe fields only — no e-mail or private data)
+router.get("/usuarios", async (req, res) => {
+  try {
+    const users = await db
+      .select()
+      .from(usersTable)
+      .orderBy(desc(usersTable.createdAt));
+    res.json(users.map(serializePublicUser));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 router.get("/usuarios/:uid", async (req, res) => {
   try {
@@ -23,10 +37,42 @@ router.get("/usuarios/:uid", async (req, res) => {
 
 router.patch("/usuarios/:uid", async (req, res) => {
   try {
-    const { username, photoUrl } = req.body;
+    const { username, photoUrl, bio, voicePortfolio } = req.body;
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (username !== undefined) updateData.username = username;
     if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
+
+    if (bio !== undefined) {
+      if (bio !== null && typeof bio !== "string") {
+        res.status(400).json({ error: "Bio inválida" });
+        return;
+      }
+      updateData.bio = bio === null ? null : bio.slice(0, 1000);
+    }
+
+    if (voicePortfolio !== undefined) {
+      if (!Array.isArray(voicePortfolio)) {
+        res.status(400).json({ error: "Portfólio de voz inválido" });
+        return;
+      }
+      const invalid = voicePortfolio.find(
+        (item: any) =>
+          !item ||
+          typeof item.titulo !== "string" ||
+          typeof item.url !== "string" ||
+          !isDriveUrl(item.url),
+      );
+      if (invalid) {
+        res.status(400).json({
+          error: "O portfólio aceita apenas URLs do Google Drive.",
+        });
+        return;
+      }
+      updateData.voicePortfolio = voicePortfolio.map((item: any) => ({
+        titulo: String(item.titulo).trim().slice(0, 80),
+        url: String(item.url).trim(),
+      }));
+    }
     const [user] = await db
       .update(usersTable)
       .set(updateData)
@@ -136,6 +182,41 @@ router.post("/usuarios/:uid/avatar", async (req, res) => {
   }
 });
 
+// Somente links do Google Drive são aceitos no portfólio de voz.
+const DRIVE_HOSTS = [
+  "drive.google.com",
+  "docs.google.com",
+  "drive.usercontent.google.com",
+  "docs.googleusercontent.com",
+];
+
+function isDriveUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      DRIVE_HOSTS.includes(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function serializePublicUser(u: typeof usersTable.$inferSelect) {
+  return {
+    id: u.id,
+    uid: u.uid,
+    username: u.username,
+    photoUrl: u.photoUrl,
+    role: u.role,
+    isZenkatuber: u.isZenkatuber ?? false,
+    verifiedAt: u.verifiedAt ? u.verifiedAt.toISOString() : null,
+    bio: u.bio ?? null,
+    voicePortfolio: u.voicePortfolio ?? [],
+    createdAt: u.createdAt.toISOString(),
+  };
+}
+
 function serializeUser(u: typeof usersTable.$inferSelect) {
   return {
     id: u.id,
@@ -149,6 +230,8 @@ function serializeUser(u: typeof usersTable.$inferSelect) {
     contactWhatsapp: u.contactWhatsapp ?? null,
     contactInstagram: u.contactInstagram ?? null,
     contactDiscord: u.contactDiscord ?? null,
+    bio: u.bio ?? null,
+    voicePortfolio: u.voicePortfolio ?? [],
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),
   };

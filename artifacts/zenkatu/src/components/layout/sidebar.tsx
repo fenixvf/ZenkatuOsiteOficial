@@ -15,6 +15,7 @@ import {
   X,
   BadgeCheck,
   Bell,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -252,6 +253,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       <NavLink href="/" icon={Home} label="Início" onClick={onClose} />
+      <NavLink href="/descobrir" icon={Users} label="Descobrir" onClick={onClose} />
       <NavLink href="/ranking" icon={TrendingUp} label="Ranking" onClick={onClose} />
       <NavLink href="/versao-app" icon={Smartphone} label="Versão app" onClick={onClose} />
       <GeneroSection onClose={onClose} />

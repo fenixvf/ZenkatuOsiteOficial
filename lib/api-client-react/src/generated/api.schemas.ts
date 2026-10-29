@@ -150,6 +150,14 @@ export interface ComentarioUpdate {
   texto: string;
 }
 
+/**
+ * Item do portfólio de voz (apenas URLs do Google Drive)
+ */
+export interface VoicePortfolioItem {
+  titulo: string;
+  url: string;
+}
+
 export interface Usuario {
   id: number;
   uid: string;
@@ -163,6 +171,9 @@ export interface Usuario {
   /** @nullable */
   verifiedAt?: string | null;
   /** @nullable */
+  bio?: string | null;
+  voicePortfolio?: VoicePortfolioItem[];
+  /** @nullable */
   contactWhatsapp?: string | null;
   /** @nullable */
   contactInstagram?: string | null;
@@ -170,6 +181,26 @@ export interface Usuario {
   contactDiscord?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/**
+ * Public profile fields of a linked account (no private data)
+ */
+export interface UsuarioPublico {
+  id: number;
+  uid: string;
+  /** @nullable */
+  username?: string | null;
+  /** @nullable */
+  photoUrl?: string | null;
+  role: string;
+  isZenkatuber: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  voicePortfolio?: VoicePortfolioItem[];
+  createdAt: string;
 }
 
 export interface UsuarioInput {
@@ -186,10 +217,26 @@ export interface UsuarioUpdate {
   username?: string | null;
   /** @nullable */
   photoUrl?: string | null;
+  /** @nullable */
+  bio?: string | null;
+  voicePortfolio?: VoicePortfolioItem[];
+}
+
+/**
+ * Imagem enviada e convertida para WebP no banco de dados
+ */
+export interface Imagen {
+  id: number;
+  url: string;
 }
 
 export interface AvatarUpload {
   /** Base64-encoded WebP image data */
+  imageData: string;
+}
+
+export interface ImagenUpload {
+  /** Base64-encoded image data (any format) */
   imageData: string;
 }
 
