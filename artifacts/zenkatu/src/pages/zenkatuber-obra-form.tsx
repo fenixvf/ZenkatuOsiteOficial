@@ -422,13 +422,14 @@ export default function ZenkatuberObraForm() {
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel>Tipografia (Opcional)</FormLabel>
-                  <FormControl>                      <ImageUploadField
-                        value={field.value || null}
-                        onChange={field.onChange}
-                        previewClassName="h-16 w-full max-w-[256px]"
-                        fit="contain"
-                        hint="PNG com fundo transparente, convertido para WebP."
-                      />
+                  <FormControl>
+                    <ImageUploadField
+                      value={field.value || null}
+                      onChange={field.onChange}
+                      previewClassName="h-16 w-full max-w-[256px]"
+                      fit="contain"
+                      hint="PNG com fundo transparente, convertido para WebP."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
