@@ -9,12 +9,13 @@ import {
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, Play, Info, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Info, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchMaisAvaliadas } from "@/lib/avaliacoes";
 
 function HeroCarousel() {
   const { data: bannerObras, isLoading } = useListBannerObras();
@@ -313,6 +314,118 @@ function SectionTitle({ title }: { title: string }) {
   );
 }
 
+function MaisBemAvaliadas() {
+  const { data: obras, isLoading } = useQuery({
+    queryKey: ["avaliacoes", "mais-avaliadas"],
+    queryFn: fetchMaisAvaliadas,
+  });
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === "left" ? -336 : 336, behavior: "smooth" });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center gap-5">
+        <Skeleton className="h-8 w-72 rounded-full" />
+        <div className="flex gap-5 overflow-hidden">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-[152px] w-[240px] shrink-0 rounded-lg md:w-[280px]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const itens = (Array.isArray(obras) ? obras : []).slice(0, 5);
+  if (itens.length === 0) return null;
+
+  return (
+    <section aria-label="Mais bem avaliados da zenkatu" className="flex flex-col items-center">
+      <div className="mb-7 flex flex-col items-center gap-3 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-amber-300">
+          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+          Comunidade
+        </span>
+        <h3 className="font-display text-2xl md:text-3xl font-bold tracking-wide text-foreground">
+          Mais bem avaliados da zenkatu
+        </h3>
+        <span aria-hidden="true" className="h-1 w-28 rounded-full bg-gradient-to-r from-amber-400 via-primary to-amber-400" />
+      </div>
+
+      <div className="relative w-full max-w-6xl">
+        <button
+          onClick={() => scroll("left")}
+          aria-label="Avaliados anteriores"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+
+        <div
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto pb-2 scroll-smooth px-1"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+        {itens.map((obra, idx) => (
+          <motion.div
+            key={obra.id}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.07 }}
+            className="w-[240px] md:w-[280px] shrink-0"
+          >
+            <Link href={`/obra/${obra.slug}`}>
+              <div className="group relative overflow-hidden rounded-lg border border-white/10 bg-card transition-all duration-300 hover:-translate-y-1 hover:border-amber-400/60 hover:shadow-[0_18px_40px_rgba(0,0,0,.4)]">
+                <div className="relative aspect-video w-full">
+                  <img
+                    src={
+                      obra.bannerUrl ||
+                      obra.capaUrl ||
+                      `https://placehold.co/640x360/0F1C2E/1E3A8A?text=${obra.titulo}`
+                    }
+                    alt={obra.titulo}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a10] via-[#070a10]/35 to-transparent" />
+                  <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-black/70 px-2 py-1 text-[11px] font-bold text-amber-300 backdrop-blur-sm">
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    {obra.media.toFixed(1)}
+                  </span>
+                  <span className="absolute right-2 top-1 select-none font-display text-3xl font-black text-white/25 italic drop-shadow">
+                    {(idx + 1).toString().padStart(2, "0")}
+                  </span>
+                  <div className="absolute inset-x-0 bottom-0 p-3">
+                    <h4 className="font-display text-sm font-semibold leading-tight line-clamp-2 group-hover:text-amber-300 transition-colors">
+                      {obra.titulo}
+                    </h4>
+                    <p className="mt-1 text-[11px] text-white/60">
+                      {obra.total} {obra.total === 1 ? "avaliação" : "avaliações"} · {obra.ano}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+        ))}
+        </div>
+
+        <button
+          onClick={() => scroll("right")}
+          aria-label="Próximos avaliados"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-3 p-1.5 rounded-full bg-background/90 border border-border text-foreground shadow-lg hover:bg-secondary transition-colors"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function ObrasRecentes() {
   const { data: obras, isLoading } = useListObrasRecentes();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -549,6 +662,7 @@ export default function Home() {
       <HeroCarousel />
       <div className="container max-w-screen-2xl px-4 md:px-8 py-10 md:py-14 space-y-14 md:space-y-16">
         <ContinuarAssistindo />
+        <MaisBemAvaliadas />
         <ObrasRecentes />
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.8fr)_minmax(290px,.82fr)] gap-10 lg:gap-12 items-start">
           <EpisodiosRecentes />

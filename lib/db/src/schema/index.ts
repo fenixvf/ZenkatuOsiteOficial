@@ -1,5 +1,6 @@
 export * from "./users";
 export * from "./obras";
+export * from "./avaliacoes";
 export * from "./episodios";
 export * from "./comentarios";
 export * from "./lista";

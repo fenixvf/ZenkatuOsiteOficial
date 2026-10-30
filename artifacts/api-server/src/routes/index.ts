@@ -13,6 +13,7 @@ import pushRouter from "./push";
 import zenkatuberRouter from "./zenkatuber";
 import shareRouter from "./share";
 import imagenesRouter from "./imagenes";
+import avaliacoesRouter from "./avaliacoes";
 import convitesRouter from "./convites";
 
 const router: IRouter = Router();
@@ -20,6 +21,7 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use(shareRouter);
 router.use(imagenesRouter);
+router.use(avaliacoesRouter);
 router.use(obrasRouter);
 router.use(episodiosRouter);
 router.use(comentariosRouter);

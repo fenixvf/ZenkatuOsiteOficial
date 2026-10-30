@@ -20820,27 +20820,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router18;
+    module.exports = Router19;
     module.exports.Route = Route;
-    function Router18(options) {
-      if (!(this instanceof Router18)) {
-        return new Router18(options);
+    function Router19(options) {
+      if (!(this instanceof Router19)) {
+        return new Router19(options);
       }
       const opts = options || {};
-      function router18(req, res, next) {
-        router18.handle(req, res, next);
+      function router19(req, res, next) {
+        router19.handle(req, res, next);
       }
-      Object.setPrototypeOf(router18, this);
-      router18.caseSensitive = opts.caseSensitive;
-      router18.mergeParams = opts.mergeParams;
-      router18.params = {};
-      router18.strict = opts.strict;
-      router18.stack = [];
-      return router18;
+      Object.setPrototypeOf(router19, this);
+      router19.caseSensitive = opts.caseSensitive;
+      router19.mergeParams = opts.mergeParams;
+      router19.params = {};
+      router19.strict = opts.strict;
+      router19.stack = [];
+      return router19;
     }
-    Router18.prototype = function() {
+    Router19.prototype = function() {
     };
-    Router18.prototype.param = function param2(name2, fn) {
+    Router19.prototype.param = function param2(name2, fn) {
       if (!name2) {
         throw new TypeError("argument name is required");
       }
@@ -20860,7 +20860,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router18.prototype.handle = function handle(req, res, callback) {
+    Router19.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20987,7 +20987,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router18.prototype.use = function use(handler) {
+    Router19.prototype.use = function use(handler) {
       let offset = 0;
       let path4 = "/";
       if (typeof handler !== "function") {
@@ -21020,7 +21020,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router18.prototype.route = function route(path4) {
+    Router19.prototype.route = function route(path4) {
       const route2 = new Route(path4);
       const layer = new Layer(path4, {
         sensitive: this.caseSensitive,
@@ -21035,7 +21035,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router18.prototype[method] = function(path4) {
+      Router19.prototype[method] = function(path4) {
         const route = this.route(path4);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -21218,13 +21218,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router18 = require_router();
+    var Router19 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router18 = null;
+      var router19 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21233,13 +21233,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router18 === null) {
-            router18 = new Router18({
+          if (router19 === null) {
+            router19 = new Router19({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router18;
+          return router19;
         }
       });
     };
@@ -21310,15 +21310,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router18 = this.router;
+      var router19 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router18.use(path4, fn2);
+          return router19.use(path4, fn2);
         }
         debug(".use app under %s", path4);
         fn2.mountpath = path4;
         fn2.parent = this;
-        router18.use(path4, function mounted_app(req, res, next) {
+        router19.use(path4, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -23971,7 +23971,7 @@ var require_express = __commonJS({
     var EventEmitter = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router18 = require_router();
+    var Router19 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23993,8 +23993,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router18.Route;
-    exports.Router = Router18;
+    exports.Route = Router19.Route;
+    exports.Router = Router19;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -28390,7 +28390,7 @@ var require_pino = __commonJS({
     function pinoBundlerAbsolutePath(p) {
       try {
         const path4 = __require("path");
-        const outputDir = "/workspace/chats/009ecf042640d0f74d0fa715/api";
+        const outputDir = "/workspace/chats/98a222cf6790492951d8e7b4/api";
         return path4.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
@@ -44651,14 +44651,14 @@ var require_src2 = __commonJS({
 });
 
 // src/app.ts
-var import_express18 = __toESM(require_express2(), 1);
+var import_express19 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_pino_http = __toESM(require_logger(), 1);
 import path3 from "path";
 import { fileURLToPath } from "url";
 
 // src/routes/index.ts
-var import_express16 = __toESM(require_express2(), 1);
+var import_express17 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -53015,6 +53015,7 @@ function drizzle(...params) {
 // ../../lib/db/src/schema/index.ts
 var schema_exports = {};
 __export(schema_exports, {
+  avaliacoesTable: () => avaliacoesTable,
   castConvitesTable: () => castConvitesTable,
   comentariosTable: () => comentariosTable,
   episodiosTable: () => episodiosTable,
@@ -64468,6 +64469,22 @@ var obrasTable = pgTable("obras", {
 });
 var insertObraSchema = createInsertSchema(obrasTable).omit({ id: true, views: true, createdAt: true, updatedAt: true });
 
+// ../../lib/db/src/schema/avaliacoes.ts
+var avaliacoesTable = pgTable(
+  "avaliacoes",
+  {
+    id: serial("id").primaryKey(),
+    obraId: integer("obra_id").notNull().references(() => obrasTable.id, { onDelete: "cascade" }),
+    uid: varchar("uid", { length: 128 }).notNull(),
+    estrelas: integer("estrelas").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull()
+  },
+  (t) => [
+    unique("avaliacoes_obra_uid_unique").on(t.obraId, t.uid)
+  ]
+);
+
 // ../../lib/db/src/schema/episodios.ts
 var episodiosTable = pgTable("episodios", {
   id: serial("id").primaryKey(),
@@ -67061,8 +67078,8 @@ function injectObraHead(html, head) {
 ${cleaned}`;
 }
 function loadSpaIndexHtml() {
-  if ('<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-DbMpSnTU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-Dqc5669h.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n'.length > 0) {
-    return '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-DbMpSnTU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-Dqc5669h.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n';
+  if ('<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-B1MY2cAU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-C8oxH1v3.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n'.length > 0) {
+    return '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-B1MY2cAU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-C8oxH1v3.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n';
   }
   try {
     const filePath = path2.resolve(
@@ -67300,10 +67317,141 @@ router14.get("/imagens/:id", async (req, res) => {
 });
 var imagenes_default = router14;
 
-// src/routes/convites.ts
+// src/routes/avaliacoes.ts
 var import_express15 = __toESM(require_express2(), 1);
 init_drizzle_orm();
 var router15 = (0, import_express15.Router)();
+var LIMITE_MAIS_AVALIADAS = 5;
+function parseObraId(raw) {
+  const id = Number.parseInt(raw, 10);
+  return Number.isNaN(id) ? null : id;
+}
+async function resumo(obraId, uid) {
+  const [agg] = await db.select({
+    media: sql`coalesce(avg(${avaliacoesTable.estrelas}), 0)`,
+    total: sql`count(*)::int`
+  }).from(avaliacoesTable).where(eq(avaliacoesTable.obraId, obraId));
+  let minha = null;
+  if (uid) {
+    const [minhaRow] = await db.select({ estrelas: avaliacoesTable.estrelas }).from(avaliacoesTable).where(
+      and(
+        eq(avaliacoesTable.obraId, obraId),
+        eq(avaliacoesTable.uid, uid)
+      )
+    );
+    minha = minhaRow?.estrelas ?? null;
+  }
+  return {
+    media: Number(agg?.media ?? 0),
+    total: Number(agg?.total ?? 0),
+    minha
+  };
+}
+router15.get("/avaliacoes/mais-avaliadas", async (req, res) => {
+  try {
+    const rows = await db.select({
+      id: obrasTable.id,
+      titulo: obrasTable.titulo,
+      slug: obrasTable.slug,
+      ano: obrasTable.ano,
+      status: obrasTable.status,
+      capaUrl: obrasTable.capaUrl,
+      bannerUrl: obrasTable.bannerUrl,
+      tipografiaUrl: obrasTable.tipografiaUrl,
+      media: sql`avg(${avaliacoesTable.estrelas})`,
+      total: sql`count(*)::int`
+    }).from(avaliacoesTable).innerJoin(obrasTable, eq(avaliacoesTable.obraId, obrasTable.id)).groupBy(obrasTable.id).orderBy(
+      sql`avg(${avaliacoesTable.estrelas}) desc`,
+      sql`count(*) desc`
+    ).limit(LIMITE_MAIS_AVALIADAS);
+    res.json(
+      rows.map((r) => ({
+        ...r,
+        media: Number(r.media),
+        total: Number(r.total)
+      }))
+    );
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router15.get("/obras/:obraId/avaliacao", async (req, res) => {
+  try {
+    const obraId = parseObraId(req.params.obraId);
+    if (obraId === null) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    const uid = typeof req.query.uid === "string" ? req.query.uid : void 0;
+    res.json(await resumo(obraId, uid));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router15.post("/obras/:obraId/avaliacao", async (req, res) => {
+  try {
+    const obraId = parseObraId(req.params.obraId);
+    if (obraId === null) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    const { uid } = req.body;
+    if (!uid || typeof uid !== "string") {
+      res.status(400).json({ error: "uid is required" });
+      return;
+    }
+    const estrelas = Number(req.body.estrelas);
+    if (!Number.isInteger(estrelas) || estrelas < 1 || estrelas > 5) {
+      res.status(400).json({ error: "estrelas must be an integer between 1 and 5" });
+      return;
+    }
+    const [obra] = await db.select({ id: obrasTable.id }).from(obrasTable).where(eq(obrasTable.id, obraId));
+    if (!obra) {
+      res.status(404).json({ error: "Obra n\xE3o encontrada" });
+      return;
+    }
+    await db.insert(avaliacoesTable).values({ obraId, uid, estrelas }).onConflictDoUpdate({
+      target: [avaliacoesTable.obraId, avaliacoesTable.uid],
+      set: { estrelas, updatedAt: /* @__PURE__ */ new Date() }
+    });
+    res.status(201).json(await resumo(obraId, uid));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+router15.delete("/obras/:obraId/avaliacao", async (req, res) => {
+  try {
+    const obraId = parseObraId(req.params.obraId);
+    if (obraId === null) {
+      res.status(400).json({ error: "Invalid ID" });
+      return;
+    }
+    const uid = typeof req.query.uid === "string" ? req.query.uid : "";
+    if (!uid) {
+      res.status(400).json({ error: "uid is required" });
+      return;
+    }
+    await db.delete(avaliacoesTable).where(
+      and(
+        eq(avaliacoesTable.obraId, obraId),
+        eq(avaliacoesTable.uid, uid)
+      )
+    );
+    res.json(await resumo(obraId, uid));
+  } catch (e) {
+    req.log.error(e);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+var avaliacoes_default = router15;
+
+// src/routes/convites.ts
+var import_express16 = __toESM(require_express2(), 1);
+init_drizzle_orm();
+var router16 = (0, import_express16.Router)();
 function serialize2(convite) {
   return {
     id: convite.id,
@@ -67321,7 +67469,7 @@ function serialize2(convite) {
     respondedAt: convite.respondedAt ? convite.respondedAt.toISOString() : null
   };
 }
-router15.get("/convites-cast/:uid", async (req, res) => {
+router16.get("/convites-cast/:uid", async (req, res) => {
   try {
     const convites = await db2.select().from(castConvitesTable).where(eq(castConvitesTable.uid, req.params.uid)).orderBy(desc(castConvitesTable.createdAt));
     res.json(convites.map(serialize2));
@@ -67330,7 +67478,7 @@ router15.get("/convites-cast/:uid", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-router15.get("/personagens-feitos/:uid", async (req, res) => {
+router16.get("/personagens-feitos/:uid", async (req, res) => {
   try {
     const convites = await db2.select().from(castConvitesTable).where(eq(castConvitesTable.uid, req.params.uid)).orderBy(desc(castConvitesTable.createdAt));
     res.json(convites.filter((c) => c.status === "accepted").map(serialize2));
@@ -67362,7 +67510,7 @@ async function responder(req, res, status) {
   const [atualizado] = await db2.update(castConvitesTable).set({ status, respondedAt: /* @__PURE__ */ new Date() }).where(eq(castConvitesTable.id, id)).returning();
   res.json(serialize2(atualizado));
 }
-router15.post("/convites-cast/:id/aceitar", async (req, res) => {
+router16.post("/convites-cast/:id/aceitar", async (req, res) => {
   try {
     await responder(req, res, "accepted");
   } catch (e) {
@@ -67370,7 +67518,7 @@ router15.post("/convites-cast/:id/aceitar", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-router15.post("/convites-cast/:id/recusar", async (req, res) => {
+router16.post("/convites-cast/:id/recusar", async (req, res) => {
   try {
     await responder(req, res, "declined");
   } catch (e) {
@@ -67378,31 +67526,32 @@ router15.post("/convites-cast/:id/recusar", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-var convites_default = router15;
+var convites_default = router16;
 
 // src/routes/index.ts
-var router16 = (0, import_express16.Router)();
-router16.use(health_default);
-router16.use(share_default);
-router16.use(imagenes_default);
-router16.use(obras_default);
-router16.use(episodios_default);
-router16.use(comentarios_default);
-router16.use(usuarios_default);
-router16.use(stats_default);
-router16.use(lista_default);
-router16.use(historico_default);
-router16.use(generos_default);
-router16.use(config_default);
-router16.use(push_default);
-router16.use(zenkatuber_default);
-router16.use(convites_default);
-var routes_default = router16;
+var router17 = (0, import_express17.Router)();
+router17.use(health_default);
+router17.use(share_default);
+router17.use(imagenes_default);
+router17.use(avaliacoes_default);
+router17.use(obras_default);
+router17.use(episodios_default);
+router17.use(comentarios_default);
+router17.use(usuarios_default);
+router17.use(stats_default);
+router17.use(lista_default);
+router17.use(historico_default);
+router17.use(generos_default);
+router17.use(config_default);
+router17.use(push_default);
+router17.use(zenkatuber_default);
+router17.use(convites_default);
+var routes_default = router17;
 
 // src/routes/obra-page.ts
-var import_express17 = __toESM(require_express2(), 1);
+var import_express18 = __toESM(require_express2(), 1);
 init_drizzle_orm();
-var router17 = (0, import_express17.Router)();
+var router18 = (0, import_express18.Router)();
 async function handleObraPage(req, res) {
   const slug = resolveObraSlug(req);
   const template = loadSpaIndexHtml();
@@ -67465,9 +67614,9 @@ async function handleObraPage(req, res) {
   res.set("Cache-Control", cacheHeader);
   res.type("html").send(injectObraHead(template, head));
 }
-router17.get("/obra/:slug", (req, res) => void handleObraPage(req, res));
-router17.get("/obra/:slug/", (req, res) => void handleObraPage(req, res));
-var obra_page_default = router17;
+router18.get("/obra/:slug", (req, res) => void handleObraPage(req, res));
+router18.get("/obra/:slug/", (req, res) => void handleObraPage(req, res));
+var obra_page_default = router18;
 
 // src/lib/logger.ts
 var import_pino = __toESM(require_pino(), 1);
@@ -67489,7 +67638,7 @@ var logger = (0, import_pino.default)({
 
 // src/app.ts
 var __dirname2 = path3.dirname(fileURLToPath(import.meta.url));
-var app = (0, import_express18.default)();
+var app = (0, import_express19.default)();
 app.use(
   (0, import_pino_http.pinoHttp)({
     logger,
@@ -67510,13 +67659,13 @@ app.use(
   })
 );
 app.use((0, import_cors.default)());
-app.use(import_express18.default.json({ limit: "5mb" }));
-app.use(import_express18.default.urlencoded({ extended: true, limit: "5mb" }));
+app.use(import_express19.default.json({ limit: "5mb" }));
+app.use(import_express19.default.urlencoded({ extended: true, limit: "5mb" }));
 app.use("/api", routes_default);
 app.use(obra_page_default);
 if (process.env.NODE_ENV === "production") {
   const frontendDist = path3.resolve(process.cwd(), "artifacts/zenkatu/dist/public");
-  app.use(import_express18.default.static(frontendDist));
+  app.use(import_express19.default.static(frontendDist));
   app.use((_req, res, next) => {
     res.sendFile(path3.join(frontendDist, "index.html"), (err) => {
       if (err) next(err);

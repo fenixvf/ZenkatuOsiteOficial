@@ -70,12 +70,22 @@ import {
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { ArchiveUploader } from "@/components/admin/ArchiveUploader";
+import { ImageUploadField } from "@/components/image-upload";
 
 const episodioSchema = z.object({
   temporada: z.coerce.number().int().min(1),
   numero: z.coerce.number().int().min(0),
   titulo: z.string().min(1, "Título obrigatório"),
-  thumbnailUrl: z.string().url().optional().nullable().or(z.literal("")),
+  // Aceita URL http(s) ou caminho local ("/api/imagens/{id}"), que é o que o
+  // ImageUploadField devolve depois de converter a imagem em WebP e gravá-la no
+  // banco. Por isso não usa .url() puro: ele rejeitaria o caminho relativo.
+  thumbnailUrl: z
+    .string()
+    .refine((v) => v === "" || v.startsWith("/") || /^https?:\/\//i.test(v), {
+      message: "Informe uma URL válida",
+    })
+    .optional()
+    .nullable(),
   playerContent: z.string().min(1, "Conteúdo do player obrigatório"),
   publishedAt: z.string(),
 });
@@ -561,13 +571,22 @@ export default function AdminEpisodios() {
                 name="thumbnailUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Thumbnail URL (Opcional, 16:9)</FormLabel>
+                    <FormLabel>Thumbnail (Opcional, 16:9)</FormLabel>
+                    <FormControl>
+                      <ImageUploadField
+                        value={field.value || null}
+                        onChange={field.onChange}
+                        previewClassName="h-20 w-36"
+                        hint="PNG, JPG ou WebP — convertida para WebP e salva no banco de dados."
+                      />
+                    </FormControl>
                     <FormControl>
                       <Input
-                        placeholder="https://..."
+                        placeholder="https://... (ou cole uma URL manualmente)"
                         {...field}
                         value={field.value || ""}
                         className="bg-background"
+                        aria-label="URL da thumbnail"
                       />
                     </FormControl>
                     <FormMessage />

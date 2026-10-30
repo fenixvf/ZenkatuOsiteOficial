@@ -20,7 +20,7 @@ import {
   useAddToHistorico,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,8 +34,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users, Share2, Copy } from "lucide-react";
+import { Play, ChevronDown, ChevronUp, Trash2, Edit2, MessageSquare, Send, Bookmark, BookmarkCheck, Reply, X, Check, Youtube, Instagram, MessageCircle, Twitter, Globe, Music, Users, Share2, Copy, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { StarRating } from "@/components/star-rating";
+import { fetchAvaliacao, enviarAvaliacao } from "@/lib/avaliacoes";
 
 const CAST_PREVIEW_COUNT = 8;
 
@@ -373,6 +375,39 @@ export default function ObraDetail() {
   const removeFromLista = useRemoveFromLista();
   const addToHistorico = useAddToHistorico();
 
+  const { data: avaliacao } = useQuery({
+    queryKey: ["avaliacao", obra?.id ?? 0, currentUser?.uid ?? ""],
+    queryFn: () => fetchAvaliacao(obra!.id, currentUser?.uid),
+    enabled: !!obra?.id,
+  });
+
+  const salvarAvaliacao = useMutation({
+    mutationFn: (v: { obraId: number; uid: string; estrelas: number }) =>
+      enviarAvaliacao(v.obraId, v.uid, v.estrelas),
+    onSuccess: () => {
+      if (obra?.id) {
+        queryClient.invalidateQueries({ queryKey: ["avaliacao", obra.id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["avaliacoes", "mais-avaliadas"] });
+      toast({ title: "Avaliação salva", description: "Obrigado por avaliar esta obra!" });
+    },
+    onError: () => {
+      toast({ title: "Erro ao salvar avaliação", variant: "destructive" });
+    },
+  });
+
+  const handleAvaliar = (estrelas: number) => {
+    if (!obra) return;
+    if (!currentUser) {
+      toast({
+        title: "Entre na sua conta para avaliar",
+        description: "Faça login para dar estrelas para esta obra.",
+      });
+      return;
+    }
+    salvarAvaliacao.mutate({ obraId: obra.id, uid: currentUser.uid, estrelas });
+  };
+
   const isInLista = obra ? listaObras.some(o => o.id === obra.id) : false;
 
   const handleToggleLista = async () => {
@@ -657,9 +692,11 @@ export default function ObraDetail() {
             <span className="rounded-full border border-white/15 bg-black/25 px-3 py-1 backdrop-blur-sm">{obra.ano}</span>
             <span className="rounded-full border border-white/15 bg-black/25 px-3 py-1 backdrop-blur-sm">{obra.status}</span>
             {obra.totalEps && <span className="rounded-full border border-white/15 bg-black/25 px-3 py-1 backdrop-blur-sm">{obra.totalEps} episódios</span>}
-            {obra.nota != null && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/20 px-3 py-1 text-white backdrop-blur-sm">
-                <span className="font-bold text-primary">Z</span> {obra.nota}/10
+            {avaliacao && avaliacao.total > 0 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1 text-white backdrop-blur-sm">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                <span className="font-bold text-amber-300">{avaliacao.media.toFixed(1)}</span>
+                <span className="text-white/60">({avaliacao.total})</span>
               </span>
             )}
           </div>
@@ -1006,12 +1043,22 @@ export default function ObraDetail() {
                   <dt className="text-sm text-white/65 sm:text-base">Episódios</dt>
                   <dd className="text-right text-sm font-medium text-white sm:text-base">{obra.totalEps ?? episodios.length}</dd>
                 </div>
-                {obra.nota != null && (
-                  <div className="flex items-center justify-between gap-6 py-4">
-                    <dt className="text-sm text-white/65 sm:text-base">Nota Zenkatu</dt>
-                    <dd className="text-right text-sm font-semibold text-primary sm:text-base">{obra.nota}/10</dd>
-                  </div>
-                )}
+                <div className="flex items-center justify-between gap-6 py-4">
+                  <dt className="text-sm text-white/65 sm:text-base">Avaliação</dt>
+                  <dd className="text-right text-sm font-semibold sm:text-base">
+                    {avaliacao && avaliacao.total > 0 ? (
+                      <span className="inline-flex items-center gap-1.5 text-amber-300">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        {avaliacao.media.toFixed(1)}
+                        <span className="font-normal text-white/55">
+                          ({avaliacao.total} {avaliacao.total === 1 ? "voto" : "votos"})
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="font-normal text-white/55">Sem avaliações ainda</span>
+                    )}
+                  </dd>
+                </div>
                 {obra.generos?.length ? (
                   <div className="flex items-start justify-between gap-6 py-4">
                     <dt className="text-sm text-white/65 sm:text-base">Gêneros</dt>
@@ -1020,6 +1067,30 @@ export default function ObraDetail() {
                 ) : null}
               </dl>
             )}
+          </section>
+
+          {/* Avaliação em estrelas */}
+          <section className="rounded-sm border border-white/10 bg-[#111722]/80 p-5 md:p-6" data-testid="section-avaliacao">
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:justify-between sm:text-left">
+              <div>
+                <h3 className="font-display text-xl font-bold tracking-wide sm:text-2xl">Avalie esta obra</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  {avaliacao && avaliacao.total > 0
+                    ? `Média de ${avaliacao.media.toFixed(1)} de 5 · ${avaliacao.total} ${avaliacao.total === 1 ? "avaliação" : "avaliações"}`
+                    : "Seja o primeiro a avaliar"}
+                </p>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <StarRating value={avaliacao?.minha ?? 0} onChange={handleAvaliar} size="lg" />
+                <p className="text-xs text-muted-foreground">
+                  {!currentUser
+                    ? "Entre na sua conta para avaliar"
+                    : avaliacao?.minha
+                      ? `Sua nota: ${avaliacao.minha}/5 — clique para alterar`
+                      : "Clique nas estrelas para avaliar"}
+                </p>
+              </div>
+            </div>
           </section>
 
           {/* Comentários */}
