@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Camera,
   Loader2,
+  RefreshCw,
   Save,
   Trash2,
   BookmarkX,
@@ -71,7 +72,16 @@ function isDriveUrl(value: string) {
 }
 
 export default function Perfil() {
-  const { currentUser, userProfile, loading, isAdmin } = useAuth();
+  const {
+    currentUser,
+    userProfile,
+    loading,
+    isAdmin,
+    userProfileLoading,
+    userProfileError,
+    profileSyncing,
+    retryUserProfileSync,
+  } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -175,10 +185,41 @@ export default function Perfil() {
     return null;
   }
 
-  if (loading || !userProfile) {
+  if (loading || (currentUser && userProfileLoading)) {
     return (
       <div className="p-8 flex justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <div className="container mx-auto flex w-full justify-center px-4 py-12">
+        <Card className="w-full max-w-md border-border bg-card/70">
+          <CardHeader>
+            <CardTitle>Não foi possível carregar seu perfil</CardTitle>
+            <CardDescription>
+              {userProfileError
+                ? "A conta está conectada, mas o perfil da Zenkatu não foi sincronizado. Tente novamente."
+                : "O perfil ainda não está disponível. Tente sincronizar sua conta novamente."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={retryUserProfileSync}
+              disabled={profileSyncing || !currentUser}
+              className="gap-2"
+            >
+              {profileSyncing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
