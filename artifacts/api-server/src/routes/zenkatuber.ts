@@ -3,7 +3,7 @@ import { db, db2 } from "@workspace/db";
 // Usuários e candidaturas vivem no 2º banco (Supabase #2): `db2`.
 // `db` continua sendo o 1º banco (site_config, obras).
 import { zenkatuberRequestsTable, usersTable, siteConfigTable, obrasTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -388,13 +388,16 @@ router.post("/zenkatuber/grant", async (req, res) => {
       return;
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
     const [user] = await db2
       .select()
       .from(usersTable)
-      .where(eq(usersTable.email, email.trim().toLowerCase()));
+      .where(sql`lower(${usersTable.email}) = ${normalizedEmail}`);
 
     if (!user) {
-      res.status(404).json({ error: "Usuário não encontrado. O usuário precisa ter feito login ao menos uma vez." });
+      res.status(404).json({
+        error: "Perfil não sincronizado na Zenkatu. Peça para a pessoa recarregar o site para repetir a sincronização.",
+      });
       return;
     }
 

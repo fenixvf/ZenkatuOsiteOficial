@@ -10,6 +10,38 @@ const router = Router();
 
 const ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
 
+function normalizeUsername(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 20) || "usuario";
+}
+
+async function createUniqueUsername(name: string, email: string, uid: string) {
+  const base = normalizeUsername(name || email.split("@")[0]);
+  const uidSuffix = uid.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const candidates = [base];
+
+  for (let suffixLength = 4; suffixLength <= Math.min(18, uidSuffix.length); suffixLength += 1) {
+    const prefix = base.slice(0, 19 - suffixLength) || "u";
+    candidates.push(`${prefix}_${uidSuffix.slice(-suffixLength)}`);
+  }
+
+  for (const username of candidates) {
+    const [owner] = await db
+      .select({ uid: usersTable.uid })
+      .from(usersTable)
+      .where(eq(usersTable.username, username));
+    if (!owner || owner.uid === uid) return username;
+  }
+
+  throw new Error("Unable to allocate a unique username");
+}
+
 // Public directory of linked accounts (safe fields only — no e-mail or private data)
 router.get("/usuarios", async (req, res) => {
   try {
@@ -99,34 +131,41 @@ router.patch("/usuarios/:uid", async (req, res) => {
 router.post("/usuarios", async (req, res) => {
   try {
     const { uid, email, displayName, photoUrl } = req.body;
-    if (!uid || !email) {
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!uid || !normalizedEmail) {
       res.status(400).json({ error: "uid and email required" });
       return;
     }
-    const role = email === ADMIN_EMAIL ? "admin" : "user";
+    const role = normalizedEmail === ADMIN_EMAIL ? "admin" : "user";
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.uid, uid));
     if (existing) {
       const [updated] = await db
         .update(usersTable)
-        .set({ role, updatedAt: new Date() })
+        .set({ email: normalizedEmail, role, updatedAt: new Date() })
         .where(eq(usersTable.uid, uid))
         .returning();
       res.json(serializeUser(updated));
       return;
     }
-    const baseUsername = ((displayName ?? email.split("@")[0]) as string)
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, "_")
-      .slice(0, 20);
+    const username = await createUniqueUsername(
+      typeof displayName === "string" ? displayName : "",
+      normalizedEmail,
+      uid,
+    );
     const [user] = await db.insert(usersTable).values({
-      uid, email,
-      username: baseUsername,
+      uid,
+      email: normalizedEmail,
+      username,
       photoUrl: photoUrl ?? null,
       role,
     }).returning();
     res.json(serializeUser(user));
-  } catch (e) {
+  } catch (e: any) {
     req.log.error(e);
+    if (e?.code === "23505") {
+      res.status(409).json({ error: "E-mail já vinculado a outra conta." });
+      return;
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });

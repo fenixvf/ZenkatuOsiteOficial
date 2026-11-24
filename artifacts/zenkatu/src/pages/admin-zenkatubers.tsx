@@ -756,7 +756,7 @@ export default function AdminZenkatubers() {
               onChange={(e) => setGrantEmail(e.target.value)}
               className="bg-background max-w-sm"
             />
-            <p className="text-xs text-muted-foreground">O usuário precisa ter feito login ao menos uma vez na plataforma.</p>
+            <p className="text-xs text-muted-foreground">A conta precisa estar sincronizada no perfil da Zenkatu. Se já entrou, peça para recarregar o site e repetir a sincronização.</p>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-3">
