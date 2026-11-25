@@ -12,7 +12,6 @@ import {
   Layers,
   Smartphone,
   Settings,
-  X,
   BadgeCheck,
   Bell,
   Users,
@@ -20,11 +19,6 @@ import {
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { detectPlatform, parseSocialLinks } from "@/lib/social-platforms";
-
-interface SidebarProps {
-  open: boolean;
-  onClose: () => void;
-}
 
 async function fetchConfig(): Promise<Record<string, string>> {
   const res = await fetch("/api/config");
@@ -36,18 +30,16 @@ function NavLink({
   href,
   icon: Icon,
   label,
-  onClick,
 }: {
   href: string;
   icon: React.ElementType;
   label: string;
-  onClick?: () => void;
 }) {
   const [location] = useLocation();
   const active = location === href || (href !== "/" && location.startsWith(href));
 
   return (
-    <Link href={href} onClick={onClick}>
+    <Link href={href}>
       <div
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
@@ -63,7 +55,7 @@ function NavLink({
   );
 }
 
-function GeneroSection({ onClose }: { onClose: () => void }) {
+function GeneroSection() {
   const [location] = useLocation();
   const [expanded, setExpanded] = useState(
     location.startsWith("/genero") || location === "/generos",
@@ -99,7 +91,7 @@ function GeneroSection({ onClose }: { onClose: () => void }) {
             className="overflow-hidden"
           >
             <div className="mt-1 ml-4 pl-3 border-l border-border space-y-0.5">
-              <Link href="/generos" onClick={onClose}>
+              <Link href="/generos">
                 <div className={cn(
                   "px-3 py-2 rounded-md text-xs font-medium transition-all",
                   location === "/generos"
@@ -110,7 +102,7 @@ function GeneroSection({ onClose }: { onClose: () => void }) {
                 </div>
               </Link>
               {generos.map((g) => (
-                <Link key={g.id} href={`/genero/${g.slug}`} onClick={onClose}>
+                <Link key={g.id} href={`/genero/${g.slug}`}>
                   <div
                     className={cn(
                       "px-3 py-2 rounded-md text-xs font-medium transition-all",
@@ -136,7 +128,7 @@ function GeneroSection({ onClose }: { onClose: () => void }) {
   );
 }
 
-function SocialLinksSection({ onClose }: { onClose: () => void }) {
+function SocialLinksSection() {
   const { data: config } = useQuery({
     queryKey: ["site-config"],
     queryFn: fetchConfig,
@@ -165,7 +157,6 @@ function SocialLinksSection({ onClose }: { onClose: () => void }) {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={onClose}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all"
             >
               <Icon className={cn("w-4 h-4 shrink-0", platform.color)} />
@@ -178,7 +169,7 @@ function SocialLinksSection({ onClose }: { onClose: () => void }) {
   );
 }
 
-function AdminSection({ onClose }: { onClose: () => void }) {
+function AdminSection() {
   const [location] = useLocation();
   const [expanded, setExpanded] = useState(location.startsWith("/admin"));
 
@@ -219,7 +210,7 @@ function AdminSection({ onClose }: { onClose: () => void }) {
                 { href: "/admin/config", label: "Configurações", icon: Settings },
                 { href: "/meus-projetos", label: "Meus Projetos", icon: Layers },
               ].map(({ href, label, icon: Icon }) => (
-                <Link key={href} href={href} onClick={onClose}>
+                <Link key={href} href={href}>
                   <div
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all",
@@ -241,7 +232,7 @@ function AdminSection({ onClose }: { onClose: () => void }) {
   );
 }
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar() {
   const { isAdmin, isZenkatuber } = useAuth();
 
   const sidebarContent = (
@@ -252,13 +243,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </span>
       </div>
 
-      <NavLink href="/" icon={Home} label="Início" onClick={onClose} />
-      <NavLink href="/descobrir" icon={Users} label="Descobrir" onClick={onClose} />
-      <NavLink href="/ranking" icon={TrendingUp} label="Ranking" onClick={onClose} />
-      <NavLink href="/versao-app" icon={Smartphone} label="Versão app" onClick={onClose} />
-      <GeneroSection onClose={onClose} />
+      <NavLink href="/" icon={Home} label="Início" />
+      <NavLink href="/descobrir" icon={Users} label="Descobrir" />
+      <NavLink href="/ranking" icon={TrendingUp} label="Ranking" />
+      <NavLink href="/versao-app" icon={Smartphone} label="Versão app" />
+      <GeneroSection />
 
-      <SocialLinksSection onClose={onClose} />
+      <SocialLinksSection />
 
       {isZenkatuber && !isAdmin && (
         <>
@@ -268,7 +259,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               Criador
             </span>
           </div>
-          <NavLink href="/meus-projetos" icon={Layers} label="Meus Projetos" onClick={onClose} />
+          <NavLink href="/meus-projetos" icon={Layers} label="Meus Projetos" />
         </>
       )}
 
@@ -280,54 +271,15 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               Administração
             </span>
           </div>
-          <AdminSection onClose={onClose} />
+          <AdminSection />
         </>
       )}
     </div>
   );
 
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-border/60 bg-background/95 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
-        {sidebarContent}
-      </aside>
-
-      {/* Mobile overlay */}
-      <AnimatePresence>
-        {open && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-              onClick={onClose}
-            />
-            <motion.aside
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 left-0 z-50 h-full w-72 bg-background border-r border-border shadow-2xl lg:hidden overflow-y-auto"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <span className="font-display text-xl font-bold tracking-wider text-primary">
-                  ZENKATU
-                </span>
-                <button
-                  onClick={onClose}
-                  className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              {sidebarContent}
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+    <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r border-border/60 bg-background/95 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
+      {sidebarContent}
+    </aside>
   );
 }

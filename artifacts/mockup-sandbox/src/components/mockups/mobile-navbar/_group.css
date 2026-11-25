@@ -1,0 +1,69 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap");
+
+@theme inline {
+  --font-sans: var(--app-font-sans);
+  --font-display: var(--app-font-display);
+}
+
+:root {
+  --app-font-sans: "Inter", sans-serif;
+  --app-font-display: "Rajdhani", sans-serif;
+  --radius: 0.5rem;
+  --background: 217 56% 5%;
+  --foreground: 220 70% 95%;
+  --card: 215 51% 12%;
+  --card-foreground: 220 70% 95%;
+  --popover: 215 51% 12%;
+  --popover-foreground: 220 70% 95%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 220 70% 95%;
+  --secondary: 216 60% 10%;
+  --secondary-foreground: 220 70% 95%;
+  --muted: 215 28% 65%;
+  --muted-foreground: 215 28% 65%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 220 70% 95%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 220 70% 95%;
+  --border: 224 64% 33%;
+  --input: 224 64% 33%;
+  --ring: 217 91% 60%;
+  --sidebar: 215 51% 12%;
+  --sidebar-foreground: 220 70% 95%;
+  --sidebar-border: 224 64% 33%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 220 70% 95%;
+  --sidebar-accent: 217 91% 60%;
+  --sidebar-accent-foreground: 220 70% 95%;
+  --sidebar-ring: 217 91% 60%;
+}
+
+.dark {
+  --background: 217 56% 5%;
+  --foreground: 220 70% 95%;
+  --card: 215 51% 12%;
+  --card-foreground: 220 70% 95%;
+  --popover: 215 51% 12%;
+  --popover-foreground: 220 70% 95%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 220 70% 95%;
+  --secondary: 216 60% 10%;
+  --secondary-foreground: 220 70% 95%;
+  --muted: 215 28% 65%;
+  --muted-foreground: 215 28% 65%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 220 70% 95%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 220 70% 95%;
+  --border: 224 64% 33%;
+  --input: 224 64% 33%;
+  --ring: 217 91% 60%;
+  --sidebar: 215 51% 12%;
+  --sidebar-foreground: 220 70% 95%;
+  --sidebar-border: 224 64% 33%;
+  --sidebar-primary: 217 91% 60%;
+  --sidebar-primary-foreground: 220 70% 95%;
+  --sidebar-accent: 217 91% 60%;
+  --sidebar-accent-foreground: 220 70% 95%;
+  --sidebar-ring: 217 91% 60%;
+}

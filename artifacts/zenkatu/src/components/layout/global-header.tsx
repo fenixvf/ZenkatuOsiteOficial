@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Search, X, Menu, TrendingUp, Clock, Bell, BellOff, Loader2 } from "lucide-react";
+import { Search, X, TrendingUp, Clock, Bell, BellOff, Loader2 } from "lucide-react";
 import { NotificationBell } from "@/components/notification-bell";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { usePushNotificationsContext } from "@/lib/push-notifications-context";
@@ -305,11 +305,7 @@ function MobileSearchOverlay({ onClose }: { onClose: () => void }) {
   );
 }
 
-interface GlobalHeaderProps {
-  onMenuClick: () => void;
-}
-
-export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
+export function GlobalHeader() {
   const { currentUser, userProfile, isAdmin, signOut } = useAuth();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const { toast } = useToast();
@@ -320,14 +316,6 @@ export function GlobalHeader({ onMenuClick }: GlobalHeaderProps) {
       <header className="relative z-50 w-full border-b border-border/40 bg-background/95 supports-[backdrop-filter]:bg-background/80 md:sticky md:top-0 md:backdrop-blur">
         <div className="flex h-16 max-w-full items-center justify-between px-4 gap-4">
           <div className="flex items-center gap-3">
-            <button
-              onClick={onMenuClick}
-              className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
-              aria-label="Abrir menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
             <Link href="/" className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-primary/10">
                 <img
