@@ -187,7 +187,7 @@ const ZENKATUBER_PROJECT_LIMIT = 10;
 router.post("/obras", async (req, res) => {
   try {
     const {
-      titulo, slug, sinopse, generos, status, ano, nota, totalEps,
+      titulo, slug, sinopse, trailerContent, generos, status, ano, nota, totalEps,
       capaUrl, bannerUrl, tipografiaUrl, showInBanner, bannerOrder, cast, ownerId,
     } = req.body;
 
@@ -209,6 +209,9 @@ router.post("/obras", async (req, res) => {
 
     const [obra] = await db.insert(obrasTable).values({
       titulo, slug, sinopse,
+      trailerContent: typeof trailerContent === "string" && trailerContent.trim()
+        ? trailerContent.trim()
+        : null,
       generos: generos ?? [],
       status: status ?? "Em Exibição",
       ano, nota, totalEps, capaUrl, bannerUrl, tipografiaUrl,
@@ -371,6 +374,7 @@ function serializeObra(obra: typeof obrasTable.$inferSelect) {
     titulo: obra.titulo,
     slug: obra.slug,
     sinopse: obra.sinopse,
+    trailerContent: obra.trailerContent ?? null,
     generos: obra.generos ?? [],
     status: obra.status,
     ano: obra.ano,

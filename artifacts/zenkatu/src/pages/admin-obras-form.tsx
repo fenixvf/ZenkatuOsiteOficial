@@ -45,6 +45,7 @@ const obraSchema = z.object({
   titulo: z.string().min(1, "Título é obrigatório"),
   slug: z.string().min(1, "Slug é obrigatório").regex(/^[a-z0-9-]+$/, "Apenas letras minúsculas, números e hifens"),
   sinopse: z.string().min(10, "Sinopse muito curta"),
+  trailerContent: z.string().optional().nullable().or(z.literal("")),
   status: z.string().min(1, "Status é obrigatório"),
   ano: z.coerce.number().int().min(1900).max(2100),
   nota: z.coerce.number().min(0).max(10).optional().nullable(),
@@ -212,6 +213,7 @@ export default function AdminObrasForm() {
       titulo: "",
       slug: "",
       sinopse: "",
+      trailerContent: "",
       status: "Em Exibição",
       ano: new Date().getFullYear(),
       nota: null,
@@ -228,6 +230,7 @@ export default function AdminObrasForm() {
         titulo: obra.titulo,
         slug: obra.slug,
         sinopse: obra.sinopse,
+        trailerContent: obra.trailerContent ?? "",
         status: obra.status,
         ano: obra.ano,
         nota: obra.nota,
@@ -250,7 +253,12 @@ export default function AdminObrasForm() {
 
   const onSubmit = async (data: ObraFormValues) => {
     try {
-      const payload = { ...data, tipografiaUrl: data.tipografiaUrl || null, cast };
+      const payload = {
+        ...data,
+        trailerContent: data.trailerContent?.trim() || null,
+        tipografiaUrl: data.tipografiaUrl || null,
+        cast,
+      };
       if (isEditing) {
         await updateObra.mutateAsync({
           obraId: Number(id),
@@ -412,6 +420,27 @@ export default function AdminObrasForm() {
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="trailerContent"
+              render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Trailer da obra (opcional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Cole uma URL de vídeo ou o código de incorporação (iframe)"
+                      className="min-h-[96px] bg-background resize-y font-mono text-sm"
+                      {...field}
+                      value={field.value ?? ""}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Aceita links de vídeo, YouTube/Vimeo ou código iframe. A página usa o mesmo player dos episódios.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

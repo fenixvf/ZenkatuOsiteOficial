@@ -830,6 +830,29 @@ export default function ObraDetail() {
             )}
           </section>
 
+          {obra.trailerContent?.trim() && (
+            <section
+              className="space-y-4"
+              aria-label={`Trailer de ${obra.titulo}`}
+              data-testid="section-obra-trailer"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+                  Trailer
+                </p>
+                <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  {obra.titulo}
+                </h2>
+              </div>
+              <Player
+                key={`trailer-${obra.id}`}
+                content={obra.trailerContent}
+                episodeLabel="Trailer oficial"
+                episodeTitle={obra.titulo}
+              />
+            </section>
+          )}
+
           {/* Equipe / Cast */}
           {Array.isArray((obra as any).cast) && (obra as any).cast.length > 0 && (
             <section>

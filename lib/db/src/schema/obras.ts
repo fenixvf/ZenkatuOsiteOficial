@@ -23,6 +23,7 @@ export const obrasTable = pgTable("obras", {
   titulo: varchar("titulo", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
   sinopse: text("sinopse").notNull(),
+  trailerContent: text("trailer_content"),
   generos: text("generos").array().default([]).notNull(),
   status: varchar("status", { length: 50 }).default("Em Exibição").notNull(),
   ano: integer("ano").notNull(),

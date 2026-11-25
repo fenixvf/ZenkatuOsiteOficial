@@ -14,6 +14,8 @@ export interface Obra {
   titulo: string;
   slug: string;
   sinopse: string;
+  /** @nullable */
+  trailerContent?: string | null;
   generos?: string[];
   status: string;
   ano: number;
@@ -39,6 +41,8 @@ export interface ObraInput {
   titulo: string;
   slug: string;
   sinopse: string;
+  /** @nullable */
+  trailerContent?: string | null;
   generos?: string[];
   status: string;
   ano: number;
@@ -62,6 +66,8 @@ export interface ObraUpdate {
   titulo?: string;
   slug?: string;
   sinopse?: string;
+  /** @nullable */
+  trailerContent?: string | null;
   generos?: string[];
   status?: string;
   ano?: number;

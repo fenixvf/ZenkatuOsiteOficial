@@ -863,6 +863,8 @@ components:
           type: string
         sinopse:
           type: string
+        trailerContent:
+          type: ["string", "null"]
         generos:
           type: array
           items:
@@ -911,6 +913,8 @@ components:
           type: string
         sinopse:
           type: string
+        trailerContent:
+          type: ["string", "null"]
         generos:
           type: array
           items:
@@ -947,6 +951,8 @@ components:
           type: string
         sinopse:
           type: string
+        trailerContent:
+          type: ["string", "null"]
         generos:
           type: array
           items:

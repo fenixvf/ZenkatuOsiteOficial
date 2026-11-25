@@ -11,6 +11,8 @@ export interface Obra {
   titulo: string;
   slug: string;
   sinopse: string;
+  /** @nullable */
+  trailerContent?: string | null;
   generos?: string[];
   status: string;
   ano: number;
