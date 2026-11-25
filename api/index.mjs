@@ -28390,7 +28390,7 @@ var require_pino = __commonJS({
     function pinoBundlerAbsolutePath(p) {
       try {
         const path4 = __require("path");
-        const outputDir = "/workspace/chats/98a222cf6790492951d8e7b4/api";
+        const outputDir = "/home/runner/workspace/api";
         return path4.resolve(outputDir, p.replace(/^\.\//, ""));
       } catch (e) {
         const f = new Function("p", "return new URL(p, import.meta.url).pathname");
@@ -48571,6 +48571,7 @@ var ListObrasResponseItem = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48591,6 +48592,7 @@ var CreateObraBody = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48608,6 +48610,7 @@ var ListBannerObrasResponseItem = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48629,6 +48632,7 @@ var ListTop10ObrasResponseItem = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48650,6 +48654,7 @@ var ListObrasRecentesResponseItem = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48674,6 +48679,7 @@ var GetObraResponse = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48697,6 +48703,7 @@ var UpdateObraBody = objectType({
   "titulo": stringType().optional(),
   "slug": stringType().optional(),
   "sinopse": stringType().optional(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType().optional(),
   "ano": numberType().optional(),
@@ -48713,6 +48720,7 @@ var UpdateObraResponse = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48739,6 +48747,7 @@ var GetObraBySlugResponse = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48762,6 +48771,7 @@ var SearchObrasResponseItem = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -48786,6 +48796,7 @@ var IncrementObraViewResponse = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -49075,6 +49086,7 @@ var GetUsuarioListaResponseItem = objectType({
   "titulo": stringType(),
   "slug": stringType(),
   "sinopse": stringType(),
+  "trailerContent": stringType().nullish(),
   "generos": arrayType(stringType()).optional(),
   "status": stringType(),
   "ano": numberType(),
@@ -64451,6 +64463,7 @@ var obrasTable = pgTable("obras", {
   titulo: varchar("titulo", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).unique().notNull(),
   sinopse: text("sinopse").notNull(),
+  trailerContent: text("trailer_content"),
   generos: text("generos").array().default([]).notNull(),
   status: varchar("status", { length: 50 }).default("Em Exibi\xE7\xE3o").notNull(),
   ano: integer("ano").notNull(),
@@ -64965,6 +64978,7 @@ router2.post("/obras", async (req, res) => {
       titulo,
       slug,
       sinopse,
+      trailerContent,
       generos,
       status,
       ano,
@@ -64994,6 +65008,7 @@ router2.post("/obras", async (req, res) => {
       titulo,
       slug,
       sinopse,
+      trailerContent: typeof trailerContent === "string" && trailerContent.trim() ? trailerContent.trim() : null,
       generos: generos ?? [],
       status: status ?? "Em Exibi\xE7\xE3o",
       ano,
@@ -65144,6 +65159,7 @@ function serializeObra(obra) {
     titulo: obra.titulo,
     slug: obra.slug,
     sinopse: obra.sinopse,
+    trailerContent: obra.trailerContent ?? null,
     generos: obra.generos ?? [],
     status: obra.status,
     ano: obra.ano,
@@ -65535,6 +65551,23 @@ var import_express5 = __toESM(require_express2(), 1);
 init_drizzle_orm();
 var router5 = (0, import_express5.Router)();
 var ADMIN_EMAIL = "souzawalisonlopes52@gmail.com";
+function normalizeUsername(value) {
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9_]/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "").slice(0, 20) || "usuario";
+}
+async function createUniqueUsername(name2, email3, uid) {
+  const base = normalizeUsername(name2 || email3.split("@")[0]);
+  const uidSuffix = uid.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const candidates = [base];
+  for (let suffixLength = 4; suffixLength <= Math.min(18, uidSuffix.length); suffixLength += 1) {
+    const prefix = base.slice(0, 19 - suffixLength) || "u";
+    candidates.push(`${prefix}_${uidSuffix.slice(-suffixLength)}`);
+  }
+  for (const username of candidates) {
+    const [owner] = await db2.select({ uid: usersTable.uid }).from(usersTable).where(eq(usersTable.username, username));
+    if (!owner || owner.uid === uid) return username;
+  }
+  throw new Error("Unable to allocate a unique username");
+}
 router5.get("/usuarios", async (req, res) => {
   try {
     const users = await db2.select().from(usersTable).orderBy(desc(usersTable.createdAt));
@@ -65607,28 +65640,37 @@ router5.patch("/usuarios/:uid", async (req, res) => {
 router5.post("/usuarios", async (req, res) => {
   try {
     const { uid, email: email3, displayName, photoUrl } = req.body;
-    if (!uid || !email3) {
+    const normalizedEmail = typeof email3 === "string" ? email3.trim().toLowerCase() : "";
+    if (!uid || !normalizedEmail) {
       res.status(400).json({ error: "uid and email required" });
       return;
     }
-    const role = email3 === ADMIN_EMAIL ? "admin" : "user";
+    const role = normalizedEmail === ADMIN_EMAIL ? "admin" : "user";
     const [existing] = await db2.select().from(usersTable).where(eq(usersTable.uid, uid));
     if (existing) {
-      const [updated] = await db2.update(usersTable).set({ role, updatedAt: /* @__PURE__ */ new Date() }).where(eq(usersTable.uid, uid)).returning();
+      const [updated] = await db2.update(usersTable).set({ email: normalizedEmail, role, updatedAt: /* @__PURE__ */ new Date() }).where(eq(usersTable.uid, uid)).returning();
       res.json(serializeUser(updated));
       return;
     }
-    const baseUsername = (displayName ?? email3.split("@")[0]).toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 20);
+    const username = await createUniqueUsername(
+      typeof displayName === "string" ? displayName : "",
+      normalizedEmail,
+      uid
+    );
     const [user] = await db2.insert(usersTable).values({
       uid,
-      email: email3,
-      username: baseUsername,
+      email: normalizedEmail,
+      username,
       photoUrl: photoUrl ?? null,
       role
     }).returning();
     res.json(serializeUser(user));
   } catch (e) {
     req.log.error(e);
+    if (e?.code === "23505") {
+      res.status(409).json({ error: "E-mail j\xE1 vinculado a outra conta." });
+      return;
+    }
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -66528,9 +66570,12 @@ router12.post("/zenkatuber/grant", async (req, res) => {
       res.status(400).json({ error: "E-mail \xE9 obrigat\xF3rio" });
       return;
     }
-    const [user] = await db2.select().from(usersTable).where(eq(usersTable.email, email3.trim().toLowerCase()));
+    const normalizedEmail = String(email3).trim().toLowerCase();
+    const [user] = await db2.select().from(usersTable).where(sql`lower(${usersTable.email}) = ${normalizedEmail}`);
     if (!user) {
-      res.status(404).json({ error: "Usu\xE1rio n\xE3o encontrado. O usu\xE1rio precisa ter feito login ao menos uma vez." });
+      res.status(404).json({
+        error: "Perfil n\xE3o sincronizado na Zenkatu. Pe\xE7a para a pessoa recarregar o site para repetir a sincroniza\xE7\xE3o."
+      });
       return;
     }
     await db2.update(usersTable).set({
@@ -67078,8 +67123,8 @@ function injectObraHead(html, head) {
 ${cleaned}`;
 }
 function loadSpaIndexHtml() {
-  if ('<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-B1MY2cAU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-C8oxH1v3.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n'.length > 0) {
-    return '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />\n    <title>Zenkatu Streaming</title>\n    <meta name="description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta name="robots" content="index, follow" />\n    <meta property="og:title" content="Zenkatu Streaming" />\n    <meta property="og:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <meta property="og:type" content="website" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="Zenkatu Streaming" />\n    <meta name="twitter:description" content="Zenkatu Streaming \u2014 Projetos de f\xE3s para f\xE3s." />\n    <link rel="icon" type="image/png" href="/logo.png" />\n    <link rel="preconnect" href="https://fonts.googleapis.com">\n    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">\n  <script>\n    (function () {\n      function block(e) {\n        if (\n          e.keyCode === 123 ||\n          (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||\n          (e.ctrlKey && e.keyCode === 85)\n        ) {\n          e.preventDefault();\n          e.stopPropagation();\n          return false;\n        }\n      }\n      document.addEventListener("keydown", block, true);\n      document.addEventListener("contextmenu", function (e) {\n        e.preventDefault();\n        return false;\n      });\n      var threshold = 160;\n      setInterval(function () {\n        var before = performance.now();\n        (function () {}).constructor("debugger")();\n        var after = performance.now();\n        if (after - before > threshold) {\n          document.body.innerHTML = "";\n          window.location.reload();\n        }\n      }, 1000);\n    })();\n  </script>\n    <script type="module" crossorigin src="/assets/index-B1MY2cAU.js"></script>\n    <link rel="stylesheet" crossorigin href="/assets/index-C8oxH1v3.css">\n  </head>\n  <body>\n    <div id="root"></div>\n  </body>\n</html>\n';
+  if ("".length > 0) {
+    return "";
   }
   try {
     const filePath = path2.resolve(
