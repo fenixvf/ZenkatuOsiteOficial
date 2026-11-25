@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useLocation, Link } from "wouter";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ import {
   useRemoveFromLista,
   useListConvitesCast,
   useListPersonagensFeitos,
+  useListObras,
   useAceitarConviteCast,
   useRecusarConviteCast,
   type VoicePortfolioItem,
@@ -26,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Camera,
   Loader2,
@@ -39,17 +41,20 @@ import {
   CalendarDays,
   AlignLeft,
   ExternalLink,
+  ArrowRight,
   Mic,
   Plus,
   Check,
   X,
   Film,
+  UserRound,
 } from "lucide-react";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { groupProfileProjects } from "@/lib/profile-projects";
 
 // Somente links do Google Drive são aceitos no portfólio de voz.
 const DRIVE_HOSTS = [
@@ -105,11 +110,20 @@ export default function Perfil() {
   const convites = Array.isArray(convitesRaw) ? convitesRaw : [];
   const pendentes = convites.filter((c) => c.status === "pending");
 
-  const { data: personagensRaw, isLoading: personagensLoading, refetch: refetchPersonagens } =
+  const { data: personagensRaw, isLoading: personagensLoading, isError: personagensError, refetch: refetchPersonagens } =
     useListPersonagensFeitos(uid, {
       query: { enabled: !!uid, queryKey: ["personagensFeitos", uid] },
     });
-  const personagens = Array.isArray(personagensRaw) ? personagensRaw : [];
+  const { data: obrasRaw, isLoading: obrasLoading, isError: obrasError, refetch: refetchObras } =
+    useListObras();
+  const personagens = useMemo(
+    () => (Array.isArray(personagensRaw) ? personagensRaw : []),
+    [personagensRaw],
+  );
+  const obras = useMemo(() => (Array.isArray(obrasRaw) ? obrasRaw : []), [obrasRaw]);
+  const projetos = useMemo(() => {
+    return groupProfileProjects(uid, obras, personagens);
+  }, [uid, obras, personagens]);
 
   const aceitarConvite = useAceitarConviteCast();
   const recusarConvite = useRecusarConviteCast();
@@ -142,6 +156,7 @@ export default function Perfil() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [avatarBroken, setAvatarBroken] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -187,8 +202,11 @@ export default function Perfil() {
 
   if (loading || (currentUser && userProfileLoading)) {
     return (
-      <div className="p-8 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto grid w-full max-w-screen-md gap-5 px-4 py-8" aria-label="Carregando seu perfil">
+        <Skeleton className="h-64 rounded-2xl" />
+        <Skeleton className="h-12 rounded-xl" />
+        <Skeleton className="h-44 rounded-2xl" />
+        <Skeleton className="h-56 rounded-2xl" />
       </div>
     );
   }
@@ -331,6 +349,7 @@ export default function Perfil() {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
+    setAvatarBroken(false);
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -348,6 +367,7 @@ export default function Perfil() {
         canvas.height = SIZE;
         ctx?.drawImage(img, sx, sy, minDim, minDim, 0, 0, SIZE, SIZE);
 
+        setAvatarBroken(false);
         setPreviewUrl(canvas.toDataURL("image/webp", 0.75));
 
         canvas.toBlob(
@@ -418,54 +438,56 @@ export default function Perfil() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="container mx-auto w-full min-w-0 max-w-screen-md overflow-x-clip px-4 py-8"
+      className="container mx-auto w-full min-w-0 max-w-screen-md overflow-x-clip px-4 py-7 sm:py-10"
     >
       <div className="grid min-w-0 gap-6">
         {/* Cabeçalho do perfil */}
-        <Card className="border-border bg-card/50 backdrop-blur overflow-hidden">
-          <div className="h-28 bg-gradient-to-br from-primary/40 via-primary/10 to-transparent relative">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.35),transparent_60%)]" />
+        <Card className="relative overflow-hidden border-border bg-card/70 shadow-xl shadow-background/30 backdrop-blur">
+          <div className="relative h-36 overflow-hidden bg-gradient-to-br from-primary/35 via-primary/10 to-secondary sm:h-44">
+            <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(59,130,246,0.34),transparent_55%)]" />
+            <div aria-hidden="true" className="absolute -right-12 -top-24 h-72 w-72 rounded-full border border-primary/15" />
+            <span className="absolute bottom-4 right-5 font-display text-xs font-bold uppercase tracking-[0.24em] text-foreground/55">Seu espaço na comunidade</span>
           </div>
-          <CardContent className="px-6 pb-6 -mt-14 flex flex-col items-center text-center">
+          <CardContent className="relative -mt-16 flex flex-col items-center px-5 pb-7 text-center sm:-mt-[4.5rem] sm:px-8">
             <div className="relative group shrink-0">
-              <div className="h-28 w-28 rounded-full border-4 border-background shadow-xl overflow-hidden bg-secondary flex items-center justify-center">
-                <img
-                  src={avatarSrc}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                {!avatarSrc && (
-                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-muted-foreground">
-                    {userProfile.username?.[0]?.toUpperCase() ||
-                      currentUser?.email?.[0]?.toUpperCase() ||
-                      "Z"}
-                  </div>
+              <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-background bg-secondary shadow-xl sm:h-32 sm:w-32">
+                {avatarSrc && !avatarBroken ? (
+                  <img
+                    src={avatarSrc}
+                    alt={`Foto de perfil de ${userProfile.username || "sua conta"}`}
+                    className="h-full w-full object-cover"
+                    onError={() => setAvatarBroken(true)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center font-display text-4xl font-bold text-muted-foreground">{userProfile.username?.[0]?.toUpperCase() || "Z"}</div>
                 )}
               </div>
-              <div
-                className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center cursor-pointer transition-opacity"
+              <button
+                type="button"
+                aria-label="Alterar foto de perfil"
+                data-testid="button-change-avatar"
+                disabled={isUploading}
+                className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-background/75 text-foreground opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring group-hover:opacity-100 disabled:cursor-wait disabled:opacity-100"
                 onClick={handleAvatarClick}
               >
                 {isUploading ? (
-                  <Loader2 className="w-8 h-8 text-white animate-spin" />
+                  <Loader2 className="h-7 w-7 animate-spin" />
                 ) : (
-                  <Camera className="w-8 h-8 text-white" />
+                  <span className="flex flex-col items-center gap-1"><Camera className="h-6 w-6" /><span className="text-[10px] font-semibold">Alterar</span></span>
                 )}
-              </div>
+              </button>
               <input
                 type="file"
                 accept="image/png, image/jpeg, image/jpg, image/webp"
                 className="hidden"
                 ref={fileInputRef}
                 onChange={handleFileChange}
+                aria-label="Selecionar nova foto de perfil"
               />
             </div>
 
             <div className="flex items-center gap-2 mt-3 min-w-0">
-              <h1 className="font-display text-2xl font-bold text-foreground truncate">
+              <h1 className="font-display text-2xl font-bold text-foreground truncate sm:text-3xl">
                 {userProfile.username || "Sem nome de usuário"}
               </h1>
               {userProfile.isZenkatuber && (
@@ -489,33 +511,52 @@ export default function Perfil() {
                   : "Membro da Zenkatu"}
               </span>
             </div>
-
+            <p className="mt-3 max-w-lg text-sm text-muted-foreground">
+              Mantenha seu perfil atualizado para que a comunidade conheça sua voz e seus projetos.
+            </p>
+            <Button asChild variant="outline" className="mt-4 gap-2 rounded-lg">
+              <Link href={`/perfil/${currentUser?.uid ?? ""}`} aria-label="Ver como seu perfil aparece publicamente">
+                <ExternalLink className="h-4 w-4" /> Ver perfil público
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
         {/* Abas do perfil */}
-        <div className="flex min-w-0 gap-1 overflow-x-auto rounded-xl border border-border bg-card/50 p-1 backdrop-blur">
+        <div role="group" aria-label="Seções do perfil" className="flex min-w-0 gap-1 overflow-x-auto rounded-xl border border-border bg-card/50 p-1 backdrop-blur">
           {(
             [
-              { key: "perfil", label: "Meu perfil" },
-              { key: "notificacoes", label: "Notificações" },
-              { key: "personagens", label: "Personagens feitos" },
+              { key: "perfil", label: "Meu perfil", icon: UserRound },
+              { key: "notificacoes", label: "Notificações", icon: Bell },
+              { key: "personagens", label: "Projetos", icon: Film },
             ] as const
           ).map((tab) => (
             <button
               key={tab.key}
               type="button"
+              aria-pressed={activeTab === tab.key}
+              data-testid={`tab-${tab.key}`}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex min-w-0 flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors sm:px-4 sm:text-sm ${
+              className={`flex min-h-11 min-w-0 flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-4 sm:text-sm ${
                 activeTab === tab.key
                   ? "bg-primary text-primary-foreground shadow"
                   : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
               }`}
             >
+              <tab.icon className="h-4 w-4 shrink-0" />
               <span className="truncate">{tab.label}</span>
               {tab.key === "notificacoes" && pendentes.length > 0 && (
                 <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                   {pendentes.length}
+                </span>
+              )}
+              {tab.key === "personagens" && projetos.length > 0 && (
+                <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${
+                  activeTab === tab.key
+                    ? "bg-primary-foreground/15 text-primary-foreground"
+                    : "bg-secondary text-muted-foreground"
+                }`}>
+                  {projetos.length}
                 </span>
               )}
             </button>
@@ -526,7 +567,7 @@ export default function Perfil() {
         <>
 
         {/* Informações Pessoais */}
-        <Card className="border-border bg-card/50 backdrop-blur">
+        <Card id="profile-tabpanel-perfil" tabIndex={0} className="border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
           <CardHeader>
             <CardTitle>Informações Pessoais</CardTitle>
             <CardDescription>Atualize seu nome de usuário.</CardDescription>
@@ -564,7 +605,8 @@ export default function Perfil() {
             <Button
               onClick={handleSave}
               disabled={isSaving || username === userProfile.username}
-              className="font-display tracking-wide"
+              data-testid="button-save-username"
+              className="min-h-11 rounded-xl font-display font-semibold tracking-wide transition-transform hover:-translate-y-0.5"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -577,7 +619,7 @@ export default function Perfil() {
         </Card>
 
         {/* Biografia */}
-        <Card className="min-w-0 border-border bg-card/50 backdrop-blur">
+        <Card className="min-w-0 border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlignLeft className="w-5 h-5" />
@@ -600,7 +642,8 @@ export default function Perfil() {
               <Button
                 onClick={handleSaveBio}
                 disabled={isSavingBio || bio.trim() === (userProfile.bio || "")}
-                className="font-display tracking-wide"
+                data-testid="button-save-bio"
+                className="min-h-11 rounded-xl font-display font-semibold tracking-wide transition-transform hover:-translate-y-0.5"
               >
                 {isSavingBio ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -614,7 +657,7 @@ export default function Perfil() {
         </Card>
 
         {/* Portfólio de Voz */}
-        <Card className="min-w-0 border-border bg-card/50 backdrop-blur">
+        <Card className="min-w-0 border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mic className="w-5 h-5" />
@@ -715,7 +758,8 @@ export default function Perfil() {
                 type="button"
                 onClick={handleSavePortfolio}
                 disabled={isSavingPortfolio}
-                className="font-display tracking-wide"
+                data-testid="button-save-voice-portfolio"
+                className="min-h-11 rounded-xl font-display font-semibold tracking-wide transition-transform hover:-translate-y-0.5"
               >
                 {isSavingPortfolio ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -734,7 +778,7 @@ export default function Perfil() {
 
         {/* Notificações Push */}
         {push.isSupported && (
-          <Card className="border-border bg-card/50 backdrop-blur">
+          <Card id="profile-tabpanel-notificacoes" tabIndex={0} className="border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
@@ -765,6 +809,7 @@ export default function Perfil() {
                         <p className="text-xs text-muted-foreground">Quando um episódio for lançado</p>
                       </div>
                       <Switch
+                        aria-label="Receber notificações de novos episódios"
                         checked={localPrefs.notifyEpisodios}
                         onCheckedChange={(checked) => setLocalPrefs((p) => ({ ...p, notifyEpisodios: checked }))}
                       />
@@ -776,6 +821,7 @@ export default function Perfil() {
                         <p className="text-xs text-muted-foreground">Quando uma nova obra for adicionada</p>
                       </div>
                       <Switch
+                        aria-label="Receber notificações de novos projetos"
                         checked={localPrefs.notifyObras}
                         onCheckedChange={(checked) => setLocalPrefs((p) => ({ ...p, notifyObras: checked }))}
                       />
@@ -784,6 +830,7 @@ export default function Perfil() {
                     <div className="flex gap-3 pt-2">
                       <Button
                         size="sm"
+                        data-testid="button-save-notification-preferences"
                         disabled={prefsSaving || (localPrefs.notifyEpisodios === push.preferences.notifyEpisodios && localPrefs.notifyObras === push.preferences.notifyObras)}
                         onClick={async () => {
                           setPrefsSaving(true);
@@ -796,7 +843,7 @@ export default function Perfil() {
                             setPrefsSaving(false);
                           }
                         }}
-                        className="gap-2"
+                        className="gap-2 rounded-lg"
                       >
                         {prefsSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
                         Salvar preferências
@@ -854,7 +901,7 @@ export default function Perfil() {
         )}
 
         {/* Zenkatuber */}
-        <Card className="border-border bg-card/50 backdrop-blur">
+          <Card className="border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BadgeCheck className="w-5 h-5 text-blue-400" />
@@ -891,7 +938,7 @@ export default function Perfil() {
           </Card>
 
         {/* Minha Lista */}
-        <Card className="border-border bg-card/50 backdrop-blur">
+        <Card className="border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
           <CardHeader>
             <CardTitle>Minha Lista</CardTitle>
             <CardDescription>Obras salvas para assistir depois.</CardDescription>
@@ -915,14 +962,8 @@ export default function Perfil() {
                   <div key={obra.id} className="group relative">
                     <Link href={`/obra/${obra.slug}`}>
                       <div className="relative aspect-[2/3] rounded-lg overflow-hidden border border-border bg-card transition-all hover:scale-[1.02] hover:border-primary/50 hover:shadow-[0_0_10px_rgba(59,130,246,0.2)]">
-                        <img
-                          src={
-                            obra.capaUrl ||
-                            `https://placehold.co/400x600/0F1C2E/1E3A8A?text=${obra.titulo}`
-                          }
-                          alt={obra.titulo}
-                          className="w-full h-full object-cover"
-                        />
+                        {!obra.capaUrl && <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center bg-secondary"><Film className="h-8 w-8 text-muted-foreground/50" /></div>}
+                        {obra.capaUrl && <img src={obra.capaUrl} alt={obra.titulo} className="relative z-10 h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/80 pointer-events-none" />
                         <div className="absolute bottom-0 left-0 right-0 px-2 pb-2">
                           {obra.tipografiaUrl ? (
@@ -943,6 +984,7 @@ export default function Perfil() {
                       onClick={() => handleRemoveFromLista(obra.id)}
                       className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 border border-border text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-all backdrop-blur-sm"
                       title="Remover da lista"
+                      aria-label={`Remover ${obra.titulo} da lista`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -958,7 +1000,7 @@ export default function Perfil() {
 
         {/* Notificações de cast */}
         {activeTab === "notificacoes" && (
-          <Card className="border-border bg-card/50 backdrop-blur">
+          <Card id="profile-tabpanel-notificacoes" role="tabpanel" tabIndex={0} className="border-border bg-card/50 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="w-5 h-5" />
@@ -1070,74 +1112,80 @@ export default function Perfil() {
 
         {/* Personagens feitos */}
         {activeTab === "personagens" && (
-          <Card className="border-border bg-card/50 backdrop-blur">
+          <Card id="profile-tabpanel-personagens" tabIndex={0} className="border-border bg-card/60 shadow-lg shadow-background/20 backdrop-blur">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Film className="w-5 h-5" />
-                Personagens feitos
+                Projetos em que participo
               </CardTitle>
               <CardDescription>
-                Personagens que você confirmou. Eles também aparecem no seu perfil público.
+                Seus projetos e as participações de elenco que você confirmou. Este resumo também aparece no seu perfil público.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {personagensLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              {personagensLoading || obrasLoading ? (
+                <div className="grid gap-3 sm:grid-cols-2" aria-label="Carregando projetos">
+                  {[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-28 rounded-xl" />)}
                 </div>
-              ) : personagens.length === 0 ? (
+              ) : personagensError || obrasError ? (
+                <div role="alert" className="rounded-lg border border-destructive/25 bg-background/50 p-8 text-center">
+                  <p className="text-sm text-muted-foreground">Não foi possível carregar os projetos.</p>
+                  <Button
+                    onClick={() => void Promise.all([refetchPersonagens(), refetchObras()])}
+                    data-testid="button-retry-profile-projects"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                  >
+                    Tentar novamente
+                  </Button>
+                </div>
+              ) : projetos.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-background/50">
                   <Film className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                  <p className="text-sm">Nenhum personagem confirmado ainda.</p>
+                  <p className="text-sm">Nenhum projeto para mostrar ainda.</p>
                   <p className="text-xs mt-1">
-                    Aceite um convite de cast para que o personagem apareça aqui.
+                    Seus projetos e participações aceitas vão aparecer aqui.
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {personagens.map((personagem) => (
-                    <Link
-                      key={personagem.id}
-                      href={`/obra/${personagem.obraSlug}`}
-                      className="group flex min-w-0 items-center gap-3 rounded-xl border border-border bg-background/50 p-3 transition-all hover:border-primary/40 hover:bg-primary/5"
-                    >
-                      {personagem.fotoUrl ? (
-                        <img
-                          src={personagem.fotoUrl}
-                          alt={personagem.personagem}
-                          className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      ) : personagem.obraCapa ? (
-                        <img
-                          src={personagem.obraCapa}
-                          alt={personagem.obraTitulo}
-                          className="h-16 w-12 shrink-0 rounded-md border border-border object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <div className="flex h-16 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-secondary">
-                          <Film className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
-                          {personagem.personagem}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {personagem.obraTitulo}
-                        </p>
-                        <p className="truncate text-[11px] text-muted-foreground/70">
-                          como {personagem.nome}
-                        </p>
-                      </div>
-                      <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </Link>
-                  ))}
+                  {projetos.map((projeto) => {
+                    return (
+                      <article key={projeto.id} className="overflow-hidden rounded-xl border border-border bg-background/50 transition-colors hover:border-primary/35">
+                        <Link href={`/obra/${projeto.slug}`} data-testid={`link-profile-project-${projeto.id}`} className="group flex items-center gap-3 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                          {projeto.capaUrl ? (
+                            <img src={projeto.capaUrl} alt="" className="h-20 w-14 shrink-0 rounded-md border border-border object-cover" loading="lazy" />
+                          ) : (
+                            <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded-md border border-border bg-secondary"><Film className="h-5 w-5 text-muted-foreground" /></div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-display text-lg font-bold text-foreground group-hover:text-primary">{projeto.titulo}</p>
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                              {projeto.isOwner && <span className="rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Criado por você</span>}
+                              {projeto.participations.length > 0 && <span className="rounded-full border border-border bg-secondary/70 px-2 py-0.5 text-[10px] text-muted-foreground">{projeto.participations.length} {projeto.participations.length === 1 ? "personagem" : "personagens"}</span>}
+                            </div>
+                          </div>
+                          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                        </Link>
+                        {projeto.participations.length > 0 ? (
+                          <div className="border-t border-border/70 px-3 py-3">
+                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Participação confirmada</p>
+                            <ul className="space-y-2">
+                              {projeto.participations.map((entry) => (
+                                <li key={entry.id} className="flex min-w-0 items-start justify-between gap-3 text-sm">
+                                  <span className="min-w-0 truncate font-medium text-foreground">{entry.personagem}</span>
+                                  <span className="shrink-0 text-right text-xs text-muted-foreground">como {entry.nome}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <p className="border-t border-border/70 px-3 py-3 text-xs text-muted-foreground">Você é responsável por este projeto.</p>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
