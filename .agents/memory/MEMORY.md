@@ -5,3 +5,4 @@
 - [TV playback](tv-playback.md) — Direct MP4/HLS can use Cast or native remote playback; cross-origin embeds must use their provider's own casting controls.
 - [Social link previews](social-link-previews.md) — Generate Open Graph data on the server and preserve the public host through the Vite API proxy; SPA-only metadata is invisible to many crawlers.
 - [Vercel workspace dependencies](vercel-workspace-deps.md) — Root-level Vercel functions need external runtime packages declared in the workspace root manifest.
+- [Vercel frozen lockfile](pnpm-catalog-lock.md) — Keep workspace catalogs and `pnpm-lock.yaml` synchronized or frozen Vercel installs fail before building.
